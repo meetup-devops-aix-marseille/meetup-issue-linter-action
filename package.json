@@ -1,20 +1,22 @@
 {
-  "name": "typescript-action",
-  "description": "GitHub Actions TypeScript template",
+  "name": "meetup-issue-linter-action",
+  "description": "Docker Compose Action",
   "version": "0.0.0",
-  "author": "",
-  "type": "module",
+  "author": "Meetup DevOps Aix-Marseille",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/meetup-devops-aix-marseille/meetup-issue-linter-action",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/meetup-devops-aix-marseille/meetup-issue-linter-action.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/meetup-devops-aix-marseille/meetup-issue-linter-action/issues"
   },
   "keywords": [
-    "actions"
+    "actions",
+    "meetup",
+    "issue",
+    "linter"
   ],
   "exports": {
     ".": "./dist/index.js"
@@ -23,50 +25,123 @@
     "node": ">=20"
   },
   "scripts": {
-    "bundle": "npm run format:write && npm run package",
-    "ci-test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
-    "coverage": "npx make-coverage-badge --output-path ./badges/coverage.svg",
-    "format:write": "npx prettier --write .",
-    "format:check": "npx prettier --check .",
-    "lint": "npx eslint .",
-    "local-action": "npx local-action . src/main.ts .env",
-    "package": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "package": "npm run package:index",
+    "package:index": "ncc build src/index.ts -o dist --license licenses.txt",
     "package:watch": "npm run package -- --watch",
-    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
-    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "all": "npm run format && npm run lint && npm run test && npm run package",
+    "build": "tsc --noEmit",
+    "format": "prettier --cache --write '**/*.ts'",
+    "jest": "jest --detectOpenHandles --forceExit",
+    "test": "npm run jest --maxWorkers=50%",
+    "test:watch": "npm run jest --watch --maxWorkers=25%",
+    "test:cov": "npm run test --coverage",
+    "test:ci": "npm run test:cov --runInBand",
+    "prepare": "ts-dev-tools install"
   },
   "license": "MIT",
+  "jest": {
+    "preset": "ts-jest",
+    "verbose": true,
+    "clearMocks": true,
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "js",
+      "ts"
+    ],
+    "testMatch": [
+      "**/*.test.ts",
+      "**/__tests__/**/*.[jt]s?(x)",
+      "**/?(*.)+(spec|test)?(.*).+(ts|tsx|js)"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "coverageReporters": [
+      "json-summary",
+      "text",
+      "lcov"
+    ],
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "./src/**",
+      "**/src/**/*.[jt]s?(x)"
+    ]
+  },
   "dependencies": {
-    "@actions/core": "^1.11.1"
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "inversify": "^6.2.1",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^3.24.1",
+    "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
-    "@eslint/compat": "^1.2.5",
-    "@github/local-action": "^2.5.0",
-    "@jest/globals": "^29.7.0",
-    "@rollup/plugin-commonjs": "^28.0.1",
-    "@rollup/plugin-node-resolve": "^16.0.0",
-    "@rollup/plugin-typescript": "^12.1.1",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^20.17.14",
-    "@typescript-eslint/eslint-plugin": "^8.20.0",
-    "@typescript-eslint/parser": "^8.20.0",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-import-resolver-typescript": "^3.6.3",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jest": "^28.11.0",
-    "eslint-plugin-prettier": "^5.2.2",
-    "jest": "^29.7.0",
-    "make-coverage-badge": "^1.2.0",
-    "prettier": "^3.4.2",
-    "prettier-eslint": "^16.3.0",
-    "rollup": "^4.30.1",
-    "ts-jest": "^29.2.5",
-    "ts-jest-resolver": "^2.0.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "@ts-dev-tools/core": "^1.6.2",
+    "@vercel/ncc": "^0.38.1",
+    "eslint-plugin-github": "^5.0.1",
+    "eslint-plugin-jsonc": "^2.14.1",
+    "jest-mock-extended": "^4.0.0-beta1"
   },
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "*"
+  "eslintConfig": {
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint",
+      "jest"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:jest/recommended",
+      "prettier"
+    ],
+    "env": {
+      "es2021": true
+    },
+    "parserOptions": {
+      "ecmaFeatures": {
+        "jsx": true
+      },
+      "ecmaVersion": 12,
+      "sourceType": "module"
+    },
+    "settings": {
+      "jest": {
+        "version": "detect"
+      }
+    },
+    "ignorePatterns": [
+      "dist",
+      "node_modules"
+    ]
+  },
+  "prettier": {
+    "semi": true,
+    "printWidth": 100,
+    "trailingComma": "es5"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "eslint --fix"
+    ]
+  },
+  "importSort": {
+    ".js, .jsx, .ts, .tsx": {
+      "style": "module",
+      "parser": "typescript"
+    }
+  },
+  "tsDevTools": {
+    "version": "20220617100200-prettier-cache"
   }
 }

@@ -1,0 +1,45 @@
+name: Internal - Tests for action
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  TEST_ISSUE_NUMBER: "6" # This issue number should be valid
+
+jobs:
+  test-action-with-valid-issue:
+    runs-on: ubuntu-latest
+    name: Test with valid issue
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: get-issue-body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: process.env.TEST_ISSUE_NUMBER
+            });
+
+            core.setOutput('issue-body', issue.data.body);
+
+      - name: Parse Issue
+        id: parser
+        uses: issue-ops/parser@v4.0.0
+        with:
+          body: ${{ steps.get-issue-body.outputs.issue-body }}
+          issue-form-template: ../../__tests__/meetup-issue-template.yml
+
+      - name: Act
+        uses: ./
+        with:
+          issue-number: ${{ env.TEST_ISSUE_NUMBER }}
+          should-fix: false
+          issue-parsed-body: ${{ steps.parser.outputs.json }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
