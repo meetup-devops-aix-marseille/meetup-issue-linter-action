@@ -1,0 +1,17 @@
+{
+  "paths": {
+    "action": "action.yml",
+    "readme": "README.md"
+  },
+  "show_logo": true,
+  "versioning": {
+    "enabled": true,
+    "override": "",
+    "prefix": "",
+    "branch": "main"
+  },
+  "owner": "meetup-devops-aix-marseille",
+  "repo": "meetup-issue-linter-action",
+  "title_prefix": "GitHub Action: ",
+  "prettier": true
+}

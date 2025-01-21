@@ -1,23 +1,23 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
-
-# Add your action's branding here. This will appear on the GitHub Marketplace.
+name: "Meetup issue linter action"
+description: "This action lint the meetup issue for required fields and format"
+author: "Meetup DevOps Aix-Marseille"
 branding:
-  icon: heart
-  color: red
+  icon: check-circle
+  color: blue
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  issue-number:
+    description: "The issue number to lint."
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: Your output description here
+  issue-parsed-body:
+    description: "The parsed issue body. See <https://github.com/issue-ops/parser>."
+    required: true
+  should-fix:
+    description: "Whether to fix the issue or not."
+    required: true
+  github-token:
+    description: "The GitHub token with permissions to update the issue."
+    required: true
 
 runs:
   using: node20

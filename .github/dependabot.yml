@@ -2,29 +2,41 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    open-pull-requests-limit: 20
     schedule:
       interval: weekly
+      day: friday
+      time: "04:00"
     groups:
-      actions-minor:
-        update-types:
-          - minor
-          - patch
+      github-actions-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directories:
+      - "/test"
+      - "/"
+    open-pull-requests-limit: 20
+    schedule:
+      interval: weekly
+      day: friday
+      time: "04:00"
+    groups:
+      docker-dependencies:
+        patterns:
+          - "*"
 
   - package-ecosystem: npm
-    directory: /
+    directory: "/"
+    open-pull-requests-limit: 20
+    versioning-strategy: widen
     schedule:
       interval: weekly
-    ignore:
-      - dependency-name: '@types/node'
-        update-types:
-          - 'version-update:semver-major'
+      day: friday
+      time: "04:00"
     groups:
-      npm-development:
+      npm-actions-dependencies:
+        patterns:
+          - "@actions/*"
+      npm-dev-dependencies:
         dependency-type: development
-        update-types:
-          - minor
-          - patch
-      npm-production:
-        dependency-type: production
-        update-types:
-          - patch
