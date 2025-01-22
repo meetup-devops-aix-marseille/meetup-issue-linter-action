@@ -38,7 +38,7 @@ describe("HosterLinterAdapter", () => {
 
       // Act & Assert
       const expectedError = new LintError(["Hoster: Must not be empty"]);
-      await expect(() => hosterLinterAdapter.lint(invalidMeetupIssue, false)).rejects.toThrow(
+      await expect(() => hosterLinterAdapter.lint(invalidMeetupIssue, false)).rejects.toStrictEqual(
         expectedError
       );
     });
@@ -53,7 +53,7 @@ describe("HosterLinterAdapter", () => {
 
       // Act & Assert
       const expectedError = new LintError(["Hoster: Must have exactly one entry"]);
-      await expect(() => hosterLinterAdapter.lint(invalidMeetupIssue, false)).rejects.toThrow(
+      await expect(() => hosterLinterAdapter.lint(invalidMeetupIssue, false)).rejects.toStrictEqual(
         expectedError
       );
     });
@@ -67,10 +67,8 @@ describe("HosterLinterAdapter", () => {
       });
 
       // Act & Assert
-      const expectedError = new LintError([
-        "Hoster: Invalid enum value. Expected 'hoster 1' | 'hoster 2', received 'invalidHoster' at index 0",
-      ]);
-      await expect(() => hosterLinterAdapter.lint(invalidMeetupIssue, false)).rejects.toThrow(
+      const expectedError = new LintError(["Hoster: Must be an existing hoster at index 0"]);
+      await expect(() => hosterLinterAdapter.lint(invalidMeetupIssue, false)).rejects.toStrictEqual(
         expectedError
       );
     });

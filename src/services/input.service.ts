@@ -1,16 +1,11 @@
 import { inject, injectable } from "inversify";
 import { CoreService, CORE_SERVICE_IDENTIFIER } from "./core.service";
 
-export type Inputs = {
-  issueNumber: number;
-  shouldFix: boolean;
-  githubToken: string;
-};
-
 export enum InputNames {
   IssueNumber = "issue-number",
   IssueParsedBody = "issue-parsed-body",
   Hosters = "hosters",
+  FailOnError = "fail-on-error",
   ShouldFix = "should-fix",
   GithubToken = "github-token",
 }
@@ -61,6 +56,10 @@ export class InputService {
 
   getShouldFix(): boolean {
     return this.coreService.getBooleanInput(InputNames.ShouldFix);
+  }
+
+  getFailOnError() {
+    return this.coreService.getBooleanInput(InputNames.FailOnError);
   }
 
   getGithubToken(): string {

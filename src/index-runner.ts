@@ -4,6 +4,8 @@ import { LoggerService } from "./services/logger.service";
 import { container } from "./container";
 import { LinterService } from "./services/linter.service";
 import { MeetupIssueService } from "./services/meetup-issue.service";
+import { LintError } from "./services/linter/lint.error";
+import { CORE_SERVICE_IDENTIFIER, CoreService } from "./services/core.service";
 
 /**
  * The run function for the action.
@@ -15,6 +17,7 @@ export async function run(): Promise<void> {
     const inputService = container.get(InputService);
     const linterService = container.get(LinterService);
     const meetupIssueService = container.get(MeetupIssueService);
+    const coreService = container.get<CoreService>(CORE_SERVICE_IDENTIFIER);
 
     const issueNumber = inputService.getIssueNumber();
     loggerService.debug(`Issue number: ${issueNumber}`);
@@ -25,13 +28,29 @@ export async function run(): Promise<void> {
     const shouldFix = inputService.getShouldFix();
     loggerService.debug(`Should fix: ${shouldFix}`);
 
+    const failOnError = inputService.getFailOnError();
+    loggerService.debug(`Fail on error: ${failOnError}`);
+
     loggerService.info(`Start linting issue ${issueNumber}...`);
 
     const meetupIssue = await meetupIssueService.getMeetupIssue(issueNumber, IssueParsedBody);
 
-    await linterService.lint(meetupIssue, shouldFix);
+    try {
+      await linterService.lint(meetupIssue, shouldFix);
+      loggerService.info("Issue linted successfully.");
+    } catch (error) {
+      if (!(error instanceof LintError)) {
+        throw error;
+      }
 
-    loggerService.info("Issue linted successfully.");
+      coreService.setOutput("lint-issues", error.getMessages().join("\n"));
+
+      if (failOnError) {
+        throw error;
+      }
+
+      loggerService.info("Issue linted with issues.");
+    }
   } catch (error) {
     setFailed(`${error instanceof Error ? error : JSON.stringify(error)}`);
   }

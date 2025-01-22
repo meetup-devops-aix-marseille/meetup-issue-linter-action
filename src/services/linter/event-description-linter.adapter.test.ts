@@ -36,7 +36,7 @@ describe("EventDescriptionLinterAdapter", () => {
 
       await expect(
         eventDescriptionLinterAdapter.lint(invalidMeetupIssue, shouldFix)
-      ).rejects.toThrow(expectedError);
+      ).rejects.toStrictEqual(expectedError);
     });
   });
 

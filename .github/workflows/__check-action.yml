@@ -8,7 +8,8 @@ permissions:
   issues: write
 
 env:
-  TEST_ISSUE_NUMBER: "6" # This issue number should be valid
+  TEST_VALID_ISSUE_NUMBER: "6" # This issue number should be valid
+  TEST_INVALID_ISSUE_NUMBER: "11" # This issue number should be valid
 
 jobs:
   test-action-with-valid-issue:
@@ -24,7 +25,7 @@ jobs:
             const issue = await github.rest.issues.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: process.env.TEST_ISSUE_NUMBER
+              issue_number: process.env.TEST_VALID_ISSUE_NUMBER
             });
 
             core.setOutput('issue-body', issue.data.body);
@@ -37,10 +38,75 @@ jobs:
           issue-form-template: ../../__tests__/meetup-issue-template.yml
 
       - name: Act
+        id: act
         uses: ./
         with:
-          issue-number: ${{ env.TEST_ISSUE_NUMBER }}
+          issue-number: ${{ env.TEST_VALID_ISSUE_NUMBER }}
           issue-parsed-body: ${{ steps.parser.outputs.json }}
           hosters: '["Hoster Test One", "Hoster Test Two"]'
           should-fix: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Assert
+        run: |
+          if [[ "${{ steps.act.outputs.lint-issues }}" != "" ]]; then
+            echo "The action did not return an empty list of issues"
+            exit 1
+          fi
+
+  test-action-with-invalid-issue:
+    runs-on: ubuntu-latest
+    name: Test with invalid issue
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: get-issue-body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: process.env.TEST_INVALID_ISSUE_NUMBER
+            });
+
+            core.setOutput('issue-body', issue.data.body);
+
+      - name: Parse Issue
+        id: parser
+        uses: issue-ops/parser@v4.0.0
+        with:
+          body: ${{ steps.get-issue-body.outputs.issue-body }}
+          issue-form-template: ../../__tests__/meetup-issue-template.yml
+
+      - name: Act
+        id: act
+        uses: ./
+        with:
+          issue-number: ${{ env.TEST_INVALID_ISSUE_NUMBER }}
+          issue-parsed-body: ${{ steps.parser.outputs.json }}
+          hosters: '["Hoster Test One", "Hoster Test Two"]'
+          should-fix: false
+          fail-on-error: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Assert
+        run: |
+          LINT_ISSUES=$(cat <<EOF
+          ${{ steps.act.outputs.lint-issues }}
+          EOF
+          )
+
+          EXPECTED_LINT_ISSUES=$(cat <<EOF
+          Hoster: Must be an existing hoster at index 0
+          Event Description: Required
+          Agenda: Entry "- Wrong agenda entry" must follow the format: "- <speaker>: <talk_description>"
+          Meetup Link: Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789
+          Drive Link: Must be a valid Drive Link, e.g. https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j
+          EOF
+          )
+
+          if ! diff <(echo "${LINT_ISSUES}") <(echo "${EXPECTED_LINT_ISSUES}"); then
+            echo "The action did not return the expected list of issues"
+            exit 1
+          fi

@@ -123,6 +123,23 @@ describe("InputService", () => {
     });
   });
 
+  describe("getFailOnError", () => {
+    it("should return the failOnError value", () => {
+      coreServiceMock.getBooleanInput.mockImplementation((name: string) => {
+        if (name === InputNames.FailOnError) {
+          return true;
+        }
+
+        return false;
+      });
+
+      const result = service.getFailOnError();
+
+      expect(result).toBe(true);
+      expect(coreServiceMock.getBooleanInput).toHaveBeenCalledWith(InputNames.FailOnError);
+    });
+  });
+
   describe("getGithubToken", () => {
     it("should return the github token", () => {
       coreServiceMock.getInput.mockImplementation((name: string) => {

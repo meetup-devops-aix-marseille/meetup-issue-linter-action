@@ -32,12 +32,10 @@ describe("EventDateLinterAdapter", () => {
       const shouldFix = false;
 
       // Act & Assert
-
       const expectedError = new LintError(["Event Date: Invalid date"]);
-
-      await expect(eventDateLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
-        expectedError
-      );
+      await expect(
+        eventDateLinterAdapter.lint(invalidMeetupIssue, shouldFix)
+      ).rejects.toStrictEqual(expectedError);
     });
   });
 

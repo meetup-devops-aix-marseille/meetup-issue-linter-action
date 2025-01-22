@@ -34765,6 +34765,8 @@ const logger_service_1 = __nccwpck_require__(8187);
 const container_1 = __nccwpck_require__(6296);
 const linter_service_1 = __nccwpck_require__(5309);
 const meetup_issue_service_1 = __nccwpck_require__(9759);
+const lint_error_1 = __nccwpck_require__(4918);
+const core_service_1 = __nccwpck_require__(7872);
 /**
  * The run function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -34775,16 +34777,31 @@ async function run() {
         const inputService = container_1.container.get(input_service_1.InputService);
         const linterService = container_1.container.get(linter_service_1.LinterService);
         const meetupIssueService = container_1.container.get(meetup_issue_service_1.MeetupIssueService);
+        const coreService = container_1.container.get(core_service_1.CORE_SERVICE_IDENTIFIER);
         const issueNumber = inputService.getIssueNumber();
         loggerService.debug(`Issue number: ${issueNumber}`);
         const IssueParsedBody = inputService.getIssueParsedBody();
         loggerService.debug(`Parsed issue body: ${JSON.stringify(IssueParsedBody)}`);
         const shouldFix = inputService.getShouldFix();
         loggerService.debug(`Should fix: ${shouldFix}`);
+        const failOnError = inputService.getFailOnError();
+        loggerService.debug(`Fail on error: ${failOnError}`);
         loggerService.info(`Start linting issue ${issueNumber}...`);
         const meetupIssue = await meetupIssueService.getMeetupIssue(issueNumber, IssueParsedBody);
-        await linterService.lint(meetupIssue, shouldFix);
-        loggerService.info("Issue linted successfully.");
+        try {
+            await linterService.lint(meetupIssue, shouldFix);
+            loggerService.info("Issue linted successfully.");
+        }
+        catch (error) {
+            if (!(error instanceof lint_error_1.LintError)) {
+                throw error;
+            }
+            coreService.setOutput("lint-issues", error.getMessages().join("\n"));
+            if (failOnError) {
+                throw error;
+            }
+            loggerService.info("Issue linted with issues.");
+        }
     }
     catch (error) {
         (0, core_1.setFailed)(`${error instanceof Error ? error : JSON.stringify(error)}`);
@@ -34807,6 +34824,7 @@ exports.CORE_SERVICE_IDENTIFIER = Symbol("CoreService");
 exports.coreService = {
     getInput: core_1.getInput,
     getBooleanInput: core_1.getBooleanInput,
+    setOutput: core_1.setOutput,
     debug: core_1.debug,
     info: core_1.info,
     warning: core_1.warning,
@@ -34905,6 +34923,7 @@ var InputNames;
     InputNames["IssueNumber"] = "issue-number";
     InputNames["IssueParsedBody"] = "issue-parsed-body";
     InputNames["Hosters"] = "hosters";
+    InputNames["FailOnError"] = "fail-on-error";
     InputNames["ShouldFix"] = "should-fix";
     InputNames["GithubToken"] = "github-token";
 })(InputNames || (exports.InputNames = InputNames = {}));
@@ -34945,6 +34964,9 @@ let InputService = class InputService {
     getShouldFix() {
         return this.coreService.getBooleanInput(InputNames.ShouldFix);
     }
+    getFailOnError() {
+        return this.coreService.getBooleanInput(InputNames.FailOnError);
+    }
     getGithubToken() {
         return this.coreService.getInput(InputNames.GithubToken, {
             required: true,
@@ -34982,16 +35004,48 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LinterService = void 0;
 const inversify_1 = __nccwpck_require__(4871);
 const linter_adapter_1 = __nccwpck_require__(8120);
+const lint_error_1 = __nccwpck_require__(4918);
 let LinterService = class LinterService {
     linters;
     constructor(linters) {
-        // Sort linters by priority, lower first
+        // Sort linters by priority, lower first, group  by priority
         this.linters = linters.sort((a, b) => a.getPriority() - b.getPriority());
     }
     async lint(meetupIssue, shouldFix) {
-        let currentMeetupIssue = meetupIssue;
+        let lintedMeetupIssue = meetupIssue;
+        let previousPriority;
+        let aggregatedError;
         for (const linter of this.linters) {
-            currentMeetupIssue = await linter.lint(currentMeetupIssue, shouldFix);
+            this.ensureNoPendingErrors(previousPriority, linter.getPriority(), aggregatedError);
+            previousPriority = linter.getPriority();
+            const result = await this.runSingleLinter(linter, lintedMeetupIssue, shouldFix, aggregatedError);
+            lintedMeetupIssue = result.lintedIssue;
+            aggregatedError = result.aggregatedError;
+        }
+        if (aggregatedError) {
+            throw aggregatedError;
+        }
+    }
+    ensureNoPendingErrors(prevPriority, currentPriority, aggregatedError) {
+        if (prevPriority !== undefined && currentPriority > prevPriority && aggregatedError) {
+            throw aggregatedError;
+        }
+    }
+    async runSingleLinter(linter, meetupIssue, shouldFix, aggregatedError) {
+        try {
+            return {
+                lintedIssue: await linter.lint(meetupIssue, shouldFix),
+                aggregatedError: aggregatedError,
+            };
+        }
+        catch (error) {
+            if (error instanceof lint_error_1.LintError) {
+                return {
+                    lintedIssue: meetupIssue,
+                    aggregatedError: aggregatedError ? aggregatedError.merge(error) : error,
+                };
+            }
+            throw error;
         }
     }
 };
@@ -35314,7 +35368,9 @@ let HosterLinterAdapter = class HosterLinterAdapter extends abtract_zod_linter_a
         this.hosters = this.inputService.getHosters();
     }
     getValidator() {
-        return (0, zod_1.enum)(this.hosters)
+        return (0, zod_1.enum)(this.hosters, {
+            message: "Must be an existing hoster",
+        })
             .array()
             .min(1, {
             message: "Must not be empty",
@@ -35351,9 +35407,14 @@ class LintError extends Error {
     constructor(messages) {
         super(messages.join("; "));
         this.messages = messages;
+        this.name = "LintError";
+        Object.setPrototypeOf(this, new.target.prototype);
     }
     getMessages() {
         return this.messages;
+    }
+    merge(lintError) {
+        return new LintError([...this.messages, ...lintError.getMessages()]);
     }
 }
 exports.LintError = LintError;

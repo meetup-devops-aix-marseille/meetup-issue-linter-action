@@ -34,7 +34,7 @@ describe("AgendaLinterAdapter", () => {
       // Act & Assert
       const expectedError = new LintError(["Agenda: Must not be empty"]);
 
-      await expect(agendaLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
+      await expect(agendaLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toStrictEqual(
         expectedError
       );
     });
@@ -53,7 +53,7 @@ describe("AgendaLinterAdapter", () => {
         'Agenda: Entry "wrong-line" must follow the format: "- <speaker>: <talk_description>"',
       ]);
 
-      await expect(agendaLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
+      await expect(agendaLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toStrictEqual(
         expectedError
       );
     });

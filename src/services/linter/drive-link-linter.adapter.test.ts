@@ -36,9 +36,9 @@ describe("DriveLinkLinterAdapter", () => {
         "Drive Link: Invalid url; Must be a valid Drive Link, e.g. https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j",
       ]);
 
-      await expect(driveLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
-        expectedError
-      );
+      await expect(
+        driveLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)
+      ).rejects.toStrictEqual(expectedError);
     });
 
     it("should throw a LintError if the Drive Link is not a Drive Link", async () => {
@@ -55,9 +55,9 @@ describe("DriveLinkLinterAdapter", () => {
         "Drive Link: Must be a valid Drive Link, e.g. https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j",
       ]);
 
-      await expect(driveLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
-        expectedError
-      );
+      await expect(
+        driveLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)
+      ).rejects.toStrictEqual(expectedError);
     });
   });
 
