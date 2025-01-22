@@ -28,8 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: bitflight-devops/github-action-readme-generator@v1.8.0
         with:
-          owner: hoverkraft-tech
-          repo: compose-action
+          version_prefix: ""
 
       - uses: actions/create-github-app-token@v1
         id: generate-token
