@@ -34730,6 +34730,7 @@ const event_description_linter_adapter_1 = __nccwpck_require__(4006);
 const hoster_linter_adapter_1 = __nccwpck_require__(6856);
 const agenda_linter_adapter_1 = __nccwpck_require__(5447);
 const meetup_link_linter_adapter_1 = __nccwpck_require__(4516);
+const drive_link_linter_adapter_1 = __nccwpck_require__(526);
 const container = new inversify_1.Container();
 exports.container = container;
 container.bind(core_service_1.CORE_SERVICE_IDENTIFIER).toConstantValue(core_service_1.coreService);
@@ -34746,6 +34747,7 @@ container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(hoster_linter_adap
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(event_description_linter_adapter_1.EventDescriptionLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(agenda_linter_adapter_1.AgendaLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(meetup_link_linter_adapter_1.MeetupLinkLinterAdapter);
+container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(drive_link_linter_adapter_1.DriveLinkLinterAdapter);
 
 
 /***/ }),
@@ -35130,6 +35132,46 @@ exports.AgendaLinterAdapter = AgendaLinterAdapter;
 exports.AgendaLinterAdapter = AgendaLinterAdapter = AgendaLinterAdapter_1 = __decorate([
     (0, inversify_1.injectable)()
 ], AgendaLinterAdapter);
+
+
+/***/ }),
+
+/***/ 526:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var DriveLinkLinterAdapter_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DriveLinkLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
+let DriveLinkLinterAdapter = class DriveLinkLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    static { DriveLinkLinterAdapter_1 = this; }
+    static DRIVE_LINK_REGEX = /^https:\/\/drive\.google\.com\/drive\/folders\/[a-zA-Z0-9-_]+$/;
+    getValidator() {
+        return (0, zod_1.string)().url().regex(DriveLinkLinterAdapter_1.DRIVE_LINK_REGEX, {
+            message: "Must be a valid Drive Link, e.g. https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j",
+        });
+    }
+    getFieldName() {
+        return "drive_link";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.DriveLinkLinterAdapter = DriveLinkLinterAdapter;
+exports.DriveLinkLinterAdapter = DriveLinkLinterAdapter = DriveLinkLinterAdapter_1 = __decorate([
+    (0, inversify_1.injectable)()
+], DriveLinkLinterAdapter);
 
 
 /***/ }),
