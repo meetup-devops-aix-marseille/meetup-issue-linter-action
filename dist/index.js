@@ -34881,6 +34881,14 @@ let GithubService = class GithubService {
             title: title,
         });
     }
+    async updateIssueLabels(issueNumber, labels) {
+        await this.getOctokit().rest.issues.update({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            issue_number: issueNumber,
+            labels: labels,
+        });
+    }
     getOctokit() {
         if (this.octokit) {
             return this.octokit;
@@ -35627,6 +35635,9 @@ let MeetupIssueService = class MeetupIssueService {
     }
     async updateMeetupIssueTitle(meetupIssue) {
         await this.githubService.updateIssueTitle(meetupIssue.number, meetupIssue.title);
+    }
+    async updateMeetupIssueLabels(meetupIssue) {
+        await this.githubService.updateIssueLabels(meetupIssue.number, meetupIssue.labels);
     }
 };
 exports.MeetupIssueService = MeetupIssueService;

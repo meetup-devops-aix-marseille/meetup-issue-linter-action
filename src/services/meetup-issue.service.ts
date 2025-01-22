@@ -54,4 +54,8 @@ export class MeetupIssueService {
   async updateMeetupIssueTitle(meetupIssue: MeetupIssue): Promise<void> {
     await this.githubService.updateIssueTitle(meetupIssue.number, meetupIssue.title);
   }
+
+  async updateMeetupIssueLabels(meetupIssue: MeetupIssue): Promise<void> {
+    await this.githubService.updateIssueLabels(meetupIssue.number, meetupIssue.labels);
+  }
 }

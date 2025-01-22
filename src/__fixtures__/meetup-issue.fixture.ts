@@ -5,7 +5,7 @@ export function getMeetupIssueFixture(override?: Partial<MeetupIssue>): MeetupIs
   return {
     number: 1,
     title: "[Meetup] - 2021-12-31 - Meetup Event",
-    labels: [],
+    labels: ["meetup"],
     body: {
       event_date: "2021-12-31",
       event_title: "Meetup Event",
