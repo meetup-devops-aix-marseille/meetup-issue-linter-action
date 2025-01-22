@@ -9,6 +9,8 @@ import { LINTER_ADAPTER_IDENTIFIER, LinterAdapter } from "./services/linter/lint
 import { MeetupIssueService } from "./services/meetup-issue.service";
 import { EventTitleLinterAdapter } from "./services/linter/event-title-linter.adapter";
 import { TitleLinterAdapter } from "./services/linter/title-linter.adapter";
+import { EventDescriptionLinterAdapter } from "./services/linter/event-description-linter.adapter";
+import { HosterLinterAdapter } from "./services/linter/hoster-linter.adapter";
 
 const container = new Container();
 
@@ -24,5 +26,7 @@ container.bind(MeetupIssueService).toSelf();
 container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(EventDateLinterAdapter);
 container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(EventTitleLinterAdapter);
 container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(TitleLinterAdapter);
+container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(HosterLinterAdapter);
+container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(EventDescriptionLinterAdapter);
 
 export { container };

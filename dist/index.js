@@ -34726,6 +34726,8 @@ const linter_adapter_1 = __nccwpck_require__(8120);
 const meetup_issue_service_1 = __nccwpck_require__(9759);
 const event_title_linter_adapter_1 = __nccwpck_require__(9630);
 const title_linter_adapter_1 = __nccwpck_require__(7853);
+const event_description_linter_adapter_1 = __nccwpck_require__(4006);
+const hoster_linter_adapter_1 = __nccwpck_require__(6856);
 const container = new inversify_1.Container();
 exports.container = container;
 container.bind(core_service_1.CORE_SERVICE_IDENTIFIER).toConstantValue(core_service_1.coreService);
@@ -34738,6 +34740,8 @@ container.bind(meetup_issue_service_1.MeetupIssueService).toSelf();
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(event_date_linter_adapter_1.EventDateLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(event_title_linter_adapter_1.EventTitleLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(title_linter_adapter_1.TitleLinterAdapter);
+container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(hoster_linter_adapter_1.HosterLinterAdapter);
+container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(event_description_linter_adapter_1.EventDescriptionLinterAdapter);
 
 
 /***/ }),
@@ -35067,6 +35071,43 @@ exports.EventDateLinterAdapter = EventDateLinterAdapter = __decorate([
 
 /***/ }),
 
+/***/ 4006:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EventDescriptionLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
+let EventDescriptionLinterAdapter = class EventDescriptionLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    getValidator() {
+        return (0, zod_1.string)().nonempty({
+            message: "Must not be empty",
+        });
+    }
+    getFieldName() {
+        return "event_description";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.EventDescriptionLinterAdapter = EventDescriptionLinterAdapter;
+exports.EventDescriptionLinterAdapter = EventDescriptionLinterAdapter = __decorate([
+    (0, inversify_1.injectable)()
+], EventDescriptionLinterAdapter);
+
+
+/***/ }),
+
 /***/ 9630:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -35100,6 +35141,60 @@ exports.EventTitleLinterAdapter = EventTitleLinterAdapter;
 exports.EventTitleLinterAdapter = EventTitleLinterAdapter = __decorate([
     (0, inversify_1.injectable)()
 ], EventTitleLinterAdapter);
+
+
+/***/ }),
+
+/***/ 6856:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HosterLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
+const input_service_1 = __nccwpck_require__(2301);
+let HosterLinterAdapter = class HosterLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    inputService;
+    hosters;
+    constructor(inputService) {
+        super();
+        this.inputService = inputService;
+        this.hosters = this.inputService.getHosters();
+    }
+    getValidator() {
+        return (0, zod_1.enum)(this.hosters)
+            .array()
+            .min(1, {
+            message: "Must not be empty",
+        })
+            .max(1, {
+            message: "Must have exactly one entry",
+        });
+    }
+    getFieldName() {
+        return "hoster";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.HosterLinterAdapter = HosterLinterAdapter;
+exports.HosterLinterAdapter = HosterLinterAdapter = __decorate([
+    (0, inversify_1.injectable)(),
+    __metadata("design:paramtypes", [input_service_1.InputService])
+], HosterLinterAdapter);
 
 
 /***/ }),
@@ -35269,6 +35364,7 @@ exports.MEETUP_ISSUE_BODY_FIELD_LABELS = {
     event_date: "Event Date",
     event_title: "Event Title",
     hoster: "Hoster",
+    event_description: "Event Description",
     agenda: "Agenda",
     meetup_link: "Meetup Link",
     drive_link: "Drive Link",

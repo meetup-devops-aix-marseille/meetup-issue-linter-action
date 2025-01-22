@@ -10,6 +10,7 @@ export function getMeetupIssueFixture(override?: Partial<MeetupIssue>): MeetupIs
       event_date: "2021-12-31",
       event_title: "Meetup Event",
       hoster: [getHostersFixture()[0]],
+      event_description: "Description",
       ...(override?.body || {}),
     },
     ...(override || {}),

@@ -8,6 +8,7 @@ export type MeetupIssueBody = {
   event_date?: string;
   event_title?: string;
   hoster?: string[];
+  event_description?: string;
   agenda?: string;
   meetup_link?: string;
   drive_link?: string;
@@ -24,6 +25,7 @@ export const MEETUP_ISSUE_BODY_FIELD_LABELS: Record<MeetupIssueBodyFields, strin
   event_date: "Event Date",
   event_title: "Event Title",
   hoster: "Hoster",
+  event_description: "Event Description",
   agenda: "Agenda",
   meetup_link: "Meetup Link",
   drive_link: "Drive Link",
