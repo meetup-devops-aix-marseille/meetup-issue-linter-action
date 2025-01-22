@@ -12,11 +12,7 @@
 <!-- end title -->
 <!-- start badges -->
 
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fcompose-action%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/hoverkraft-tech/compose-action?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a>
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fcompose-action%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/hoverkraft-tech/compose-action?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a>
-<img src="https://img.shields.io/github/last-commit/hoverkraft-tech/compose-action?logo=github&style=flat-square" alt="Commit" />
-<a href="https%3A%2F%2Fgithub.com%2Fhoverkraft-tech%2Fcompose-action%2Fissues"><img src="https://img.shields.io/github/issues/hoverkraft-tech/compose-action?logo=github&style=flat-square" alt="Open%20Issues" /></a>
-<img src="https://img.shields.io/github/downloads/hoverkraft-tech/compose-action/total?logo=github&style=flat-square" alt="Downloads" />
+<a href="https%3A%2F%2Fgithub.com%2F%2F%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release//?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2F%2F%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date//?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit//?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2F%2F%2Fissues"><img src="https://img.shields.io/github/issues//?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads///total?logo=github&style=flat-square" alt="Downloads" />
 
 <!-- end badges -->
 </div>
@@ -30,7 +26,7 @@ This action lint the meetup issue for required fields and format
 <!-- start usage -->
 
 ```yaml
-- uses: hoverkraft-tech/compose-action@v0.0.0
+- uses: /@0.0.0
   with:
     # Description: The issue number to lint.
     #
@@ -39,6 +35,10 @@ This action lint the meetup issue for required fields and format
     # Description: The parsed issue body. See <https://github.com/issue-ops/parser>.
     #
     issue-parsed-body: ""
+
+    # Description: JSON List of hosters to update. Example: ['Hoster 1', 'Hoster 2']
+    #
+    hosters: ""
 
     # Description: Whether to fix the issue or not.
     #
@@ -56,6 +56,7 @@ This action lint the meetup issue for required fields and format
 | ------------------------------ | ----------------------------------------------------------------- | ----------- | ------------ |
 | <code>issue-number</code>      | The issue number to lint.                                         |             | **true**     |
 | <code>issue-parsed-body</code> | The parsed issue body. See <https://github.com/issue-ops/parser>. |             | **true**     |
+| <code>hosters</code>           | JSON List of hosters to update. Example: ['Hoster 1', 'Hoster 2'] |             | **true**     |
 | <code>should-fix</code>        | Whether to fix the issue or not.                                  |             | **true**     |
 | <code>github-token</code>      | The GitHub token with permissions to update the issue.            |             | **true**     |
 
