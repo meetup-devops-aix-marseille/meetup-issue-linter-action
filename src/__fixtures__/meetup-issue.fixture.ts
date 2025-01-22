@@ -12,6 +12,7 @@ export function getMeetupIssueFixture(override?: Partial<MeetupIssue>): MeetupIs
       hoster: [getHostersFixture()[0]],
       event_description: "Description",
       agenda: "- Speaker One: Talk description One\n- Speaker Two: Talk description Two",
+      meetup_link: "https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
       ...(override?.body ?? {}),
     },
     ...(override ?? {}),
