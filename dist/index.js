@@ -34729,6 +34729,7 @@ const title_linter_adapter_1 = __nccwpck_require__(7853);
 const event_description_linter_adapter_1 = __nccwpck_require__(4006);
 const hoster_linter_adapter_1 = __nccwpck_require__(6856);
 const agenda_linter_adapter_1 = __nccwpck_require__(5447);
+const meetup_link_linter_adapter_1 = __nccwpck_require__(4516);
 const container = new inversify_1.Container();
 exports.container = container;
 container.bind(core_service_1.CORE_SERVICE_IDENTIFIER).toConstantValue(core_service_1.coreService);
@@ -34744,6 +34745,7 @@ container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(title_linter_adapt
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(hoster_linter_adapter_1.HosterLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(event_description_linter_adapter_1.EventDescriptionLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(agenda_linter_adapter_1.AgendaLinterAdapter);
+container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(meetup_link_linter_adapter_1.MeetupLinkLinterAdapter);
 
 
 /***/ }),
@@ -35325,6 +35327,46 @@ exports.LintError = LintError;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LINTER_ADAPTER_IDENTIFIER = void 0;
 exports.LINTER_ADAPTER_IDENTIFIER = Symbol("LinterAdapter");
+
+
+/***/ }),
+
+/***/ 4516:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var MeetupLinkLinterAdapter_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MeetupLinkLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
+let MeetupLinkLinterAdapter = class MeetupLinkLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    static { MeetupLinkLinterAdapter_1 = this; }
+    static MEETUP_LINK_REGEX = /^https:\/\/www\.meetup\.com\/fr-FR\/devops-aix-marseille\/events\/[0-9]+$/;
+    getValidator() {
+        return (0, zod_1.string)().url().regex(MeetupLinkLinterAdapter_1.MEETUP_LINK_REGEX, {
+            message: "Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
+        });
+    }
+    getFieldName() {
+        return "meetup_link";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.MeetupLinkLinterAdapter = MeetupLinkLinterAdapter;
+exports.MeetupLinkLinterAdapter = MeetupLinkLinterAdapter = MeetupLinkLinterAdapter_1 = __decorate([
+    (0, inversify_1.injectable)()
+], MeetupLinkLinterAdapter);
 
 
 /***/ }),

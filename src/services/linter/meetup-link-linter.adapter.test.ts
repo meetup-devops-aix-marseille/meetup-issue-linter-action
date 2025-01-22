@@ -1,0 +1,71 @@
+import { MeetupLinkLinterAdapter } from "./meetup-link-linter.adapter";
+import { LintError } from "./lint.error";
+import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue.fixture";
+
+describe("MeetupLinkLinterAdapter", () => {
+  let meetupLinkLinterAdapter: MeetupLinkLinterAdapter;
+
+  beforeEach(() => {
+    meetupLinkLinterAdapter = new MeetupLinkLinterAdapter();
+  });
+
+  describe("lint", () => {
+    it("should return the meetup issue if the Meetup link is valid", async () => {
+      // Arrange
+      const meetupIssue = getMeetupIssueFixture();
+      const shouldFix = false;
+
+      // Act
+      const result = await meetupLinkLinterAdapter.lint(meetupIssue, shouldFix);
+
+      // Assert
+      expect(result).toEqual(meetupIssue);
+    });
+
+    it("should throw a LintError if the Meetup link is invalid", async () => {
+      // Arrange
+      const invalidMeetupIssue = getMeetupIssueFixture({
+        body: {
+          meetup_link: "invalid-link",
+        },
+      });
+      const shouldFix = false;
+
+      // Act & Assert
+      const expectedError = new LintError([
+        "Meetup Link: Invalid url; Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
+      ]);
+
+      await expect(meetupLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
+        expectedError
+      );
+    });
+
+    it("should throw a LintError if the Meetup link is not a Meetup link", async () => {
+      // Arrange
+      const invalidMeetupIssue = getMeetupIssueFixture({
+        body: {
+          meetup_link: "https://www.google.com",
+        },
+      });
+      const shouldFix = false;
+
+      // Act & Assert
+      const expectedError = new LintError([
+        "Meetup Link: Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
+      ]);
+
+      await expect(meetupLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
+        expectedError
+      );
+    });
+  });
+
+  describe("getPriority", () => {
+    it("should return priority as 0", () => {
+      const priority = meetupLinkLinterAdapter.getPriority();
+
+      expect(priority).toBe(0);
+    });
+  });
+});
