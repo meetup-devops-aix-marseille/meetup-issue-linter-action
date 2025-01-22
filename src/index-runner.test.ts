@@ -7,6 +7,8 @@ import { container } from "./container";
 import { LinterService } from "./services/linter.service";
 import { MeetupIssueService } from "./services/meetup-issue.service";
 import { getMeetupIssueFixture } from "./__fixtures__/meetup-issue.fixture";
+import { CORE_SERVICE_IDENTIFIER, CoreService } from "./services/core.service";
+import { LintError } from "./services/linter/lint.error";
 
 describe("run", () => {
   let setFailedMock: jest.SpiedFunction<typeof core.setFailed>;
@@ -14,6 +16,7 @@ describe("run", () => {
   let loggerServiceMock: MockProxy<LoggerService>;
   let meetupIssueServiceMock: MockProxy<MeetupIssueService>;
   let linterServiceMock: MockProxy<LinterService>;
+  let coreServiceMock: MockProxy<CoreService>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -23,14 +26,16 @@ describe("run", () => {
     loggerServiceMock = mock<LoggerService>();
     meetupIssueServiceMock = mock<MeetupIssueService>();
     linterServiceMock = mock<LinterService>();
+    coreServiceMock = mock<CoreService>();
 
     container.rebind(InputService).toConstantValue(inputServiceMock);
     container.rebind(LoggerService).toConstantValue(loggerServiceMock);
     container.rebind(MeetupIssueService).toConstantValue(meetupIssueServiceMock);
     container.rebind(LinterService).toConstantValue(linterServiceMock);
+    container.rebind<CoreService>(CORE_SERVICE_IDENTIFIER).toConstantValue(coreServiceMock);
   });
 
-  it("should install docker compose with specified version", async () => {
+  it("should lint given issue", async () => {
     // Arrange
     inputServiceMock.getIssueNumber.mockReturnValue(1);
     inputServiceMock.getShouldFix.mockReturnValue(true);
@@ -49,10 +54,41 @@ describe("run", () => {
 
     expect(loggerServiceMock.info).toHaveBeenCalledWith("Issue linted successfully.");
 
+    expect(coreServiceMock.setOutput).not.toHaveBeenCalled();
+
     expect(setFailedMock).not.toHaveBeenCalled();
   });
 
-  it("should handle errors and call setFailed", async () => {
+  it("should handle lint errors", async () => {
+    // Arrange
+    inputServiceMock.getIssueNumber.mockReturnValue(1);
+    inputServiceMock.getShouldFix.mockReturnValue(true);
+    inputServiceMock.getFailOnError.mockReturnValue(false);
+
+    const meetupIssue = getMeetupIssueFixture();
+    meetupIssueServiceMock.getMeetupIssue.mockResolvedValue(meetupIssue);
+
+    const error = new LintError(["Test error One", "Test error Two"]);
+    linterServiceMock.lint.mockRejectedValue(error);
+
+    // Act
+    await indexRunner.run();
+
+    // Assert
+    expect(loggerServiceMock.debug).toHaveBeenCalledWith("Issue number: 1");
+    expect(loggerServiceMock.info).toHaveBeenCalledWith("Start linting issue 1...");
+
+    expect(linterServiceMock.lint).toHaveBeenCalledWith(meetupIssue, true);
+
+    expect(coreServiceMock.setOutput).toHaveBeenCalledWith(
+      "lint-issues",
+      "Test error One\nTest error Two"
+    );
+
+    expect(setFailedMock).not.toHaveBeenCalled();
+  });
+
+  it("should handle unexpected error and call setFailed", async () => {
     // Arrange
     inputServiceMock.getIssueNumber.mockReturnValue(1);
 
@@ -66,7 +102,7 @@ describe("run", () => {
     expect(setFailedMock).toHaveBeenCalledWith("Error: Test error");
   });
 
-  it("should handle unknown errors and call setFailed", async () => {
+  it("should handle unknown error and call setFailed", async () => {
     // Arrange
     inputServiceMock.getIssueNumber.mockReturnValue(1);
 

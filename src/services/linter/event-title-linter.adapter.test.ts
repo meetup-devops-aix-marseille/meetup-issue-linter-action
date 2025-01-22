@@ -34,9 +34,9 @@ describe("EventTitleLinterAdapter", () => {
       // Act & Assert
       const expectedError = new LintError(["Event Title: Must not be empty"]);
 
-      await expect(eventTitleLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
-        expectedError
-      );
+      await expect(
+        eventTitleLinterAdapter.lint(invalidMeetupIssue, shouldFix)
+      ).rejects.toStrictEqual(expectedError);
     });
   });
 

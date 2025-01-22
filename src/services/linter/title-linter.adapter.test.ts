@@ -2,6 +2,7 @@ import { mock, MockProxy } from "jest-mock-extended";
 import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue.fixture";
 import { MeetupIssueService } from "../meetup-issue.service";
 import { TitleLinterAdapter } from "./title-linter.adapter";
+import { LintError } from "./lint.error";
 
 describe("TitleLinterAdapter - lint", () => {
   let meetupIssueServiceMock: MockProxy<MeetupIssueService>;
@@ -26,9 +27,11 @@ describe("TitleLinterAdapter - lint", () => {
         title: "Wrong Title",
       });
 
-      await expect(adapter.lint(invalidMeetupIssue, false)).rejects.toThrow(
-        'Title: Invalid, expected "[Meetup] - 2021-12-31 - Meetup Event"'
-      );
+      const expectedError = new LintError([
+        'Title: Invalid, expected "[Meetup] - 2021-12-31 - Meetup Event"',
+      ]);
+
+      await expect(adapter.lint(invalidMeetupIssue, false)).rejects.toStrictEqual(expectedError);
       expect(meetupIssueServiceMock.updateMeetupIssueTitle).not.toHaveBeenCalled();
     });
 
@@ -51,9 +54,9 @@ describe("TitleLinterAdapter - lint", () => {
         },
       });
 
-      await expect(adapter.lint(invalidMeetupIssue, false)).rejects.toThrow(
-        "Event Date is required to lint the title"
-      );
+      const expectedError = new Error("Event Date is required to lint the title");
+
+      await expect(adapter.lint(invalidMeetupIssue, false)).rejects.toStrictEqual(expectedError);
     });
 
     it("should throw an error if there is no event_title", async () => {
@@ -64,9 +67,8 @@ describe("TitleLinterAdapter - lint", () => {
         },
       });
 
-      await expect(adapter.lint(invalidMeetupIssue, false)).rejects.toThrow(
-        "Event Title is required to lint the title"
-      );
+      const expectedError = new Error("Event Title is required to lint the title");
+      await expect(adapter.lint(invalidMeetupIssue, false)).rejects.toStrictEqual(expectedError);
     });
   });
 

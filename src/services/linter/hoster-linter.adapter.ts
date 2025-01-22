@@ -14,7 +14,9 @@ export class HosterLinterAdapter extends AbstractZodLinterAdapter {
   }
 
   protected getValidator() {
-    return zodEnum(this.hosters)
+    return zodEnum(this.hosters, {
+      message: "Must be an existing hoster",
+    })
       .array()
       .min(1, {
         message: "Must not be empty",

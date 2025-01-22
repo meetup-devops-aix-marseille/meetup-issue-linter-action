@@ -36,9 +36,9 @@ describe("MeetupLinkLinterAdapter", () => {
         "Meetup Link: Invalid url; Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
       ]);
 
-      await expect(meetupLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
-        expectedError
-      );
+      await expect(
+        meetupLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)
+      ).rejects.toStrictEqual(expectedError);
     });
 
     it("should throw a LintError if the Meetup link is not a Meetup link", async () => {
@@ -55,9 +55,9 @@ describe("MeetupLinkLinterAdapter", () => {
         "Meetup Link: Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
       ]);
 
-      await expect(meetupLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
-        expectedError
-      );
+      await expect(
+        meetupLinkLinterAdapter.lint(invalidMeetupIssue, shouldFix)
+      ).rejects.toStrictEqual(expectedError);
     });
   });
 
