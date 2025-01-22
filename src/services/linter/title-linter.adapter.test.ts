@@ -1,5 +1,5 @@
 import { mock, MockProxy } from "jest-mock-extended";
-import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue";
+import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue.fixture";
 import { MeetupIssueService } from "../meetup-issue.service";
 import { TitleLinterAdapter } from "./title-linter.adapter";
 

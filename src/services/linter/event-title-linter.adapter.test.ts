@@ -1,6 +1,6 @@
 import { EventTitleLinterAdapter } from "./event-title-linter.adapter";
 import { LintError } from "./lint.error";
-import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue";
+import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue.fixture";
 
 describe("EventTitleLinterAdapter", () => {
   let eventTitleLinterAdapter: EventTitleLinterAdapter;
@@ -9,38 +9,42 @@ describe("EventTitleLinterAdapter", () => {
     eventTitleLinterAdapter = new EventTitleLinterAdapter();
   });
 
-  it("should return the meetup issue if the event title is valid", async () => {
-    // Arrange
-    const meetupIssue = getMeetupIssueFixture();
-    const shouldFix = false;
+  describe("lint", () => {
+    it("should return the meetup issue if the event title is valid", async () => {
+      // Arrange
+      const meetupIssue = getMeetupIssueFixture();
+      const shouldFix = false;
 
-    // Act
-    const result = await eventTitleLinterAdapter.lint(meetupIssue, shouldFix);
+      // Act
+      const result = await eventTitleLinterAdapter.lint(meetupIssue, shouldFix);
 
-    // Assert
-    expect(result).toEqual(meetupIssue);
-  });
-
-  it("should throw a LintError if the event title is invalid", async () => {
-    // Arrange
-    const invalidMeetupIssue = getMeetupIssueFixture({
-      body: {
-        event_title: "",
-      },
+      // Assert
+      expect(result).toEqual(meetupIssue);
     });
-    const shouldFix = false;
 
-    // Act & Assert
-    const expectedError = new LintError(["Event Title: Must not be empty"]);
+    it("should throw a LintError if the event title is invalid", async () => {
+      // Arrange
+      const invalidMeetupIssue = getMeetupIssueFixture({
+        body: {
+          event_title: "",
+        },
+      });
+      const shouldFix = false;
 
-    await expect(eventTitleLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
-      expectedError
-    );
+      // Act & Assert
+      const expectedError = new LintError(["Event Title: Must not be empty"]);
+
+      await expect(eventTitleLinterAdapter.lint(invalidMeetupIssue, shouldFix)).rejects.toThrow(
+        expectedError
+      );
+    });
   });
 
-  it("should return priority as 0", () => {
-    const priority = eventTitleLinterAdapter.getPriority();
+  describe("getPriority", () => {
+    it("should return priority as 0", () => {
+      const priority = eventTitleLinterAdapter.getPriority();
 
-    expect(priority).toBe(0);
+      expect(priority).toBe(0);
+    });
   });
 });

@@ -32,14 +32,21 @@ export abstract class AbstractZodLinterAdapter<
 
     const validationError = fromError(result.error, {});
 
-    const fieldLabel = MEETUP_ISSUE_BODY_FIELD_LABELS[fieldName];
-
     const errors = validationError
       .toString()
-      .replace(`Validation error: `, `${fieldLabel}: `)
-      .split("\n");
+      .replace(`Validation error: `, ``)
+      .split("\n")
+      .map((error) => this.getLintErrorMessage(error))
+      .filter(Boolean);
 
     throw new LintError(errors);
+  }
+
+  protected getLintErrorMessage(message: string): string {
+    const fieldName = this.getFieldName();
+    const fieldLabel = MEETUP_ISSUE_BODY_FIELD_LABELS[fieldName];
+
+    return `${fieldLabel}: ${message.trim()}`;
   }
 
   protected abstract getFieldName(): MeetupIssueBodyField;

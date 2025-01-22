@@ -34728,6 +34728,7 @@ const event_title_linter_adapter_1 = __nccwpck_require__(9630);
 const title_linter_adapter_1 = __nccwpck_require__(7853);
 const event_description_linter_adapter_1 = __nccwpck_require__(4006);
 const hoster_linter_adapter_1 = __nccwpck_require__(6856);
+const agenda_linter_adapter_1 = __nccwpck_require__(5447);
 const container = new inversify_1.Container();
 exports.container = container;
 container.bind(core_service_1.CORE_SERVICE_IDENTIFIER).toConstantValue(core_service_1.coreService);
@@ -34742,6 +34743,7 @@ container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(event_title_linter
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(title_linter_adapter_1.TitleLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(hoster_linter_adapter_1.HosterLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(event_description_linter_adapter_1.EventDescriptionLinterAdapter);
+container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(agenda_linter_adapter_1.AgendaLinterAdapter);
 
 
 /***/ }),
@@ -35023,15 +35025,109 @@ class AbstractZodLinterAdapter {
             return meetupIssue;
         }
         const validationError = (0, zod_validation_error_1.fromError)(result.error, {});
-        const fieldLabel = meetup_issue_service_1.MEETUP_ISSUE_BODY_FIELD_LABELS[fieldName];
         const errors = validationError
             .toString()
-            .replace(`Validation error: `, `${fieldLabel}: `)
-            .split("\n");
+            .replace(`Validation error: `, ``)
+            .split("\n")
+            .map((error) => this.getLintErrorMessage(error))
+            .filter(Boolean);
         throw new lint_error_1.LintError(errors);
+    }
+    getLintErrorMessage(message) {
+        const fieldName = this.getFieldName();
+        const fieldLabel = meetup_issue_service_1.MEETUP_ISSUE_BODY_FIELD_LABELS[fieldName];
+        return `${fieldLabel}: ${message.trim()}`;
     }
 }
 exports.AbstractZodLinterAdapter = AbstractZodLinterAdapter;
+
+
+/***/ }),
+
+/***/ 5447:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var AgendaLinterAdapter_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AgendaLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
+const lint_error_1 = __nccwpck_require__(4918);
+let AgendaLinterAdapter = class AgendaLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    static { AgendaLinterAdapter_1 = this; }
+    static AGENDA_LINE_REGEX = /^- (.+): (.+)$/;
+    async lint(meetupIssue, shouldFix) {
+        const result = await super.lint(meetupIssue, shouldFix);
+        const agenda = result.body[this.getFieldName()];
+        // Parse agenda lines
+        const agendaLines = agenda.split("\n");
+        const agendaEntries = [];
+        const lintErrors = [];
+        for (const agendaLine of agendaLines) {
+            try {
+                const agendaEntry = this.lintAgendaLine(agendaLine);
+                if (agendaEntry) {
+                    agendaEntries.push(agendaEntry);
+                }
+            }
+            catch (error) {
+                if (error instanceof lint_error_1.LintError) {
+                    lintErrors.push(...error.getMessages());
+                }
+                else {
+                    throw error;
+                }
+            }
+        }
+        if (lintErrors.length) {
+            throw new lint_error_1.LintError(lintErrors);
+        }
+        if (!agendaEntries.length) {
+            throw new lint_error_1.LintError([this.getLintErrorMessage("Must contain at least one entry")]);
+        }
+        return result;
+    }
+    lintAgendaLine(agendaLine) {
+        if (agendaLine.trim() === "") {
+            return;
+        }
+        const matches = agendaLine.match(AgendaLinterAdapter_1.AGENDA_LINE_REGEX);
+        if (matches === null) {
+            throw new lint_error_1.LintError([
+                this.getLintErrorMessage(`Entry "${agendaLine}" must follow the format: "- <speaker>: <talk_description>"`),
+            ]);
+        }
+        const [, speaker, talkDescription] = matches;
+        return {
+            speaker: speaker.trim(),
+            talkDescription: talkDescription.trim(),
+        };
+    }
+    getValidator() {
+        return (0, zod_1.string)().nonempty({
+            message: "Must not be empty",
+        });
+    }
+    getFieldName() {
+        return "agenda";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.AgendaLinterAdapter = AgendaLinterAdapter;
+exports.AgendaLinterAdapter = AgendaLinterAdapter = AgendaLinterAdapter_1 = __decorate([
+    (0, inversify_1.injectable)()
+], AgendaLinterAdapter);
 
 
 /***/ }),

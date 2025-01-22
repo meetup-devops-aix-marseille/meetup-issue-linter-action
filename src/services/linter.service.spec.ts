@@ -2,7 +2,7 @@ import { mock } from "jest-mock-extended";
 
 import { LinterService } from "./linter.service";
 import { LinterAdapter } from "./linter/linter.adapter";
-import { getMeetupIssueFixture } from "../__fixtures__/meetup-issue";
+import { getMeetupIssueFixture } from "../__fixtures__/meetup-issue.fixture";
 
 describe("LinterService", () => {
   describe("lint", () => {
