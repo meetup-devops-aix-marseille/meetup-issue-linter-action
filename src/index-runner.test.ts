@@ -6,7 +6,7 @@ import * as indexRunner from "./index-runner";
 import { container } from "./container";
 import { LinterService } from "./services/linter.service";
 import { MeetupIssueService } from "./services/meetup-issue.service";
-import { getMeetupIssueFixture } from "./__fixtures__/meetup-issue";
+import { getMeetupIssueFixture } from "./__fixtures__/meetup-issue.fixture";
 
 describe("run", () => {
   let setFailedMock: jest.SpiedFunction<typeof core.setFailed>;

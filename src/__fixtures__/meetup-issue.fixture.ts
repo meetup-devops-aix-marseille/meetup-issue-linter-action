@@ -1,5 +1,5 @@
 import { MeetupIssue } from "../services/meetup-issue.service";
-import { getHostersFixture } from "./hosters";
+import { getHostersFixture } from "./hosters.fixture";
 
 export function getMeetupIssueFixture(override?: Partial<MeetupIssue>): MeetupIssue {
   return {
@@ -11,8 +11,9 @@ export function getMeetupIssueFixture(override?: Partial<MeetupIssue>): MeetupIs
       event_title: "Meetup Event",
       hoster: [getHostersFixture()[0]],
       event_description: "Description",
-      ...(override?.body || {}),
+      agenda: "- Speaker One: Talk description One\n- Speaker Two: Talk description Two",
+      ...(override?.body ?? {}),
     },
-    ...(override || {}),
+    ...(override ?? {}),
   };
 }
