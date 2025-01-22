@@ -42,9 +42,7 @@ describe("TitleLinterAdapter - lint", () => {
 
       const result = await adapter.lint(invalidMeetupIssue, true);
       expect(result.title).toBe("[Meetup] - 2021-12-31 - Meetup Event");
-      expect(meetupIssueServiceMock.updateMeetupIssueTitle).toHaveBeenCalledWith(
-        invalidMeetupIssue
-      );
+      expect(meetupIssueServiceMock.updateMeetupIssueTitle).toHaveBeenCalledWith(result);
     });
 
     it("should throw an error if there is no event_date", async () => {

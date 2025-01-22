@@ -45,6 +45,15 @@ export class GithubService {
     });
   }
 
+  async updateIssueLabels(issueNumber: number, labels: string[]) {
+    await this.getOctokit().rest.issues.update({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: issueNumber,
+      labels: labels,
+    });
+  }
+
   private getOctokit(): Octokit {
     if (this.octokit) {
       return this.octokit;
