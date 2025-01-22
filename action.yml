@@ -12,6 +12,9 @@ inputs:
   issue-parsed-body:
     description: "The parsed issue body. See <https://github.com/issue-ops/parser>."
     required: true
+  hosters:
+    description: "JSON List of hosters to update. Example: ['Hoster 1', 'Hoster 2']"
+    required: true
   should-fix:
     description: "Whether to fix the issue or not."
     required: true

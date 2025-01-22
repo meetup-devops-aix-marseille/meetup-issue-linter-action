@@ -40,6 +40,7 @@ jobs:
         uses: ./
         with:
           issue-number: ${{ env.TEST_ISSUE_NUMBER }}
-          should-fix: false
           issue-parsed-body: ${{ steps.parser.outputs.json }}
+          hosters: '["Hoster Test One", "Hoster Test Two"]'
+          should-fix: false
           github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,5 @@
 import { MeetupIssue } from "../services/meetup-issue.service";
-import { getHostingFixture } from "./hosting";
+import { getHostersFixture } from "./hosters";
 
 export function getMeetupIssueFixture(override?: Partial<MeetupIssue>): MeetupIssue {
   return {
@@ -9,7 +9,7 @@ export function getMeetupIssueFixture(override?: Partial<MeetupIssue>): MeetupIs
     body: {
       event_date: "2021-12-31",
       event_title: "Meetup Event",
-      hoster: [getHostingFixture()[0]],
+      hoster: [getHostersFixture()[0]],
       ...(override?.body || {}),
     },
     ...(override || {}),
