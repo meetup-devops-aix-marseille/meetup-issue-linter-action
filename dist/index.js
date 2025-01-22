@@ -34894,6 +34894,7 @@ var InputNames;
 (function (InputNames) {
     InputNames["IssueNumber"] = "issue-number";
     InputNames["IssueParsedBody"] = "issue-parsed-body";
+    InputNames["Hosters"] = "hosters";
     InputNames["ShouldFix"] = "should-fix";
     InputNames["GithubToken"] = "github-token";
 })(InputNames || (exports.InputNames = InputNames = {}));
@@ -34912,6 +34913,24 @@ let InputService = class InputService {
             required: true,
         });
         return JSON.parse(issueParsedBody);
+    }
+    getHosters() {
+        const hostersInput = this.coreService.getInput(InputNames.Hosters, {
+            required: true,
+        });
+        const hosters = JSON.parse(hostersInput);
+        if (!Array.isArray(hosters)) {
+            throw new Error("Hosters input must be an array");
+        }
+        if (hosters.length === 0) {
+            throw new Error("Hosters input must not be empty");
+        }
+        for (const hoster of hosters) {
+            if (typeof hoster !== "string") {
+                throw new Error("Hosters input must be an array of strings");
+            }
+        }
+        return hosters;
     }
     getShouldFix() {
         return this.coreService.getBooleanInput(InputNames.ShouldFix);

@@ -10,6 +10,7 @@ export type Inputs = {
 export enum InputNames {
   IssueNumber = "issue-number",
   IssueParsedBody = "issue-parsed-body",
+  Hosters = "hosters",
   ShouldFix = "should-fix",
   GithubToken = "github-token",
 }
@@ -32,6 +33,30 @@ export class InputService {
     });
 
     return JSON.parse(issueParsedBody);
+  }
+
+  getHosters(): [string, ...string[]] {
+    const hostersInput = this.coreService.getInput(InputNames.Hosters, {
+      required: true,
+    });
+
+    const hosters = JSON.parse(hostersInput);
+
+    if (!Array.isArray(hosters)) {
+      throw new Error("Hosters input must be an array");
+    }
+
+    if (hosters.length === 0) {
+      throw new Error("Hosters input must not be empty");
+    }
+
+    for (const hoster of hosters) {
+      if (typeof hoster !== "string") {
+        throw new Error("Hosters input must be an array of strings");
+      }
+    }
+
+    return hosters as [string, ...string[]];
   }
 
   getShouldFix(): boolean {
