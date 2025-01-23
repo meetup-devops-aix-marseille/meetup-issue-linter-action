@@ -98,6 +98,7 @@ jobs:
           )
 
           EXPECTED_LINT_ISSUES=$(cat <<EOF
+          Title: Invalid, expected "[Meetup] - 2025-01-01 - Test Invalid Issue"
           Hoster: Must be an existing hoster at index 0
           Event Description: Required
           Agenda: Entry "- Wrong agenda entry" must follow the format: "- <speaker>: <talk_description>"

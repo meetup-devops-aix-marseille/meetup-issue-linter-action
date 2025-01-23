@@ -1,5 +1,5 @@
 import { AgendaLinterAdapter } from "./agenda-linter.adapter";
-import { LintError } from "./lint.error";
+import { LintError } from "../lint.error";
 import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue.fixture";
 
 describe("AgendaLinterAdapter", () => {

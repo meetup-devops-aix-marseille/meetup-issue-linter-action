@@ -4,11 +4,11 @@ import { InputService } from "./services/input.service";
 import { LoggerService } from "./services/logger.service";
 import * as indexRunner from "./index-runner";
 import { container } from "./container";
-import { LinterService } from "./services/linter.service";
+import { LinterService } from "./linter/linter.service";
 import { MeetupIssueService } from "./services/meetup-issue.service";
 import { getMeetupIssueFixture } from "./__fixtures__/meetup-issue.fixture";
 import { CORE_SERVICE_IDENTIFIER, CoreService } from "./services/core.service";
-import { LintError } from "./services/linter/lint.error";
+import { LintError } from "./linter/lint.error";
 
 describe("run", () => {
   let setFailedMock: jest.SpiedFunction<typeof core.setFailed>;

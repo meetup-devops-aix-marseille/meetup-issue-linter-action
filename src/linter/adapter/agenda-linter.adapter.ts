@@ -1,8 +1,8 @@
 import { injectable } from "inversify";
 import { string } from "zod";
 import { AbstractZodLinterAdapter } from "./abtract-zod-linter.adapter";
-import { MeetupIssue } from "../meetup-issue.service";
-import { LintError } from "./lint.error";
+import { MeetupIssue } from "../../services/meetup-issue.service";
+import { LintError } from "../lint.error";
 
 type AgendaEntry = {
   speaker: string;

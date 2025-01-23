@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { enum as zodEnum } from "zod";
 import { AbstractZodLinterAdapter } from "./abtract-zod-linter.adapter";
-import { InputService } from "../input.service";
+import { InputService } from "../../services/input.service";
 
 @injectable()
 export class HosterLinterAdapter extends AbstractZodLinterAdapter {

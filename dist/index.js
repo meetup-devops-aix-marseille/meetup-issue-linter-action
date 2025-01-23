@@ -34719,18 +34719,18 @@ const inversify_1 = __nccwpck_require__(4871);
 const logger_service_1 = __nccwpck_require__(8187);
 const core_service_1 = __nccwpck_require__(7872);
 const input_service_1 = __nccwpck_require__(2301);
-const linter_service_1 = __nccwpck_require__(5309);
+const linter_service_1 = __nccwpck_require__(683);
 const github_service_1 = __nccwpck_require__(304);
-const event_date_linter_adapter_1 = __nccwpck_require__(1454);
-const linter_adapter_1 = __nccwpck_require__(8120);
+const event_date_linter_adapter_1 = __nccwpck_require__(5451);
+const linter_adapter_1 = __nccwpck_require__(9595);
 const meetup_issue_service_1 = __nccwpck_require__(9759);
-const event_title_linter_adapter_1 = __nccwpck_require__(9630);
-const title_linter_adapter_1 = __nccwpck_require__(7853);
-const event_description_linter_adapter_1 = __nccwpck_require__(4006);
-const hoster_linter_adapter_1 = __nccwpck_require__(6856);
-const agenda_linter_adapter_1 = __nccwpck_require__(5447);
-const meetup_link_linter_adapter_1 = __nccwpck_require__(4516);
-const drive_link_linter_adapter_1 = __nccwpck_require__(526);
+const event_title_linter_adapter_1 = __nccwpck_require__(8877);
+const title_linter_adapter_1 = __nccwpck_require__(3241);
+const event_description_linter_adapter_1 = __nccwpck_require__(6301);
+const hoster_linter_adapter_1 = __nccwpck_require__(5057);
+const agenda_linter_adapter_1 = __nccwpck_require__(3066);
+const meetup_link_linter_adapter_1 = __nccwpck_require__(4595);
+const drive_link_linter_adapter_1 = __nccwpck_require__(3271);
 const container = new inversify_1.Container();
 exports.container = container;
 container.bind(core_service_1.CORE_SERVICE_IDENTIFIER).toConstantValue(core_service_1.coreService);
@@ -34763,9 +34763,9 @@ const core_1 = __nccwpck_require__(7484);
 const input_service_1 = __nccwpck_require__(2301);
 const logger_service_1 = __nccwpck_require__(8187);
 const container_1 = __nccwpck_require__(6296);
-const linter_service_1 = __nccwpck_require__(5309);
+const linter_service_1 = __nccwpck_require__(683);
 const meetup_issue_service_1 = __nccwpck_require__(9759);
-const lint_error_1 = __nccwpck_require__(4918);
+const lint_error_1 = __nccwpck_require__(4225);
 const core_service_1 = __nccwpck_require__(7872);
 /**
  * The run function for the action.
@@ -34808,6 +34808,662 @@ async function run() {
     }
 }
 exports.run = run;
+
+
+/***/ }),
+
+/***/ 4053:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AbstractZodLinterAdapter = void 0;
+const zod_validation_error_1 = __nccwpck_require__(1665);
+const meetup_issue_service_1 = __nccwpck_require__(9759);
+const lint_error_1 = __nccwpck_require__(4225);
+class AbstractZodLinterAdapter {
+    constructor() { }
+    async lint(meetupIssue, shouldFix) {
+        const fieldName = this.getFieldName();
+        const validator = this.getValidator();
+        const fieldToValidate = meetupIssue.body[fieldName];
+        const result = await validator.safeParseAsync(fieldToValidate);
+        if (result.success) {
+            if (shouldFix) {
+                meetupIssue.body[fieldName] = result.data;
+            }
+            return meetupIssue;
+        }
+        const validationError = (0, zod_validation_error_1.fromError)(result.error, {});
+        const errors = validationError
+            .toString()
+            .replace(`Validation error: `, ``)
+            .split("\n")
+            .map((error) => this.getLintErrorMessage(error))
+            .filter(Boolean);
+        throw new lint_error_1.LintError(errors);
+    }
+    getLintErrorMessage(message) {
+        const fieldName = this.getFieldName();
+        const fieldLabel = meetup_issue_service_1.MEETUP_ISSUE_BODY_FIELD_LABELS[fieldName];
+        return `${fieldLabel}: ${message.trim()}`;
+    }
+    getDependencies() {
+        return [];
+    }
+}
+exports.AbstractZodLinterAdapter = AbstractZodLinterAdapter;
+
+
+/***/ }),
+
+/***/ 3066:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var AgendaLinterAdapter_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AgendaLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
+const lint_error_1 = __nccwpck_require__(4225);
+let AgendaLinterAdapter = class AgendaLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    static { AgendaLinterAdapter_1 = this; }
+    static AGENDA_LINE_REGEX = /^- (.+): (.+)$/;
+    async lint(meetupIssue, shouldFix) {
+        const result = await super.lint(meetupIssue, shouldFix);
+        const agenda = result.body[this.getFieldName()];
+        // Parse agenda lines
+        const agendaLines = agenda.split("\n");
+        const agendaEntries = [];
+        const lintErrors = [];
+        for (const agendaLine of agendaLines) {
+            try {
+                const agendaEntry = this.lintAgendaLine(agendaLine);
+                if (agendaEntry) {
+                    agendaEntries.push(agendaEntry);
+                }
+            }
+            catch (error) {
+                if (error instanceof lint_error_1.LintError) {
+                    lintErrors.push(...error.getMessages());
+                }
+                else {
+                    throw error;
+                }
+            }
+        }
+        if (lintErrors.length) {
+            throw new lint_error_1.LintError(lintErrors);
+        }
+        if (!agendaEntries.length) {
+            throw new lint_error_1.LintError([this.getLintErrorMessage("Must contain at least one entry")]);
+        }
+        return result;
+    }
+    lintAgendaLine(agendaLine) {
+        if (agendaLine.trim() === "") {
+            return;
+        }
+        const matches = agendaLine.match(AgendaLinterAdapter_1.AGENDA_LINE_REGEX);
+        if (matches === null) {
+            throw new lint_error_1.LintError([
+                this.getLintErrorMessage(`Entry "${agendaLine}" must follow the format: "- <speaker>: <talk_description>"`),
+            ]);
+        }
+        const [, speaker, talkDescription] = matches;
+        return {
+            speaker: speaker.trim(),
+            talkDescription: talkDescription.trim(),
+        };
+    }
+    getValidator() {
+        return (0, zod_1.string)().nonempty({
+            message: "Must not be empty",
+        });
+    }
+    getFieldName() {
+        return "agenda";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.AgendaLinterAdapter = AgendaLinterAdapter;
+exports.AgendaLinterAdapter = AgendaLinterAdapter = AgendaLinterAdapter_1 = __decorate([
+    (0, inversify_1.injectable)()
+], AgendaLinterAdapter);
+
+
+/***/ }),
+
+/***/ 3271:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var DriveLinkLinterAdapter_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DriveLinkLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
+let DriveLinkLinterAdapter = class DriveLinkLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    static { DriveLinkLinterAdapter_1 = this; }
+    static DRIVE_LINK_REGEX = /^https:\/\/drive\.google\.com\/drive\/folders\/[a-zA-Z0-9-_]+$/;
+    getValidator() {
+        return (0, zod_1.string)().url().regex(DriveLinkLinterAdapter_1.DRIVE_LINK_REGEX, {
+            message: "Must be a valid Drive Link, e.g. https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j",
+        });
+    }
+    getFieldName() {
+        return "drive_link";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.DriveLinkLinterAdapter = DriveLinkLinterAdapter;
+exports.DriveLinkLinterAdapter = DriveLinkLinterAdapter = DriveLinkLinterAdapter_1 = __decorate([
+    (0, inversify_1.injectable)()
+], DriveLinkLinterAdapter);
+
+
+/***/ }),
+
+/***/ 5451:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EventDateLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
+let EventDateLinterAdapter = class EventDateLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    getValidator() {
+        return (0, zod_1.string)().date();
+    }
+    getFieldName() {
+        return "event_date";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.EventDateLinterAdapter = EventDateLinterAdapter;
+exports.EventDateLinterAdapter = EventDateLinterAdapter = __decorate([
+    (0, inversify_1.injectable)()
+], EventDateLinterAdapter);
+
+
+/***/ }),
+
+/***/ 6301:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EventDescriptionLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
+let EventDescriptionLinterAdapter = class EventDescriptionLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    getValidator() {
+        return (0, zod_1.string)().nonempty({
+            message: "Must not be empty",
+        });
+    }
+    getFieldName() {
+        return "event_description";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.EventDescriptionLinterAdapter = EventDescriptionLinterAdapter;
+exports.EventDescriptionLinterAdapter = EventDescriptionLinterAdapter = __decorate([
+    (0, inversify_1.injectable)()
+], EventDescriptionLinterAdapter);
+
+
+/***/ }),
+
+/***/ 8877:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.EventTitleLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
+let EventTitleLinterAdapter = class EventTitleLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    getValidator() {
+        return (0, zod_1.string)().nonempty({
+            message: "Must not be empty",
+        });
+    }
+    getFieldName() {
+        return "event_title";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.EventTitleLinterAdapter = EventTitleLinterAdapter;
+exports.EventTitleLinterAdapter = EventTitleLinterAdapter = __decorate([
+    (0, inversify_1.injectable)()
+], EventTitleLinterAdapter);
+
+
+/***/ }),
+
+/***/ 5057:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.HosterLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
+const input_service_1 = __nccwpck_require__(2301);
+let HosterLinterAdapter = class HosterLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    inputService;
+    hosters;
+    constructor(inputService) {
+        super();
+        this.inputService = inputService;
+        this.hosters = this.inputService.getHosters();
+    }
+    getValidator() {
+        return (0, zod_1.enum)(this.hosters, {
+            message: "Must be an existing hoster",
+        })
+            .array()
+            .min(1, {
+            message: "Must not be empty",
+        })
+            .max(1, {
+            message: "Must have exactly one entry",
+        });
+    }
+    getFieldName() {
+        return "hoster";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.HosterLinterAdapter = HosterLinterAdapter;
+exports.HosterLinterAdapter = HosterLinterAdapter = __decorate([
+    (0, inversify_1.injectable)(),
+    __metadata("design:paramtypes", [input_service_1.InputService])
+], HosterLinterAdapter);
+
+
+/***/ }),
+
+/***/ 9595:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LINTER_ADAPTER_IDENTIFIER = void 0;
+exports.LINTER_ADAPTER_IDENTIFIER = Symbol("LinterAdapter");
+
+
+/***/ }),
+
+/***/ 4595:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var MeetupLinkLinterAdapter_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MeetupLinkLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
+let MeetupLinkLinterAdapter = class MeetupLinkLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    static { MeetupLinkLinterAdapter_1 = this; }
+    static MEETUP_LINK_REGEX = /^https:\/\/www\.meetup\.com\/fr-FR\/devops-aix-marseille\/events\/[0-9]+$/;
+    getValidator() {
+        return (0, zod_1.string)().url().regex(MeetupLinkLinterAdapter_1.MEETUP_LINK_REGEX, {
+            message: "Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
+        });
+    }
+    getFieldName() {
+        return "meetup_link";
+    }
+    getPriority() {
+        return 0;
+    }
+};
+exports.MeetupLinkLinterAdapter = MeetupLinkLinterAdapter;
+exports.MeetupLinkLinterAdapter = MeetupLinkLinterAdapter = MeetupLinkLinterAdapter_1 = __decorate([
+    (0, inversify_1.injectable)()
+], MeetupLinkLinterAdapter);
+
+
+/***/ }),
+
+/***/ 3241:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var TitleLinterAdapter_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TitleLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const meetup_issue_service_1 = __nccwpck_require__(9759);
+const lint_error_1 = __nccwpck_require__(4225);
+const event_title_linter_adapter_1 = __nccwpck_require__(8877);
+const event_date_linter_adapter_1 = __nccwpck_require__(5451);
+let TitleLinterAdapter = class TitleLinterAdapter {
+    static { TitleLinterAdapter_1 = this; }
+    meetupIssueService;
+    static TITLE_PATTERN = "[Meetup] - <date> - <title>";
+    constructor(meetupIssueService) {
+        this.meetupIssueService = meetupIssueService;
+    }
+    async lint(meetupIssue, shouldFix) {
+        const expectedTitle = this.getExpectedTitle(meetupIssue);
+        if (meetupIssue.title === expectedTitle) {
+            return meetupIssue;
+        }
+        if (shouldFix) {
+            meetupIssue.title = expectedTitle;
+            await this.meetupIssueService.updateMeetupIssueTitle(meetupIssue);
+            return meetupIssue;
+        }
+        throw new lint_error_1.LintError([`Title: Invalid, expected "${expectedTitle}"`]);
+    }
+    getDependencies() {
+        return [event_title_linter_adapter_1.EventTitleLinterAdapter, event_date_linter_adapter_1.EventDateLinterAdapter];
+    }
+    getExpectedTitle(meetupIssue) {
+        const date = meetupIssue.body.event_date;
+        if (!date) {
+            throw new Error("Event Date is required to lint the title");
+        }
+        const title = meetupIssue.body.event_title;
+        if (!title) {
+            throw new Error("Event Title is required to lint the title");
+        }
+        return TitleLinterAdapter_1.TITLE_PATTERN.replace("<date>", date).replace("<title>", title);
+    }
+};
+exports.TitleLinterAdapter = TitleLinterAdapter;
+exports.TitleLinterAdapter = TitleLinterAdapter = TitleLinterAdapter_1 = __decorate([
+    (0, inversify_1.injectable)(),
+    __metadata("design:paramtypes", [meetup_issue_service_1.MeetupIssueService])
+], TitleLinterAdapter);
+
+
+/***/ }),
+
+/***/ 4225:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LintError = void 0;
+class LintError extends Error {
+    messages;
+    constructor(messages) {
+        super(messages.join("; "));
+        this.messages = messages;
+        this.name = "LintError";
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+    getMessages() {
+        return this.messages;
+    }
+    merge(lintError) {
+        return new LintError([...this.messages, ...lintError.getMessages()]);
+    }
+}
+exports.LintError = LintError;
+
+
+/***/ }),
+
+/***/ 683:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LinterService = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const linter_adapter_1 = __nccwpck_require__(9595);
+const lint_error_1 = __nccwpck_require__(4225);
+const linter_sorted_queue_1 = __nccwpck_require__(7981);
+let LinterService = class LinterService {
+    linters;
+    constructor(linters) {
+        this.linters = linters;
+    }
+    async lint(meetupIssue, shouldFix) {
+        let lintedMeetupIssue = meetupIssue;
+        let aggregatedError;
+        const linterQueue = new linter_sorted_queue_1.LinterSortedQueue(this.linters);
+        let linter;
+        while ((linter = linterQueue.dequeue())) {
+            const lintResult = await this.runSingleLinter(linter, lintedMeetupIssue, shouldFix);
+            linterQueue.setCompletedLinter(linter, !lintResult.lintError);
+            lintedMeetupIssue = lintResult.meetupIssue;
+            aggregatedError = this.getAggregatedError(lintResult, aggregatedError);
+        }
+        if (aggregatedError) {
+            throw aggregatedError;
+        }
+    }
+    async runSingleLinter(linter, meetupIssue, shouldFix) {
+        try {
+            return {
+                meetupIssue: await linter.lint(meetupIssue, shouldFix),
+            };
+        }
+        catch (error) {
+            if (error instanceof lint_error_1.LintError) {
+                return {
+                    meetupIssue,
+                    lintError: error,
+                };
+            }
+            throw error;
+        }
+    }
+    getAggregatedError(lintResult, aggregatedError) {
+        if (!lintResult.lintError) {
+            return aggregatedError;
+        }
+        if (aggregatedError) {
+            return aggregatedError.merge(lintResult.lintError);
+        }
+        return lintResult.lintError;
+    }
+};
+exports.LinterService = LinterService;
+exports.LinterService = LinterService = __decorate([
+    (0, inversify_1.injectable)(),
+    __param(0, (0, inversify_1.multiInject)(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER)),
+    __metadata("design:paramtypes", [Array])
+], LinterService);
+
+
+/***/ }),
+
+/***/ 7981:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LinterSortedQueue = void 0;
+class LinterSortedQueue {
+    linters = [];
+    completedLinters = new Map();
+    constructor(linters) {
+        for (const linter of linters) {
+            this.enqueue(linter);
+        }
+    }
+    setCompletedLinter(linter, success) {
+        this.completedLinters.set(linter.constructor, success);
+    }
+    size() {
+        return this.linters.length;
+    }
+    dequeue() {
+        const linter = this.linters.shift();
+        if (!linter) {
+            return undefined;
+        }
+        if (this.linterHasUnresolvedDependencies(linter)) {
+            this.enqueue(linter);
+            return this.dequeue();
+        }
+        if (this.linterHasFailedDependencies(linter)) {
+            this.setCompletedLinter(linter, false);
+            return this.dequeue();
+        }
+        return linter;
+    }
+    enqueue(linter) {
+        this.linters.push(linter);
+        this.sortQueue();
+    }
+    sortQueue() {
+        const linters = new Map();
+        const dependencies = new Map();
+        for (const linter of this.linters) {
+            if (!linter) {
+                continue;
+            }
+            const linterKey = linter.constructor;
+            const linterDependencies = linter.getDependencies();
+            if (linters.has(linterKey)) {
+                throw new Error(`Linter "${linterKey.name}" already exists.`);
+            }
+            linters.set(linterKey, linter);
+            dependencies.set(linterKey, linterDependencies);
+        }
+        const visited = new Set();
+        const result = [];
+        const tempMark = new Set();
+        const visit = (linterDependency) => {
+            if (tempMark.has(linterDependency)) {
+                throw new Error(`Circular dependency detected involving "${linterDependency.name}"`);
+            }
+            if (!visited.has(linterDependency)) {
+                tempMark.add(linterDependency);
+                const deps = dependencies.get(linterDependency) || [];
+                for (const dep of deps) {
+                    visit(dep);
+                }
+                tempMark.delete(linterDependency);
+                visited.add(linterDependency);
+                result.push(linters.get(linterDependency));
+            }
+        };
+        for (const linterConstructor of linters.keys()) {
+            if (!visited.has(linterConstructor)) {
+                visit(linterConstructor);
+            }
+        }
+        this.linters = result;
+    }
+    linterHasUnresolvedDependencies(linter) {
+        const dependencies = linter.getDependencies();
+        return dependencies.some((dependency) => !this.completedLinters.has(dependency));
+    }
+    linterHasFailedDependencies(linter) {
+        const dependencies = linter.getDependencies();
+        return dependencies.some((dependency) => this.completedLinters.get(dependency) === false);
+    }
+}
+exports.LinterSortedQueue = LinterSortedQueue;
 
 
 /***/ }),
@@ -34987,560 +35643,6 @@ exports.InputService = InputService = __decorate([
     __param(0, (0, inversify_1.inject)(core_service_1.CORE_SERVICE_IDENTIFIER)),
     __metadata("design:paramtypes", [Object])
 ], InputService);
-
-
-/***/ }),
-
-/***/ 5309:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LinterService = void 0;
-const inversify_1 = __nccwpck_require__(4871);
-const linter_adapter_1 = __nccwpck_require__(8120);
-const lint_error_1 = __nccwpck_require__(4918);
-let LinterService = class LinterService {
-    linters;
-    constructor(linters) {
-        // Sort linters by priority, lower first, group  by priority
-        this.linters = linters.sort((a, b) => a.getPriority() - b.getPriority());
-    }
-    async lint(meetupIssue, shouldFix) {
-        let lintedMeetupIssue = meetupIssue;
-        let previousPriority;
-        let aggregatedError;
-        for (const linter of this.linters) {
-            this.ensureNoPendingErrors(previousPriority, linter.getPriority(), aggregatedError);
-            previousPriority = linter.getPriority();
-            const result = await this.runSingleLinter(linter, lintedMeetupIssue, shouldFix, aggregatedError);
-            lintedMeetupIssue = result.lintedIssue;
-            aggregatedError = result.aggregatedError;
-        }
-        if (aggregatedError) {
-            throw aggregatedError;
-        }
-    }
-    ensureNoPendingErrors(prevPriority, currentPriority, aggregatedError) {
-        if (prevPriority !== undefined && currentPriority > prevPriority && aggregatedError) {
-            throw aggregatedError;
-        }
-    }
-    async runSingleLinter(linter, meetupIssue, shouldFix, aggregatedError) {
-        try {
-            return {
-                lintedIssue: await linter.lint(meetupIssue, shouldFix),
-                aggregatedError: aggregatedError,
-            };
-        }
-        catch (error) {
-            if (error instanceof lint_error_1.LintError) {
-                return {
-                    lintedIssue: meetupIssue,
-                    aggregatedError: aggregatedError ? aggregatedError.merge(error) : error,
-                };
-            }
-            throw error;
-        }
-    }
-};
-exports.LinterService = LinterService;
-exports.LinterService = LinterService = __decorate([
-    (0, inversify_1.injectable)(),
-    __param(0, (0, inversify_1.multiInject)(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER)),
-    __metadata("design:paramtypes", [Array])
-], LinterService);
-
-
-/***/ }),
-
-/***/ 6086:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AbstractZodLinterAdapter = void 0;
-const zod_validation_error_1 = __nccwpck_require__(1665);
-const meetup_issue_service_1 = __nccwpck_require__(9759);
-const lint_error_1 = __nccwpck_require__(4918);
-class AbstractZodLinterAdapter {
-    constructor() { }
-    async lint(meetupIssue, shouldFix) {
-        const fieldName = this.getFieldName();
-        const validator = this.getValidator();
-        const fieldToValidate = meetupIssue.body[fieldName];
-        const result = await validator.safeParseAsync(fieldToValidate);
-        if (result.success) {
-            if (shouldFix) {
-                meetupIssue.body[fieldName] = result.data;
-            }
-            return meetupIssue;
-        }
-        const validationError = (0, zod_validation_error_1.fromError)(result.error, {});
-        const errors = validationError
-            .toString()
-            .replace(`Validation error: `, ``)
-            .split("\n")
-            .map((error) => this.getLintErrorMessage(error))
-            .filter(Boolean);
-        throw new lint_error_1.LintError(errors);
-    }
-    getLintErrorMessage(message) {
-        const fieldName = this.getFieldName();
-        const fieldLabel = meetup_issue_service_1.MEETUP_ISSUE_BODY_FIELD_LABELS[fieldName];
-        return `${fieldLabel}: ${message.trim()}`;
-    }
-}
-exports.AbstractZodLinterAdapter = AbstractZodLinterAdapter;
-
-
-/***/ }),
-
-/***/ 5447:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var AgendaLinterAdapter_1;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AgendaLinterAdapter = void 0;
-const inversify_1 = __nccwpck_require__(4871);
-const zod_1 = __nccwpck_require__(4809);
-const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
-const lint_error_1 = __nccwpck_require__(4918);
-let AgendaLinterAdapter = class AgendaLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
-    static { AgendaLinterAdapter_1 = this; }
-    static AGENDA_LINE_REGEX = /^- (.+): (.+)$/;
-    async lint(meetupIssue, shouldFix) {
-        const result = await super.lint(meetupIssue, shouldFix);
-        const agenda = result.body[this.getFieldName()];
-        // Parse agenda lines
-        const agendaLines = agenda.split("\n");
-        const agendaEntries = [];
-        const lintErrors = [];
-        for (const agendaLine of agendaLines) {
-            try {
-                const agendaEntry = this.lintAgendaLine(agendaLine);
-                if (agendaEntry) {
-                    agendaEntries.push(agendaEntry);
-                }
-            }
-            catch (error) {
-                if (error instanceof lint_error_1.LintError) {
-                    lintErrors.push(...error.getMessages());
-                }
-                else {
-                    throw error;
-                }
-            }
-        }
-        if (lintErrors.length) {
-            throw new lint_error_1.LintError(lintErrors);
-        }
-        if (!agendaEntries.length) {
-            throw new lint_error_1.LintError([this.getLintErrorMessage("Must contain at least one entry")]);
-        }
-        return result;
-    }
-    lintAgendaLine(agendaLine) {
-        if (agendaLine.trim() === "") {
-            return;
-        }
-        const matches = agendaLine.match(AgendaLinterAdapter_1.AGENDA_LINE_REGEX);
-        if (matches === null) {
-            throw new lint_error_1.LintError([
-                this.getLintErrorMessage(`Entry "${agendaLine}" must follow the format: "- <speaker>: <talk_description>"`),
-            ]);
-        }
-        const [, speaker, talkDescription] = matches;
-        return {
-            speaker: speaker.trim(),
-            talkDescription: talkDescription.trim(),
-        };
-    }
-    getValidator() {
-        return (0, zod_1.string)().nonempty({
-            message: "Must not be empty",
-        });
-    }
-    getFieldName() {
-        return "agenda";
-    }
-    getPriority() {
-        return 0;
-    }
-};
-exports.AgendaLinterAdapter = AgendaLinterAdapter;
-exports.AgendaLinterAdapter = AgendaLinterAdapter = AgendaLinterAdapter_1 = __decorate([
-    (0, inversify_1.injectable)()
-], AgendaLinterAdapter);
-
-
-/***/ }),
-
-/***/ 526:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var DriveLinkLinterAdapter_1;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DriveLinkLinterAdapter = void 0;
-const inversify_1 = __nccwpck_require__(4871);
-const zod_1 = __nccwpck_require__(4809);
-const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
-let DriveLinkLinterAdapter = class DriveLinkLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
-    static { DriveLinkLinterAdapter_1 = this; }
-    static DRIVE_LINK_REGEX = /^https:\/\/drive\.google\.com\/drive\/folders\/[a-zA-Z0-9-_]+$/;
-    getValidator() {
-        return (0, zod_1.string)().url().regex(DriveLinkLinterAdapter_1.DRIVE_LINK_REGEX, {
-            message: "Must be a valid Drive Link, e.g. https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j",
-        });
-    }
-    getFieldName() {
-        return "drive_link";
-    }
-    getPriority() {
-        return 0;
-    }
-};
-exports.DriveLinkLinterAdapter = DriveLinkLinterAdapter;
-exports.DriveLinkLinterAdapter = DriveLinkLinterAdapter = DriveLinkLinterAdapter_1 = __decorate([
-    (0, inversify_1.injectable)()
-], DriveLinkLinterAdapter);
-
-
-/***/ }),
-
-/***/ 1454:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.EventDateLinterAdapter = void 0;
-const inversify_1 = __nccwpck_require__(4871);
-const zod_1 = __nccwpck_require__(4809);
-const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
-let EventDateLinterAdapter = class EventDateLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
-    getValidator() {
-        return (0, zod_1.string)().date();
-    }
-    getFieldName() {
-        return "event_date";
-    }
-    getPriority() {
-        return 0;
-    }
-};
-exports.EventDateLinterAdapter = EventDateLinterAdapter;
-exports.EventDateLinterAdapter = EventDateLinterAdapter = __decorate([
-    (0, inversify_1.injectable)()
-], EventDateLinterAdapter);
-
-
-/***/ }),
-
-/***/ 4006:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.EventDescriptionLinterAdapter = void 0;
-const inversify_1 = __nccwpck_require__(4871);
-const zod_1 = __nccwpck_require__(4809);
-const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
-let EventDescriptionLinterAdapter = class EventDescriptionLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
-    getValidator() {
-        return (0, zod_1.string)().nonempty({
-            message: "Must not be empty",
-        });
-    }
-    getFieldName() {
-        return "event_description";
-    }
-    getPriority() {
-        return 0;
-    }
-};
-exports.EventDescriptionLinterAdapter = EventDescriptionLinterAdapter;
-exports.EventDescriptionLinterAdapter = EventDescriptionLinterAdapter = __decorate([
-    (0, inversify_1.injectable)()
-], EventDescriptionLinterAdapter);
-
-
-/***/ }),
-
-/***/ 9630:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.EventTitleLinterAdapter = void 0;
-const inversify_1 = __nccwpck_require__(4871);
-const zod_1 = __nccwpck_require__(4809);
-const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
-let EventTitleLinterAdapter = class EventTitleLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
-    getValidator() {
-        return (0, zod_1.string)().nonempty({
-            message: "Must not be empty",
-        });
-    }
-    getFieldName() {
-        return "event_title";
-    }
-    getPriority() {
-        return 0;
-    }
-};
-exports.EventTitleLinterAdapter = EventTitleLinterAdapter;
-exports.EventTitleLinterAdapter = EventTitleLinterAdapter = __decorate([
-    (0, inversify_1.injectable)()
-], EventTitleLinterAdapter);
-
-
-/***/ }),
-
-/***/ 6856:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.HosterLinterAdapter = void 0;
-const inversify_1 = __nccwpck_require__(4871);
-const zod_1 = __nccwpck_require__(4809);
-const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
-const input_service_1 = __nccwpck_require__(2301);
-let HosterLinterAdapter = class HosterLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
-    inputService;
-    hosters;
-    constructor(inputService) {
-        super();
-        this.inputService = inputService;
-        this.hosters = this.inputService.getHosters();
-    }
-    getValidator() {
-        return (0, zod_1.enum)(this.hosters, {
-            message: "Must be an existing hoster",
-        })
-            .array()
-            .min(1, {
-            message: "Must not be empty",
-        })
-            .max(1, {
-            message: "Must have exactly one entry",
-        });
-    }
-    getFieldName() {
-        return "hoster";
-    }
-    getPriority() {
-        return 0;
-    }
-};
-exports.HosterLinterAdapter = HosterLinterAdapter;
-exports.HosterLinterAdapter = HosterLinterAdapter = __decorate([
-    (0, inversify_1.injectable)(),
-    __metadata("design:paramtypes", [input_service_1.InputService])
-], HosterLinterAdapter);
-
-
-/***/ }),
-
-/***/ 4918:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LintError = void 0;
-class LintError extends Error {
-    messages;
-    constructor(messages) {
-        super(messages.join("; "));
-        this.messages = messages;
-        this.name = "LintError";
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
-    getMessages() {
-        return this.messages;
-    }
-    merge(lintError) {
-        return new LintError([...this.messages, ...lintError.getMessages()]);
-    }
-}
-exports.LintError = LintError;
-
-
-/***/ }),
-
-/***/ 8120:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LINTER_ADAPTER_IDENTIFIER = void 0;
-exports.LINTER_ADAPTER_IDENTIFIER = Symbol("LinterAdapter");
-
-
-/***/ }),
-
-/***/ 4516:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var MeetupLinkLinterAdapter_1;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MeetupLinkLinterAdapter = void 0;
-const inversify_1 = __nccwpck_require__(4871);
-const zod_1 = __nccwpck_require__(4809);
-const abtract_zod_linter_adapter_1 = __nccwpck_require__(6086);
-let MeetupLinkLinterAdapter = class MeetupLinkLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
-    static { MeetupLinkLinterAdapter_1 = this; }
-    static MEETUP_LINK_REGEX = /^https:\/\/www\.meetup\.com\/fr-FR\/devops-aix-marseille\/events\/[0-9]+$/;
-    getValidator() {
-        return (0, zod_1.string)().url().regex(MeetupLinkLinterAdapter_1.MEETUP_LINK_REGEX, {
-            message: "Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
-        });
-    }
-    getFieldName() {
-        return "meetup_link";
-    }
-    getPriority() {
-        return 0;
-    }
-};
-exports.MeetupLinkLinterAdapter = MeetupLinkLinterAdapter;
-exports.MeetupLinkLinterAdapter = MeetupLinkLinterAdapter = MeetupLinkLinterAdapter_1 = __decorate([
-    (0, inversify_1.injectable)()
-], MeetupLinkLinterAdapter);
-
-
-/***/ }),
-
-/***/ 7853:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var TitleLinterAdapter_1;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TitleLinterAdapter = void 0;
-const inversify_1 = __nccwpck_require__(4871);
-const meetup_issue_service_1 = __nccwpck_require__(9759);
-const lint_error_1 = __nccwpck_require__(4918);
-let TitleLinterAdapter = class TitleLinterAdapter {
-    static { TitleLinterAdapter_1 = this; }
-    meetupIssueService;
-    static TITLE_PATTERN = "[Meetup] - <date> - <title>";
-    constructor(meetupIssueService) {
-        this.meetupIssueService = meetupIssueService;
-    }
-    async lint(meetupIssue, shouldFix) {
-        const expectedTitle = this.getExpectedTitle(meetupIssue);
-        if (meetupIssue.title === expectedTitle) {
-            return meetupIssue;
-        }
-        if (shouldFix) {
-            meetupIssue.title = expectedTitle;
-            await this.meetupIssueService.updateMeetupIssueTitle(meetupIssue);
-            return meetupIssue;
-        }
-        throw new lint_error_1.LintError([`Title: Invalid, expected "${expectedTitle}"`]);
-    }
-    getPriority() {
-        return 1;
-    }
-    getExpectedTitle(meetupIssue) {
-        const date = meetupIssue.body.event_date;
-        if (!date) {
-            throw new Error("Event Date is required to lint the title");
-        }
-        const title = meetupIssue.body.event_title;
-        if (!title) {
-            throw new Error("Event Title is required to lint the title");
-        }
-        return TitleLinterAdapter_1.TITLE_PATTERN.replace("<date>", date).replace("<title>", title);
-    }
-};
-exports.TitleLinterAdapter = TitleLinterAdapter;
-exports.TitleLinterAdapter = TitleLinterAdapter = TitleLinterAdapter_1 = __decorate([
-    (0, inversify_1.injectable)(),
-    __metadata("design:paramtypes", [meetup_issue_service_1.MeetupIssueService])
-], TitleLinterAdapter);
 
 
 /***/ }),

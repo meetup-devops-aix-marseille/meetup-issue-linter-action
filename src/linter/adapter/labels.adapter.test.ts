@@ -1,8 +1,8 @@
 import { mock, MockProxy } from "jest-mock-extended";
 import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue.fixture";
-import { MeetupIssueService } from "../meetup-issue.service";
+import { MeetupIssueService } from "../../services/meetup-issue.service";
 import { LabelsLinterAdapter } from "./labels-linter.adapter";
-import { LintError } from "./lint.error";
+import { LintError } from "../lint.error";
 
 describe("LabelsLinterAdapter - lint", () => {
   let meetupIssueServiceMock: MockProxy<MeetupIssueService>;
@@ -59,12 +59,6 @@ describe("LabelsLinterAdapter - lint", () => {
       const result = await labelsLinterAdapter.lint(invalidMeetupIssue, true);
       expect(result.labels).toStrictEqual(["meetup"]);
       expect(meetupIssueServiceMock.updateMeetupIssueLabels).toHaveBeenCalledWith(result);
-    });
-  });
-
-  describe("getPriority", () => {
-    it("should return 0", () => {
-      expect(labelsLinterAdapter.getPriority()).toBe(0);
     });
   });
 });
