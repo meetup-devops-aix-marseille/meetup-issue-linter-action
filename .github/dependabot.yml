@@ -14,7 +14,6 @@ updates:
 
   - package-ecosystem: docker
     directories:
-      - "/test"
       - "/"
     open-pull-requests-limit: 20
     schedule:
