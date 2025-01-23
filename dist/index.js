@@ -34869,6 +34869,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var AgendaLinterAdapter_1;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AgendaLinterAdapter = void 0;
@@ -34876,9 +34879,17 @@ const inversify_1 = __nccwpck_require__(4871);
 const zod_1 = __nccwpck_require__(4809);
 const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
 const lint_error_1 = __nccwpck_require__(4225);
+const input_service_1 = __nccwpck_require__(2301);
 let AgendaLinterAdapter = class AgendaLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
     static { AgendaLinterAdapter_1 = this; }
+    inputService;
     static AGENDA_LINE_REGEX = /^- (.+): (.+)$/;
+    speakers;
+    constructor(inputService) {
+        super();
+        this.inputService = inputService;
+        this.speakers = this.inputService.getSpeakers();
+    }
     async lint(meetupIssue, shouldFix) {
         const result = await super.lint(meetupIssue, shouldFix);
         const agenda = result.body[this.getFieldName()];
@@ -34921,9 +34932,14 @@ let AgendaLinterAdapter = class AgendaLinterAdapter extends abtract_zod_linter_a
             ]);
         }
         const [, speaker, talkDescription] = matches;
+        if (!this.speakers.includes(speaker)) {
+            throw new lint_error_1.LintError([
+                this.getLintErrorMessage(`Speaker "${speaker}" is not in the list of speakers`),
+            ]);
+        }
         return {
-            speaker: speaker.trim(),
-            talkDescription: talkDescription.trim(),
+            speaker,
+            talkDescription,
         };
     }
     getValidator() {
@@ -34934,13 +34950,11 @@ let AgendaLinterAdapter = class AgendaLinterAdapter extends abtract_zod_linter_a
     getFieldName() {
         return "agenda";
     }
-    getPriority() {
-        return 0;
-    }
 };
 exports.AgendaLinterAdapter = AgendaLinterAdapter;
 exports.AgendaLinterAdapter = AgendaLinterAdapter = AgendaLinterAdapter_1 = __decorate([
-    (0, inversify_1.injectable)()
+    (0, inversify_1.injectable)(),
+    __metadata("design:paramtypes", [input_service_1.InputService])
 ], AgendaLinterAdapter);
 
 
@@ -34974,9 +34988,6 @@ let DriveLinkLinterAdapter = class DriveLinkLinterAdapter extends abtract_zod_li
     getFieldName() {
         return "drive_link";
     }
-    getPriority() {
-        return 0;
-    }
 };
 exports.DriveLinkLinterAdapter = DriveLinkLinterAdapter;
 exports.DriveLinkLinterAdapter = DriveLinkLinterAdapter = DriveLinkLinterAdapter_1 = __decorate([
@@ -35008,9 +35019,6 @@ let EventDateLinterAdapter = class EventDateLinterAdapter extends abtract_zod_li
     }
     getFieldName() {
         return "event_date";
-    }
-    getPriority() {
-        return 0;
     }
 };
 exports.EventDateLinterAdapter = EventDateLinterAdapter;
@@ -35046,9 +35054,6 @@ let EventDescriptionLinterAdapter = class EventDescriptionLinterAdapter extends 
     getFieldName() {
         return "event_description";
     }
-    getPriority() {
-        return 0;
-    }
 };
 exports.EventDescriptionLinterAdapter = EventDescriptionLinterAdapter;
 exports.EventDescriptionLinterAdapter = EventDescriptionLinterAdapter = __decorate([
@@ -35082,9 +35087,6 @@ let EventTitleLinterAdapter = class EventTitleLinterAdapter extends abtract_zod_
     }
     getFieldName() {
         return "event_title";
-    }
-    getPriority() {
-        return 0;
     }
 };
 exports.EventTitleLinterAdapter = EventTitleLinterAdapter;
@@ -35138,9 +35140,6 @@ let HosterLinterAdapter = class HosterLinterAdapter extends abtract_zod_linter_a
     getFieldName() {
         return "hoster";
     }
-    getPriority() {
-        return 0;
-    }
 };
 exports.HosterLinterAdapter = HosterLinterAdapter;
 exports.HosterLinterAdapter = HosterLinterAdapter = __decorate([
@@ -35190,9 +35189,6 @@ let MeetupLinkLinterAdapter = class MeetupLinkLinterAdapter extends abtract_zod_
     }
     getFieldName() {
         return "meetup_link";
-    }
-    getPriority() {
-        return 0;
     }
 };
 exports.MeetupLinkLinterAdapter = MeetupLinkLinterAdapter;
@@ -35587,6 +35583,7 @@ var InputNames;
     InputNames["IssueNumber"] = "issue-number";
     InputNames["IssueParsedBody"] = "issue-parsed-body";
     InputNames["Hosters"] = "hosters";
+    InputNames["Speakers"] = "speakers";
     InputNames["FailOnError"] = "fail-on-error";
     InputNames["ShouldFix"] = "should-fix";
     InputNames["GithubToken"] = "github-token";
@@ -35608,22 +35605,10 @@ let InputService = class InputService {
         return JSON.parse(issueParsedBody);
     }
     getHosters() {
-        const hostersInput = this.coreService.getInput(InputNames.Hosters, {
-            required: true,
-        });
-        const hosters = JSON.parse(hostersInput);
-        if (!Array.isArray(hosters)) {
-            throw new Error("Hosters input must be an array");
-        }
-        if (hosters.length === 0) {
-            throw new Error("Hosters input must not be empty");
-        }
-        for (const hoster of hosters) {
-            if (typeof hoster !== "string") {
-                throw new Error("Hosters input must be an array of strings");
-            }
-        }
-        return hosters;
+        return this.getNonEmptyArrayOfStringsInput(InputNames.Hosters);
+    }
+    getSpeakers() {
+        return this.getNonEmptyArrayOfStringsInput(InputNames.Speakers);
     }
     getShouldFix() {
         return this.coreService.getBooleanInput(InputNames.ShouldFix);
@@ -35635,6 +35620,24 @@ let InputService = class InputService {
         return this.coreService.getInput(InputNames.GithubToken, {
             required: true,
         });
+    }
+    getNonEmptyArrayOfStringsInput(inputName) {
+        const inputValue = this.coreService.getInput(inputName, {
+            required: true,
+        });
+        const parsedInput = JSON.parse(inputValue);
+        if (!Array.isArray(parsedInput)) {
+            throw new Error(`"${inputName}" input must be an array`);
+        }
+        if (parsedInput.length === 0) {
+            throw new Error(`"${inputName}" input must not be empty`);
+        }
+        for (const parsedInputValue of parsedInput) {
+            if (typeof parsedInputValue !== "string") {
+                throw new Error(`"${inputName}" input value "${JSON.stringify(parsedInputValue)}" (${typeof parsedInputValue}) must be of string`);
+            }
+        }
+        return parsedInput;
     }
 };
 exports.InputService = InputService;

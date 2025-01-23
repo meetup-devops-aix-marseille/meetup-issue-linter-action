@@ -13,8 +13,4 @@ export class EventTitleLinterAdapter extends AbstractZodLinterAdapter {
   protected getFieldName() {
     return "event_title" as const;
   }
-
-  getPriority() {
-    return 0;
-  }
 }

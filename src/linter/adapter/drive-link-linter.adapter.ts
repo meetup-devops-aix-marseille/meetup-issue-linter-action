@@ -17,8 +17,4 @@ export class DriveLinkLinterAdapter extends AbstractZodLinterAdapter {
   protected getFieldName() {
     return "drive_link" as const;
   }
-
-  getPriority() {
-    return 0;
-  }
 }

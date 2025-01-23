@@ -44,6 +44,7 @@ jobs:
           issue-number: ${{ env.TEST_VALID_ISSUE_NUMBER }}
           issue-parsed-body: ${{ steps.parser.outputs.json }}
           hosters: '["Hoster Test One", "Hoster Test Two"]'
+          speakers: '["Speaker One", "Speaker Two"]'
           should-fix: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -86,6 +87,7 @@ jobs:
           issue-number: ${{ env.TEST_INVALID_ISSUE_NUMBER }}
           issue-parsed-body: ${{ steps.parser.outputs.json }}
           hosters: '["Hoster Test One", "Hoster Test Two"]'
+          speakers: '["Speaker One", "Speaker Two"]'
           should-fix: false
           fail-on-error: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -101,6 +103,7 @@ jobs:
           Title: Invalid, expected "[Meetup] - 2025-01-01 - Test Invalid Issue"
           Hoster: Must be an existing hoster at index 0
           Event Description: Required
+          Agenda: Speaker "Wrong Speaker" is not in the list of speakers
           Agenda: Entry "- Wrong agenda entry" must follow the format: "- <speaker>: <talk_description>"
           Meetup Link: Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789
           Drive Link: Must be a valid Drive Link, e.g. https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j

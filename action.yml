@@ -16,6 +16,10 @@ inputs:
     description: |
       JSON List of hosters to update. Example: ["Hoster 1", "Hoster 2"]
     required: true
+  speakers:
+    description: |
+      JSON List of speakers to update. Example: ["Speaker One", "Speaker 2"]
+    required: true
   should-fix:
     description: "Whether to fix the issue or not."
     required: false

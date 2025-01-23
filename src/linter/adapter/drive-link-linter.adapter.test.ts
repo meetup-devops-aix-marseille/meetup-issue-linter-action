@@ -60,12 +60,4 @@ describe("DriveLinkLinterAdapter", () => {
       ).rejects.toStrictEqual(expectedError);
     });
   });
-
-  describe("getPriority", () => {
-    it("should return priority as 0", () => {
-      const priority = driveLinkLinterAdapter.getPriority();
-
-      expect(priority).toBe(0);
-    });
-  });
 });

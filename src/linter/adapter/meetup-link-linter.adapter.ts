@@ -17,8 +17,4 @@ export class MeetupLinkLinterAdapter extends AbstractZodLinterAdapter {
   protected getFieldName() {
     return "meetup_link" as const;
   }
-
-  getPriority() {
-    return 0;
-  }
 }
