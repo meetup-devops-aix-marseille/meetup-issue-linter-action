@@ -2,7 +2,7 @@ import * as core from "@actions/core";
 import { mock, MockProxy } from "jest-mock-extended";
 import { container } from "./container";
 import { InputService } from "./services/input.service";
-import { LinterService } from "./services/linter.service";
+import { LinterService } from "./linter/linter.service";
 import { LoggerService } from "./services/logger.service";
 import { MeetupIssueService } from "./services/meetup-issue.service";
 

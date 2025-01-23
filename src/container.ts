@@ -2,18 +2,18 @@ import { Container } from "inversify";
 import { LoggerService } from "./services/logger.service";
 import { CORE_SERVICE_IDENTIFIER, coreService, CoreService } from "./services/core.service";
 import { InputService } from "./services/input.service";
-import { LinterService } from "./services/linter.service";
+import { LinterService } from "./linter/linter.service";
 import { GithubService } from "./services/github.service";
-import { EventDateLinterAdapter } from "./services/linter/event-date-linter.adapter";
-import { LINTER_ADAPTER_IDENTIFIER, LinterAdapter } from "./services/linter/linter.adapter";
+import { EventDateLinterAdapter } from "./linter/adapter/event-date-linter.adapter";
+import { LINTER_ADAPTER_IDENTIFIER, LinterAdapter } from "./linter/adapter/linter.adapter";
 import { MeetupIssueService } from "./services/meetup-issue.service";
-import { EventTitleLinterAdapter } from "./services/linter/event-title-linter.adapter";
-import { TitleLinterAdapter } from "./services/linter/title-linter.adapter";
-import { EventDescriptionLinterAdapter } from "./services/linter/event-description-linter.adapter";
-import { HosterLinterAdapter } from "./services/linter/hoster-linter.adapter";
-import { AgendaLinterAdapter } from "./services/linter/agenda-linter.adapter";
-import { MeetupLinkLinterAdapter } from "./services/linter/meetup-link-linter.adapter";
-import { DriveLinkLinterAdapter } from "./services/linter/drive-link-linter.adapter";
+import { EventTitleLinterAdapter } from "./linter/adapter/event-title-linter.adapter";
+import { TitleLinterAdapter } from "./linter/adapter/title-linter.adapter";
+import { EventDescriptionLinterAdapter } from "./linter/adapter/event-description-linter.adapter";
+import { HosterLinterAdapter } from "./linter/adapter/hoster-linter.adapter";
+import { AgendaLinterAdapter } from "./linter/adapter/agenda-linter.adapter";
+import { MeetupLinkLinterAdapter } from "./linter/adapter/meetup-link-linter.adapter";
+import { DriveLinkLinterAdapter } from "./linter/adapter/drive-link-linter.adapter";
 
 const container = new Container();
 

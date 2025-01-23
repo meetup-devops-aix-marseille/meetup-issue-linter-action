@@ -1,8 +1,8 @@
 import { mock, MockProxy } from "jest-mock-extended";
 import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue.fixture";
-import { MeetupIssueService } from "../meetup-issue.service";
+import { MeetupIssueService } from "../../services/meetup-issue.service";
 import { TitleLinterAdapter } from "./title-linter.adapter";
-import { LintError } from "./lint.error";
+import { LintError } from "../lint.error";
 
 describe("TitleLinterAdapter - lint", () => {
   let meetupIssueServiceMock: MockProxy<MeetupIssueService>;
@@ -67,12 +67,6 @@ describe("TitleLinterAdapter - lint", () => {
 
       const expectedError = new Error("Event Title is required to lint the title");
       await expect(adapter.lint(invalidMeetupIssue, false)).rejects.toStrictEqual(expectedError);
-    });
-  });
-
-  describe("getPriority", () => {
-    it("should return 1", () => {
-      expect(adapter.getPriority()).toBe(1);
     });
   });
 });

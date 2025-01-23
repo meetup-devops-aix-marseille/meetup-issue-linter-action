@@ -2,9 +2,9 @@ import { setFailed } from "@actions/core";
 import { InputService } from "./services/input.service";
 import { LoggerService } from "./services/logger.service";
 import { container } from "./container";
-import { LinterService } from "./services/linter.service";
+import { LinterService } from "./linter/linter.service";
 import { MeetupIssueService } from "./services/meetup-issue.service";
-import { LintError } from "./services/linter/lint.error";
+import { LintError } from "./linter/lint.error";
 import { CORE_SERVICE_IDENTIFIER, CoreService } from "./services/core.service";
 
 /**

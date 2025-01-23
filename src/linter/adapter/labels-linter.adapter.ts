@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { LinterAdapter } from "./linter.adapter";
-import { MeetupIssue, MeetupIssueService } from "../meetup-issue.service";
-import { LintError } from "./lint.error";
+import { MeetupIssue, MeetupIssueService } from "../../services/meetup-issue.service";
+import { LintError } from "../lint.error";
 
 @injectable()
 export class LabelsLinterAdapter implements LinterAdapter {
@@ -39,7 +39,7 @@ export class LabelsLinterAdapter implements LinterAdapter {
     throw new LintError(lintErrors);
   }
 
-  getPriority() {
-    return 0;
+  getDependencies() {
+    return [];
   }
 }

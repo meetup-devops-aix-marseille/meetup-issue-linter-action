@@ -5,8 +5,8 @@ import {
   MeetupIssue,
   MeetupIssueBody,
   MeetupIssueBodyFields,
-} from "../meetup-issue.service";
-import { LintError } from "./lint.error";
+} from "../../services/meetup-issue.service";
+import { LintError } from "../lint.error";
 import { LinterAdapter } from "./linter.adapter";
 
 export abstract class AbstractZodLinterAdapter<
@@ -53,5 +53,7 @@ export abstract class AbstractZodLinterAdapter<
 
   protected abstract getValidator(): ZodType<MeetupIssueBody[MeetupIssueBodyField]>;
 
-  abstract getPriority(): number;
+  getDependencies() {
+    return [];
+  }
 }

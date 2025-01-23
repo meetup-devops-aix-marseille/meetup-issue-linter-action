@@ -1,9 +1,9 @@
 import { mock, MockProxy } from "jest-mock-extended";
-import { InputService } from "../input.service";
+import { InputService } from "../../services/input.service";
 import { HosterLinterAdapter } from "./hoster-linter.adapter";
 import { getMeetupIssueFixture } from "../../__fixtures__/meetup-issue.fixture";
 import { getHostersFixture } from "../../__fixtures__/hosters.fixture";
-import { LintError } from "./lint.error";
+import { LintError } from "../lint.error";
 
 describe("HosterLinterAdapter", () => {
   let inputServiceMock: MockProxy<InputService>;
