@@ -38,12 +38,4 @@ describe("EventDateLinterAdapter", () => {
       ).rejects.toStrictEqual(expectedError);
     });
   });
-
-  describe("getPriority", () => {
-    it("should return priority as 0", () => {
-      const priority = eventDateLinterAdapter.getPriority();
-
-      expect(priority).toBe(0);
-    });
-  });
 });

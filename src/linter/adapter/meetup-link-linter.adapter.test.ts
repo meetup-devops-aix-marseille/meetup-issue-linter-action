@@ -60,12 +60,4 @@ describe("MeetupLinkLinterAdapter", () => {
       ).rejects.toStrictEqual(expectedError);
     });
   });
-
-  describe("getPriority", () => {
-    it("should return priority as 0", () => {
-      const priority = meetupLinkLinterAdapter.getPriority();
-
-      expect(priority).toBe(0);
-    });
-  });
 });

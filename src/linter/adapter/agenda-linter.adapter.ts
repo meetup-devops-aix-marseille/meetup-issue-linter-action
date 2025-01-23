@@ -3,6 +3,7 @@ import { string } from "zod";
 import { AbstractZodLinterAdapter } from "./abtract-zod-linter.adapter";
 import { MeetupIssue } from "../../services/meetup-issue.service";
 import { LintError } from "../lint.error";
+import { InputService } from "../../services/input.service";
 
 type AgendaEntry = {
   speaker: string;
@@ -12,6 +13,14 @@ type AgendaEntry = {
 @injectable()
 export class AgendaLinterAdapter extends AbstractZodLinterAdapter {
   private static AGENDA_LINE_REGEX = /^- (.+): (.+)$/;
+
+  private readonly speakers: [string, ...string[]];
+
+  constructor(private readonly inputService: InputService) {
+    super();
+
+    this.speakers = this.inputService.getSpeakers();
+  }
 
   async lint(meetupIssue: MeetupIssue, shouldFix: boolean): Promise<MeetupIssue> {
     const result = await super.lint(meetupIssue, shouldFix);
@@ -65,9 +74,16 @@ export class AgendaLinterAdapter extends AbstractZodLinterAdapter {
     }
 
     const [, speaker, talkDescription] = matches;
+
+    if (!this.speakers.includes(speaker)) {
+      throw new LintError([
+        this.getLintErrorMessage(`Speaker "${speaker}" is not in the list of speakers`),
+      ]);
+    }
+
     return {
-      speaker: speaker.trim(),
-      talkDescription: talkDescription.trim(),
+      speaker,
+      talkDescription,
     };
   }
 
@@ -79,9 +95,5 @@ export class AgendaLinterAdapter extends AbstractZodLinterAdapter {
 
   protected getFieldName() {
     return "agenda" as const;
-  }
-
-  getPriority() {
-    return 0;
   }
 }

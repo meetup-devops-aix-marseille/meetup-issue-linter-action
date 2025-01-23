@@ -15,13 +15,7 @@ describe("InputService", () => {
 
   describe("getIssueNumber", () => {
     it("should return the issue number", () => {
-      coreServiceMock.getInput.mockImplementation((name: string) => {
-        if (name === InputNames.IssueNumber) {
-          return "1";
-        }
-
-        return "";
-      });
+      coreServiceMock.getInput.calledWith(InputNames.IssueNumber).mockReturnValue("1");
 
       const result = service.getIssueNumber();
 
@@ -34,13 +28,9 @@ describe("InputService", () => {
 
   describe("getIssueParsedBody", () => {
     it("should return the parsed issue body", () => {
-      coreServiceMock.getInput.mockImplementation((name: string) => {
-        if (name === InputNames.IssueParsedBody) {
-          return JSON.stringify({ key: "value" });
-        }
-
-        return "";
-      });
+      coreServiceMock.getInput
+        .calledWith(InputNames.IssueParsedBody)
+        .mockReturnValue('{ "key": "value" }');
 
       const result = service.getIssueParsedBody();
 
@@ -53,13 +43,9 @@ describe("InputService", () => {
 
   describe("getHosters", () => {
     it("should return the hosters", () => {
-      coreServiceMock.getInput.mockImplementation((name: string) => {
-        if (name === InputNames.Hosters) {
-          return JSON.stringify(["hoster1", "hoster2"]);
-        }
-
-        return "";
-      });
+      coreServiceMock.getInput
+        .calledWith(InputNames.Hosters)
+        .mockReturnValue('["hoster1", "hoster2"]');
 
       const result = service.getHosters();
 
@@ -70,51 +56,64 @@ describe("InputService", () => {
     });
 
     it("should throw an error if the hosters input is not an array", () => {
-      coreServiceMock.getInput.mockImplementation((name: string) => {
-        if (name === InputNames.Hosters) {
-          return JSON.stringify("hoster1");
-        }
+      coreServiceMock.getInput.calledWith(InputNames.Hosters).mockReturnValue('"hoster1"');
 
-        return "";
-      });
-
-      expect(() => service.getHosters()).toThrow("Hosters input must be an array");
+      expect(() => service.getHosters()).toThrow('"hosters" input must be an array');
     });
 
     it("should throw an error if the hosters input is empty", () => {
-      coreServiceMock.getInput.mockImplementation((name: string) => {
-        if (name === InputNames.Hosters) {
-          return JSON.stringify([]);
-        }
+      coreServiceMock.getInput.calledWith(InputNames.Hosters).mockReturnValue("[]");
 
-        return "";
-      });
-
-      expect(() => service.getHosters()).toThrow("Hosters input must not be empty");
+      expect(() => service.getHosters()).toThrow('"hosters" input must not be empty');
     });
 
     it("should throw an error if the hosters input is not an array of strings", () => {
-      coreServiceMock.getInput.mockImplementation((name: string) => {
-        if (name === InputNames.Hosters) {
-          return JSON.stringify([1]);
-        }
+      coreServiceMock.getInput.calledWith(InputNames.Hosters).mockReturnValue("[1]");
 
-        return "";
+      expect(() => service.getHosters()).toThrow(
+        '"hosters" input value "1" (number) must be of string'
+      );
+    });
+  });
+
+  describe("getSpeakers", () => {
+    it("should return the speakers", () => {
+      coreServiceMock.getInput
+        .calledWith(InputNames.Speakers)
+        .mockReturnValue('["speaker1", "speaker2"]');
+
+      const result = service.getSpeakers();
+
+      expect(result).toEqual(["speaker1", "speaker2"]);
+      expect(coreServiceMock.getInput).toHaveBeenCalledWith(InputNames.Speakers, {
+        required: true,
       });
+    });
 
-      expect(() => service.getHosters()).toThrow("Hosters input must be an array of strings");
+    it("should throw an error if the speakers input is not an array", () => {
+      coreServiceMock.getInput.calledWith(InputNames.Speakers).mockReturnValue('"speaker1"');
+
+      expect(() => service.getSpeakers()).toThrow('"speakers" input must be an array');
+    });
+
+    it("should throw an error if the speakers input is empty", () => {
+      coreServiceMock.getInput.calledWith(InputNames.Speakers).mockReturnValue("[]");
+
+      expect(() => service.getSpeakers()).toThrow('"speakers" input must not be empty');
+    });
+
+    it("should throw an error if the speakers input is not an array of strings", () => {
+      coreServiceMock.getInput.calledWith(InputNames.Speakers).mockReturnValue("[1]");
+
+      expect(() => service.getSpeakers()).toThrow(
+        '"speakers" input value "1" (number) must be of string'
+      );
     });
   });
 
   describe("getShouldFix", () => {
     it("should return the shouldFix value", () => {
-      coreServiceMock.getBooleanInput.mockImplementation((name: string) => {
-        if (name === InputNames.ShouldFix) {
-          return true;
-        }
-
-        return false;
-      });
+      coreServiceMock.getBooleanInput.calledWith(InputNames.ShouldFix).mockReturnValue(true);
 
       const result = service.getShouldFix();
 
@@ -125,13 +124,7 @@ describe("InputService", () => {
 
   describe("getFailOnError", () => {
     it("should return the failOnError value", () => {
-      coreServiceMock.getBooleanInput.mockImplementation((name: string) => {
-        if (name === InputNames.FailOnError) {
-          return true;
-        }
-
-        return false;
-      });
+      coreServiceMock.getBooleanInput.calledWith(InputNames.FailOnError).mockReturnValue(true);
 
       const result = service.getFailOnError();
 
@@ -142,13 +135,7 @@ describe("InputService", () => {
 
   describe("getGithubToken", () => {
     it("should return the github token", () => {
-      coreServiceMock.getInput.mockImplementation((name: string) => {
-        if (name === InputNames.GithubToken) {
-          return "token";
-        }
-
-        return "";
-      });
+      coreServiceMock.getInput.calledWith(InputNames.GithubToken).mockReturnValue("token");
 
       const result = service.getGithubToken();
 

@@ -11,8 +11,4 @@ export class EventDateLinterAdapter extends AbstractZodLinterAdapter {
   protected getFieldName() {
     return "event_date" as const;
   }
-
-  getPriority() {
-    return 0;
-  }
 }

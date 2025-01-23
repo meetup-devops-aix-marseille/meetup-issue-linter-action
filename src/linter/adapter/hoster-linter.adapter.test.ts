@@ -73,10 +73,4 @@ describe("HosterLinterAdapter", () => {
       );
     });
   });
-
-  describe("getPriority", () => {
-    it("should return 0 from getPriority", () => {
-      expect(hosterLinterAdapter.getPriority()).toBe(0);
-    });
-  });
 });

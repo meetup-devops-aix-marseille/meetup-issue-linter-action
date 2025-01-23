@@ -39,12 +39,4 @@ describe("EventDescriptionLinterAdapter", () => {
       ).rejects.toStrictEqual(expectedError);
     });
   });
-
-  describe("getPriority", () => {
-    it("should return priority as 0", () => {
-      const priority = eventDescriptionLinterAdapter.getPriority();
-
-      expect(priority).toBe(0);
-    });
-  });
 });

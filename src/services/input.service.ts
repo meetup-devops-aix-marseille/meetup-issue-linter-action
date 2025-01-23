@@ -5,10 +5,13 @@ export enum InputNames {
   IssueNumber = "issue-number",
   IssueParsedBody = "issue-parsed-body",
   Hosters = "hosters",
+  Speakers = "speakers",
   FailOnError = "fail-on-error",
   ShouldFix = "should-fix",
   GithubToken = "github-token",
 }
+
+type NonEmptyArrayOfStrings = [string, ...string[]];
 
 @injectable()
 export class InputService {
@@ -30,28 +33,12 @@ export class InputService {
     return JSON.parse(issueParsedBody);
   }
 
-  getHosters(): [string, ...string[]] {
-    const hostersInput = this.coreService.getInput(InputNames.Hosters, {
-      required: true,
-    });
+  getHosters(): NonEmptyArrayOfStrings {
+    return this.getNonEmptyArrayOfStringsInput(InputNames.Hosters);
+  }
 
-    const hosters = JSON.parse(hostersInput);
-
-    if (!Array.isArray(hosters)) {
-      throw new Error("Hosters input must be an array");
-    }
-
-    if (hosters.length === 0) {
-      throw new Error("Hosters input must not be empty");
-    }
-
-    for (const hoster of hosters) {
-      if (typeof hoster !== "string") {
-        throw new Error("Hosters input must be an array of strings");
-      }
-    }
-
-    return hosters as [string, ...string[]];
+  getSpeakers(): NonEmptyArrayOfStrings {
+    return this.getNonEmptyArrayOfStringsInput(InputNames.Speakers);
   }
 
   getShouldFix(): boolean {
@@ -66,5 +53,31 @@ export class InputService {
     return this.coreService.getInput(InputNames.GithubToken, {
       required: true,
     });
+  }
+
+  private getNonEmptyArrayOfStringsInput(inputName: InputNames): NonEmptyArrayOfStrings {
+    const inputValue = this.coreService.getInput(inputName, {
+      required: true,
+    });
+
+    const parsedInput = JSON.parse(inputValue);
+
+    if (!Array.isArray(parsedInput)) {
+      throw new Error(`"${inputName}" input must be an array`);
+    }
+
+    if (parsedInput.length === 0) {
+      throw new Error(`"${inputName}" input must not be empty`);
+    }
+
+    for (const parsedInputValue of parsedInput) {
+      if (typeof parsedInputValue !== "string") {
+        throw new Error(
+          `"${inputName}" input value "${JSON.stringify(parsedInputValue)}" (${typeof parsedInputValue}) must be of string`
+        );
+      }
+    }
+
+    return parsedInput as NonEmptyArrayOfStrings;
   }
 }

@@ -29,8 +29,4 @@ export class HosterLinterAdapter extends AbstractZodLinterAdapter {
   protected getFieldName() {
     return "hoster" as const;
   }
-
-  getPriority() {
-    return 0;
-  }
 }
