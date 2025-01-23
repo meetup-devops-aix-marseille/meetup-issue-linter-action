@@ -40,6 +40,11 @@ This action lint the meetup issue for required fields and format
     #
     hosters: ""
 
+    # Description: JSON List of speakers to update. Example: ["Speaker One", "Speaker
+    # 2"]
+    #
+    speakers: ""
+
     # Description: Whether to fix the issue or not.
     #
     # Default: true
@@ -58,14 +63,15 @@ This action lint the meetup issue for required fields and format
 <!-- end usage -->
 <!-- start inputs -->
 
-| **Input**                      | **Description**                                                   | **Default**       | **Required** |
-| ------------------------------ | ----------------------------------------------------------------- | ----------------- | ------------ |
-| <code>issue-number</code>      | The issue number to lint.                                         |                   | **true**     |
-| <code>issue-parsed-body</code> | The parsed issue body. See <https://github.com/issue-ops/parser>. |                   | **true**     |
-| <code>hosters</code>           | JSON List of hosters to update. Example: ["Hoster 1", "Hoster 2"] |                   | **true**     |
-| <code>should-fix</code>        | Whether to fix the issue or not.                                  | <code>true</code> | **false**    |
-| <code>fail-on-error</code>     | Whether to fail on error or not.                                  | <code>true</code> | **false**    |
-| <code>github-token</code>      | The GitHub token with permissions to update the issue.            |                   | **true**     |
+| **Input**                      | **Description**                                                        | **Default**       | **Required** |
+| ------------------------------ | ---------------------------------------------------------------------- | ----------------- | ------------ |
+| <code>issue-number</code>      | The issue number to lint.                                              |                   | **true**     |
+| <code>issue-parsed-body</code> | The parsed issue body. See <https://github.com/issue-ops/parser>.      |                   | **true**     |
+| <code>hosters</code>           | JSON List of hosters to update. Example: ["Hoster 1", "Hoster 2"]      |                   | **true**     |
+| <code>speakers</code>          | JSON List of speakers to update. Example: ["Speaker One", "Speaker 2"] |                   | **true**     |
+| <code>should-fix</code>        | Whether to fix the issue or not.                                       | <code>true</code> | **false**    |
+| <code>fail-on-error</code>     | Whether to fail on error or not.                                       | <code>true</code> | **false**    |
+| <code>github-token</code>      | The GitHub token with permissions to update the issue.                 |                   | **true**     |
 
 <!-- end inputs -->
 <!-- start outputs -->
