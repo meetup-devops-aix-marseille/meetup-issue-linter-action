@@ -32,7 +32,7 @@ jobs:
 
       - name: Parse Issue
         id: parser
-        uses: issue-ops/parser@v4.0.0
+        uses: issue-ops/parser@v4.1.0
         with:
           body: ${{ steps.get-issue-body.outputs.issue-body }}
           issue-form-template: ../../__tests__/meetup-issue-template.yml
@@ -75,7 +75,7 @@ jobs:
 
       - name: Parse Issue
         id: parser
-        uses: issue-ops/parser@v4.0.0
+        uses: issue-ops/parser@v4.1.0
         with:
           body: ${{ steps.get-issue-body.outputs.issue-body }}
           issue-form-template: ../../__tests__/meetup-issue-template.yml
