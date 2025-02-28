@@ -3560,7 +3560,7 @@ var import_graphql = __nccwpck_require__(7);
 var import_auth_token = __nccwpck_require__(7864);
 
 // pkg/dist-src/version.js
-var VERSION = "5.1.0";
+var VERSION = "5.2.0";
 
 // pkg/dist-src/index.js
 var noop = () => {
@@ -3727,7 +3727,7 @@ module.exports = __toCommonJS(dist_src_exports);
 var import_universal_user_agent = __nccwpck_require__(3843);
 
 // pkg/dist-src/version.js
-var VERSION = "9.0.4";
+var VERSION = "9.0.6";
 
 // pkg/dist-src/defaults.js
 var userAgent = `octokit-endpoint.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`;
@@ -3832,9 +3832,9 @@ function addQueryParameters(url, parameters) {
 }
 
 // pkg/dist-src/util/extract-url-variable-names.js
-var urlVariableRegex = /\{[^}]+\}/g;
+var urlVariableRegex = /\{[^{}}]+\}/g;
 function removeNonChars(variableName) {
-  return variableName.replace(/^\W+|\W+$/g, "").split(/,/);
+  return variableName.replace(/(?:^\W+)|(?:(?<!\W)\W+$)/g, "").split(/,/);
 }
 function extractUrlVariableNames(url) {
   const matches = url.match(urlVariableRegex);
@@ -4020,7 +4020,7 @@ function parse(options) {
     }
     if (url.endsWith("/graphql")) {
       if (options.mediaType.previews?.length) {
-        const previewsFromAcceptHeader = headers.accept.match(/[\w-]+(?=-preview)/g) || [];
+        const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
         headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
           const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
           return `application/vnd.github.${preview}-preview${format}`;
@@ -4101,18 +4101,18 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
+var index_exports = {};
+__export(index_exports, {
   GraphqlResponseError: () => GraphqlResponseError,
   graphql: () => graphql2,
   withCustomRequest: () => withCustomRequest
 });
-module.exports = __toCommonJS(dist_src_exports);
+module.exports = __toCommonJS(index_exports);
 var import_request3 = __nccwpck_require__(8636);
 var import_universal_user_agent = __nccwpck_require__(3843);
 
 // pkg/dist-src/version.js
-var VERSION = "7.0.2";
+var VERSION = "7.1.1";
 
 // pkg/dist-src/with-defaults.js
 var import_request2 = __nccwpck_require__(8636);
@@ -4160,8 +4160,7 @@ function graphql(request2, query, options) {
       );
     }
     for (const key in options) {
-      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key))
-        continue;
+      if (!FORBIDDEN_VARIABLE_OPTIONS.includes(key)) continue;
       return Promise.reject(
         new Error(
           `[@octokit/graphql] "${key}" cannot be used as variable name`
@@ -4269,7 +4268,7 @@ __export(dist_src_exports, {
 module.exports = __toCommonJS(dist_src_exports);
 
 // pkg/dist-src/version.js
-var VERSION = "9.2.1";
+var VERSION = "9.2.2";
 
 // pkg/dist-src/normalize-paginated-list-response.js
 function normalizePaginatedListResponse(response) {
@@ -4317,7 +4316,7 @@ function iterator(octokit, route, parameters) {
           const response = await requestMethod({ method, url, headers });
           const normalizedResponse = normalizePaginatedListResponse(response);
           url = ((normalizedResponse.headers.link || "").match(
-            /<([^>]+)>;\s*rel="next"/
+            /<([^<>]+)>;\s*rel="next"/
           ) || [])[1];
           return { value: normalizedResponse };
         } catch (error) {
@@ -6869,7 +6868,7 @@ var RequestError = class extends Error {
     if (options.request.headers.authorization) {
       requestCopy.headers = Object.assign({}, options.request.headers, {
         authorization: options.request.headers.authorization.replace(
-          / .*$/,
+          /(?<! ) .*$/,
           " [REDACTED]"
         )
       });
@@ -6937,7 +6936,7 @@ var import_endpoint = __nccwpck_require__(4471);
 var import_universal_user_agent = __nccwpck_require__(3843);
 
 // pkg/dist-src/version.js
-var VERSION = "8.2.0";
+var VERSION = "8.4.1";
 
 // pkg/dist-src/is-plain-object.js
 function isPlainObject(value) {
@@ -6962,7 +6961,7 @@ function getBufferResponse(response) {
 
 // pkg/dist-src/fetch-wrapper.js
 function fetchWrapper(requestOptions) {
-  var _a, _b, _c;
+  var _a, _b, _c, _d;
   const log = requestOptions.request && requestOptions.request.log ? requestOptions.request.log : console;
   const parseSuccessResponseBody = ((_a = requestOptions.request) == null ? void 0 : _a.parseSuccessResponseBody) !== false;
   if (isPlainObject(requestOptions.body) || Array.isArray(requestOptions.body)) {
@@ -6983,8 +6982,9 @@ function fetchWrapper(requestOptions) {
   return fetch(requestOptions.url, {
     method: requestOptions.method,
     body: requestOptions.body,
+    redirect: (_c = requestOptions.request) == null ? void 0 : _c.redirect,
     headers: requestOptions.headers,
-    signal: (_c = requestOptions.request) == null ? void 0 : _c.signal,
+    signal: (_d = requestOptions.request) == null ? void 0 : _d.signal,
     // duplex must be set if request.body is ReadableStream or Async Iterables.
     // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
     ...requestOptions.body && { duplex: "half" }
@@ -6995,7 +6995,7 @@ function fetchWrapper(requestOptions) {
       headers[keyAndValue[0]] = keyAndValue[1];
     }
     if ("deprecation" in headers) {
-      const matches = headers.link && headers.link.match(/<([^>]+)>; rel="deprecation"/);
+      const matches = headers.link && headers.link.match(/<([^<>]+)>; rel="deprecation"/);
       const deprecationLink = matches && matches.pop();
       log.warn(
         `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${headers.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
@@ -15731,6 +15731,14 @@ const { isUint8Array, isArrayBuffer } = __nccwpck_require__(8253)
 const { File: UndiciFile } = __nccwpck_require__(3041)
 const { parseMIMEType, serializeAMimeType } = __nccwpck_require__(4322)
 
+let random
+try {
+  const crypto = __nccwpck_require__(7598)
+  random = (max) => crypto.randomInt(0, max)
+} catch {
+  random = (max) => Math.floor(Math.random(max))
+}
+
 let ReadableStream = globalThis.ReadableStream
 
 /** @type {globalThis['File']} */
@@ -15816,7 +15824,7 @@ function extractBody (object, keepalive = false) {
     // Set source to a copy of the bytes held by object.
     source = new Uint8Array(object.buffer.slice(object.byteOffset, object.byteOffset + object.byteLength))
   } else if (util.isFormDataLike(object)) {
-    const boundary = `----formdata-undici-0${`${Math.floor(Math.random() * 1e11)}`.padStart(11, '0')}`
+    const boundary = `----formdata-undici-0${`${random(1e11)}`.padStart(11, '0')}`
     const prefix = `--${boundary}\r\nContent-Disposition: form-data`
 
     /*! formdata-polyfill. MIT License. Jimmy Wärting <https://jimmy.warting.se/opensource> */
@@ -34748,7 +34756,7 @@ const event_date_linter_adapter_1 = __nccwpck_require__(5451);
 const linter_adapter_1 = __nccwpck_require__(9595);
 const meetup_issue_service_1 = __nccwpck_require__(9759);
 const event_title_linter_adapter_1 = __nccwpck_require__(8877);
-const title_linter_adapter_1 = __nccwpck_require__(3241);
+const title_linter_adapter_1 = __nccwpck_require__(5622);
 const event_description_linter_adapter_1 = __nccwpck_require__(6301);
 const hoster_linter_adapter_1 = __nccwpck_require__(5057);
 const agenda_linter_adapter_1 = __nccwpck_require__(3066);
@@ -35222,7 +35230,7 @@ exports.MeetupLinkLinterAdapter = MeetupLinkLinterAdapter = MeetupLinkLinterAdap
 
 /***/ }),
 
-/***/ 3241:
+/***/ 5622:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -35878,6 +35886,14 @@ module.exports = require("https");
 
 "use strict";
 module.exports = require("net");
+
+/***/ }),
+
+/***/ 7598:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:crypto");
 
 /***/ }),
 
@@ -37642,13 +37658,31 @@ module.exports = parseParams
 
 /***/ }),
 
+/***/ 4990:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isPromise = isPromise;
+function isPromise(object) {
+    const isObjectOrFunction = (typeof object === 'object' && object !== null) ||
+        typeof object === 'function';
+    return (isObjectOrFunction && typeof object.then === 'function');
+}
+//# sourceMappingURL=isPromise.js.map
+
+/***/ }),
+
 /***/ 9160:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.stringifyServiceIdentifier = exports.LazyServiceIdentifier = void 0;
+exports.stringifyServiceIdentifier = exports.LazyServiceIdentifier = exports.isPromise = void 0;
+const isPromise_1 = __nccwpck_require__(4990);
+Object.defineProperty(exports, "isPromise", ({ enumerable: true, get: function () { return isPromise_1.isPromise; } }));
 const stringifyServiceIdentifier_1 = __nccwpck_require__(8085);
 Object.defineProperty(exports, "stringifyServiceIdentifier", ({ enumerable: true, get: function () { return stringifyServiceIdentifier_1.stringifyServiceIdentifier; } }));
 const LazyServiceIdentifier_1 = __nccwpck_require__(3466);
@@ -37708,26 +37742,1766 @@ exports.LazyServiceIdentifier = LazyServiceIdentifier;
 
 /***/ }),
 
+/***/ 110:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getBindingId = getBindingId;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
+const ID_METADATA = '@inversifyjs/container/bindingId';
+function getBindingId() {
+    const bindingId = (0, reflect_metadata_utils_1.getOwnReflectMetadata)(Object, ID_METADATA) ?? 0;
+    if (bindingId === Number.MAX_SAFE_INTEGER) {
+        (0, reflect_metadata_utils_1.setReflectMetadata)(Object, ID_METADATA, Number.MIN_SAFE_INTEGER);
+    }
+    else {
+        (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(Object, ID_METADATA, () => bindingId, (id) => id + 1);
+    }
+    return bindingId;
+}
+//# sourceMappingURL=getBindingId.js.map
+
+/***/ }),
+
+/***/ 439:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isAnyAncestorBindingConstraints = isAnyAncestorBindingConstraints;
+function isAnyAncestorBindingConstraints(condition) {
+    return (constraints) => {
+        for (let ancestorMetadata = constraints.getAncestor(); ancestorMetadata !== undefined; ancestorMetadata = ancestorMetadata.getAncestor()) {
+            if (condition(ancestorMetadata)) {
+                return true;
+            }
+        }
+        return false;
+    };
+}
+//# sourceMappingURL=isAnyAncestorBindingConstraints.js.map
+
+/***/ }),
+
+/***/ 8752:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isAnyAncestorBindingConstraintsWithName = isAnyAncestorBindingConstraintsWithName;
+const isAnyAncestorBindingConstraints_1 = __nccwpck_require__(439);
+const isBindingConstraintsWithName_1 = __nccwpck_require__(5967);
+function isAnyAncestorBindingConstraintsWithName(name) {
+    return (0, isAnyAncestorBindingConstraints_1.isAnyAncestorBindingConstraints)((0, isBindingConstraintsWithName_1.isBindingConstraintsWithName)(name));
+}
+//# sourceMappingURL=isAnyAncestorBindingConstraintsWithName.js.map
+
+/***/ }),
+
+/***/ 9073:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isAnyAncestorBindingConstraintsWithServiceId = isAnyAncestorBindingConstraintsWithServiceId;
+const isAnyAncestorBindingConstraints_1 = __nccwpck_require__(439);
+const isBindingConstraintsWithServiceId_1 = __nccwpck_require__(3528);
+function isAnyAncestorBindingConstraintsWithServiceId(serviceId) {
+    return (0, isAnyAncestorBindingConstraints_1.isAnyAncestorBindingConstraints)((0, isBindingConstraintsWithServiceId_1.isBindingConstraintsWithServiceId)(serviceId));
+}
+//# sourceMappingURL=isAnyAncestorBindingConstraintsWithServiceId.js.map
+
+/***/ }),
+
+/***/ 4007:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isAnyAncestorBindingConstraintsWithTag = isAnyAncestorBindingConstraintsWithTag;
+const isAnyAncestorBindingConstraints_1 = __nccwpck_require__(439);
+const isBindingConstraintsWithTag_1 = __nccwpck_require__(9362);
+function isAnyAncestorBindingConstraintsWithTag(tag, value) {
+    return (0, isAnyAncestorBindingConstraints_1.isAnyAncestorBindingConstraints)((0, isBindingConstraintsWithTag_1.isBindingConstraintsWithTag)(tag, value));
+}
+//# sourceMappingURL=isAnyAncestorBindingConstraintsWithTag.js.map
+
+/***/ }),
+
+/***/ 5967:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isBindingConstraintsWithName = isBindingConstraintsWithName;
+function isBindingConstraintsWithName(name) {
+    return (constraints) => constraints.name === name;
+}
+//# sourceMappingURL=isBindingConstraintsWithName.js.map
+
+/***/ }),
+
+/***/ 5132:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isBindingConstraintsWithNoNameNorTags = isBindingConstraintsWithNoNameNorTags;
+function isBindingConstraintsWithNoNameNorTags(constraints) {
+    return constraints.name === undefined && constraints.tags.size === 0;
+}
+//# sourceMappingURL=isBindingConstraintsWithNoNameNorTags.js.map
+
+/***/ }),
+
+/***/ 3528:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isBindingConstraintsWithServiceId = isBindingConstraintsWithServiceId;
+function isBindingConstraintsWithServiceId(serviceId) {
+    return (constraints) => constraints.serviceIdentifier === serviceId;
+}
+//# sourceMappingURL=isBindingConstraintsWithServiceId.js.map
+
+/***/ }),
+
+/***/ 9362:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isBindingConstraintsWithTag = isBindingConstraintsWithTag;
+function isBindingConstraintsWithTag(tag, value) {
+    return (constraints) => constraints.tags.has(tag) && constraints.tags.get(tag) === value;
+}
+//# sourceMappingURL=isBindingConstraintsWithTag.js.map
+
+/***/ }),
+
+/***/ 9798:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isNoAncestorBindingConstraints = isNoAncestorBindingConstraints;
+const isAnyAncestorBindingConstraints_1 = __nccwpck_require__(439);
+function isNoAncestorBindingConstraints(condition) {
+    const isAnyAncestorBindingConstraintsConstraint = (0, isAnyAncestorBindingConstraints_1.isAnyAncestorBindingConstraints)(condition);
+    return (constraints) => {
+        return !isAnyAncestorBindingConstraintsConstraint(constraints);
+    };
+}
+//# sourceMappingURL=isNoAncestorBindingConstraints.js.map
+
+/***/ }),
+
+/***/ 8637:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isNoAncestorBindingConstraintsWithName = isNoAncestorBindingConstraintsWithName;
+const isBindingConstraintsWithName_1 = __nccwpck_require__(5967);
+const isNoAncestorBindingConstraints_1 = __nccwpck_require__(9798);
+function isNoAncestorBindingConstraintsWithName(name) {
+    return (0, isNoAncestorBindingConstraints_1.isNoAncestorBindingConstraints)((0, isBindingConstraintsWithName_1.isBindingConstraintsWithName)(name));
+}
+//# sourceMappingURL=isNoAncestorBindingConstraintsWithName.js.map
+
+/***/ }),
+
+/***/ 1870:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isNoAncestorBindingConstraintsWithServiceId = isNoAncestorBindingConstraintsWithServiceId;
+const isBindingConstraintsWithServiceId_1 = __nccwpck_require__(3528);
+const isNoAncestorBindingConstraints_1 = __nccwpck_require__(9798);
+function isNoAncestorBindingConstraintsWithServiceId(serviceId) {
+    return (0, isNoAncestorBindingConstraints_1.isNoAncestorBindingConstraints)((0, isBindingConstraintsWithServiceId_1.isBindingConstraintsWithServiceId)(serviceId));
+}
+//# sourceMappingURL=isNoAncestorBindingConstraintsWithServiceId.js.map
+
+/***/ }),
+
+/***/ 5476:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isNoAncestorBindingConstraintsWithTag = isNoAncestorBindingConstraintsWithTag;
+const isBindingConstraintsWithTag_1 = __nccwpck_require__(9362);
+const isNoAncestorBindingConstraints_1 = __nccwpck_require__(9798);
+function isNoAncestorBindingConstraintsWithTag(tag, value) {
+    return (0, isNoAncestorBindingConstraints_1.isNoAncestorBindingConstraints)((0, isBindingConstraintsWithTag_1.isBindingConstraintsWithTag)(tag, value));
+}
+//# sourceMappingURL=isNoAncestorBindingConstraintsWithTag.js.map
+
+/***/ }),
+
+/***/ 4377:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isNotParentBindingConstraints = isNotParentBindingConstraints;
+function isNotParentBindingConstraints(condition) {
+    return (constraints) => {
+        const ancestorMetadata = constraints.getAncestor();
+        return ancestorMetadata === undefined || !condition(ancestorMetadata);
+    };
+}
+//# sourceMappingURL=isNotParentBindingConstraints.js.map
+
+/***/ }),
+
+/***/ 3186:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isNotParentBindingConstraintsWithName = isNotParentBindingConstraintsWithName;
+const isBindingConstraintsWithName_1 = __nccwpck_require__(5967);
+const isNotParentBindingConstraints_1 = __nccwpck_require__(4377);
+function isNotParentBindingConstraintsWithName(name) {
+    return (0, isNotParentBindingConstraints_1.isNotParentBindingConstraints)((0, isBindingConstraintsWithName_1.isBindingConstraintsWithName)(name));
+}
+//# sourceMappingURL=isNotParentBindingConstraintsWithName.js.map
+
+/***/ }),
+
+/***/ 2707:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isNotParentBindingConstraintsWithServiceId = isNotParentBindingConstraintsWithServiceId;
+const isBindingConstraintsWithServiceId_1 = __nccwpck_require__(3528);
+const isNotParentBindingConstraints_1 = __nccwpck_require__(4377);
+function isNotParentBindingConstraintsWithServiceId(serviceId) {
+    return (0, isNotParentBindingConstraints_1.isNotParentBindingConstraints)((0, isBindingConstraintsWithServiceId_1.isBindingConstraintsWithServiceId)(serviceId));
+}
+//# sourceMappingURL=isNotParentBindingConstraintsWithServiceId.js.map
+
+/***/ }),
+
+/***/ 2349:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isNotParentBindingConstraintsWithTag = isNotParentBindingConstraintsWithTag;
+const isBindingConstraintsWithTag_1 = __nccwpck_require__(9362);
+const isNotParentBindingConstraints_1 = __nccwpck_require__(4377);
+function isNotParentBindingConstraintsWithTag(tag, value) {
+    return (0, isNotParentBindingConstraints_1.isNotParentBindingConstraints)((0, isBindingConstraintsWithTag_1.isBindingConstraintsWithTag)(tag, value));
+}
+//# sourceMappingURL=isNotParentBindingConstraintsWithTag.js.map
+
+/***/ }),
+
+/***/ 7056:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isParentBindingConstraints = isParentBindingConstraints;
+function isParentBindingConstraints(condition) {
+    return (constraints) => {
+        const ancestorMetadata = constraints.getAncestor();
+        return ancestorMetadata !== undefined && condition(ancestorMetadata);
+    };
+}
+//# sourceMappingURL=isParentBindingConstraints.js.map
+
+/***/ }),
+
+/***/ 8767:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isParentBindingConstraintsWithName = isParentBindingConstraintsWithName;
+const isBindingConstraintsWithName_1 = __nccwpck_require__(5967);
+const isParentBindingConstraints_1 = __nccwpck_require__(7056);
+function isParentBindingConstraintsWithName(name) {
+    return (0, isParentBindingConstraints_1.isParentBindingConstraints)((0, isBindingConstraintsWithName_1.isBindingConstraintsWithName)(name));
+}
+//# sourceMappingURL=isParentBindingConstraintsWithName.js.map
+
+/***/ }),
+
+/***/ 8520:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isParentBindingConstraintsWithServiceId = isParentBindingConstraintsWithServiceId;
+const isBindingConstraintsWithServiceId_1 = __nccwpck_require__(3528);
+const isParentBindingConstraints_1 = __nccwpck_require__(7056);
+function isParentBindingConstraintsWithServiceId(serviceId) {
+    return (0, isParentBindingConstraints_1.isParentBindingConstraints)((0, isBindingConstraintsWithServiceId_1.isBindingConstraintsWithServiceId)(serviceId));
+}
+//# sourceMappingURL=isParentBindingConstraintsWithServiceId.js.map
+
+/***/ }),
+
+/***/ 5666:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isParentBindingConstraintsWithTag = isParentBindingConstraintsWithTag;
+const isBindingConstraintsWithTag_1 = __nccwpck_require__(9362);
+const isParentBindingConstraints_1 = __nccwpck_require__(7056);
+function isParentBindingConstraintsWithTag(tag, value) {
+    return (0, isParentBindingConstraints_1.isParentBindingConstraints)((0, isBindingConstraintsWithTag_1.isBindingConstraintsWithTag)(tag, value));
+}
+//# sourceMappingURL=isParentBindingConstraintsWithTag.js.map
+
+/***/ }),
+
+/***/ 9130:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isResolvedValueMetadataInjectOptions = isResolvedValueMetadataInjectOptions;
+const common_1 = __nccwpck_require__(9160);
+function isResolvedValueMetadataInjectOptions(options) {
+    return typeof options === 'object' && !common_1.LazyServiceIdentifier.is(options);
+}
+//# sourceMappingURL=isResolvedValueMetadataInjectOptions.js.map
+
+/***/ }),
+
+/***/ 7769:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BindInWhenOnFluentSyntaxImplementation = exports.BindWhenOnFluentSyntaxImplementation = exports.BindWhenFluentSyntaxImplementation = exports.BindOnFluentSyntaxImplementation = exports.BindToFluentSyntaxImplementation = exports.BindInFluentSyntaxImplementation = void 0;
+const core_1 = __nccwpck_require__(4922);
+const BindingConstraintUtils_1 = __nccwpck_require__(7647);
+const getBindingId_1 = __nccwpck_require__(110);
+const isAnyAncestorBindingConstraints_1 = __nccwpck_require__(439);
+const isAnyAncestorBindingConstraintsWithName_1 = __nccwpck_require__(8752);
+const isAnyAncestorBindingConstraintsWithServiceId_1 = __nccwpck_require__(9073);
+const isAnyAncestorBindingConstraintsWithTag_1 = __nccwpck_require__(4007);
+const isBindingConstraintsWithName_1 = __nccwpck_require__(5967);
+const isBindingConstraintsWithNoNameNorTags_1 = __nccwpck_require__(5132);
+const isBindingConstraintsWithTag_1 = __nccwpck_require__(9362);
+const isNoAncestorBindingConstraints_1 = __nccwpck_require__(9798);
+const isNoAncestorBindingConstraintsWithName_1 = __nccwpck_require__(8637);
+const isNoAncestorBindingConstraintsWithServiceId_1 = __nccwpck_require__(1870);
+const isNoAncestorBindingConstraintsWithTag_1 = __nccwpck_require__(5476);
+const isNotParentBindingConstraints_1 = __nccwpck_require__(4377);
+const isNotParentBindingConstraintsWithName_1 = __nccwpck_require__(3186);
+const isNotParentBindingConstraintsWithServiceId_1 = __nccwpck_require__(2707);
+const isNotParentBindingConstraintsWithTag_1 = __nccwpck_require__(2349);
+const isParentBindingConstraints_1 = __nccwpck_require__(7056);
+const isParentBindingConstraintsWithName_1 = __nccwpck_require__(8767);
+const isParentBindingConstraintsWithServiceId_1 = __nccwpck_require__(8520);
+const isParentBindingConstraintsWithTag_1 = __nccwpck_require__(5666);
+const isResolvedValueMetadataInjectOptions_1 = __nccwpck_require__(9130);
+class BindInFluentSyntaxImplementation {
+    #binding;
+    constructor(binding) {
+        this.#binding = binding;
+    }
+    inRequestScope() {
+        this.#binding.scope = core_1.bindingScopeValues.Request;
+        return new BindWhenOnFluentSyntaxImplementation(this.#binding);
+    }
+    inSingletonScope() {
+        this.#binding.scope = core_1.bindingScopeValues.Singleton;
+        return new BindWhenOnFluentSyntaxImplementation(this.#binding);
+    }
+    inTransientScope() {
+        this.#binding.scope = core_1.bindingScopeValues.Transient;
+        return new BindWhenOnFluentSyntaxImplementation(this.#binding);
+    }
+}
+exports.BindInFluentSyntaxImplementation = BindInFluentSyntaxImplementation;
+class BindToFluentSyntaxImplementation {
+    #callback;
+    #containerModuleId;
+    #defaultScope;
+    #serviceIdentifier;
+    constructor(callback, containerModuleId, defaultScope, serviceIdentifier) {
+        this.#callback = callback;
+        this.#containerModuleId = containerModuleId;
+        this.#defaultScope = defaultScope;
+        this.#serviceIdentifier = serviceIdentifier;
+    }
+    to(type) {
+        const classMetadata = (0, core_1.getClassMetadata)(type);
+        const binding = {
+            cache: {
+                isRight: false,
+                value: undefined,
+            },
+            id: (0, getBindingId_1.getBindingId)(),
+            implementationType: type,
+            isSatisfiedBy: BindingConstraintUtils_1.BindingConstraintUtils.always,
+            moduleId: this.#containerModuleId,
+            onActivation: undefined,
+            onDeactivation: undefined,
+            scope: classMetadata.scope ?? this.#defaultScope,
+            serviceIdentifier: this.#serviceIdentifier,
+            type: core_1.bindingTypeValues.Instance,
+        };
+        this.#callback(binding);
+        return new BindInWhenOnFluentSyntaxImplementation(binding);
+    }
+    toSelf() {
+        if (typeof this.#serviceIdentifier !== 'function') {
+            throw new Error('"toSelf" function can only be applied when a newable function is used as service identifier');
+        }
+        return this.to(this.#serviceIdentifier);
+    }
+    toConstantValue(value) {
+        const binding = {
+            cache: {
+                isRight: false,
+                value: undefined,
+            },
+            id: (0, getBindingId_1.getBindingId)(),
+            isSatisfiedBy: BindingConstraintUtils_1.BindingConstraintUtils.always,
+            moduleId: this.#containerModuleId,
+            onActivation: undefined,
+            onDeactivation: undefined,
+            scope: core_1.bindingScopeValues.Singleton,
+            serviceIdentifier: this.#serviceIdentifier,
+            type: core_1.bindingTypeValues.ConstantValue,
+            value: value,
+        };
+        this.#callback(binding);
+        return new BindWhenOnFluentSyntaxImplementation(binding);
+    }
+    toDynamicValue(builder) {
+        const binding = {
+            cache: {
+                isRight: false,
+                value: undefined,
+            },
+            id: (0, getBindingId_1.getBindingId)(),
+            isSatisfiedBy: BindingConstraintUtils_1.BindingConstraintUtils.always,
+            moduleId: this.#containerModuleId,
+            onActivation: undefined,
+            onDeactivation: undefined,
+            scope: this.#defaultScope,
+            serviceIdentifier: this.#serviceIdentifier,
+            type: core_1.bindingTypeValues.DynamicValue,
+            value: builder,
+        };
+        this.#callback(binding);
+        return new BindInWhenOnFluentSyntaxImplementation(binding);
+    }
+    toResolvedValue(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    factory, injectOptions) {
+        const binding = {
+            cache: {
+                isRight: false,
+                value: undefined,
+            },
+            factory,
+            id: (0, getBindingId_1.getBindingId)(),
+            isSatisfiedBy: BindingConstraintUtils_1.BindingConstraintUtils.always,
+            metadata: this.#buildResolvedValueMetadata(injectOptions),
+            moduleId: this.#containerModuleId,
+            onActivation: undefined,
+            onDeactivation: undefined,
+            scope: this.#defaultScope,
+            serviceIdentifier: this.#serviceIdentifier,
+            type: core_1.bindingTypeValues.ResolvedValue,
+        };
+        this.#callback(binding);
+        return new BindInWhenOnFluentSyntaxImplementation(binding);
+    }
+    toFactory(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    builder) {
+        const binding = {
+            cache: {
+                isRight: false,
+                value: undefined,
+            },
+            factory: builder,
+            id: (0, getBindingId_1.getBindingId)(),
+            isSatisfiedBy: BindingConstraintUtils_1.BindingConstraintUtils.always,
+            moduleId: this.#containerModuleId,
+            onActivation: undefined,
+            onDeactivation: undefined,
+            scope: core_1.bindingScopeValues.Singleton,
+            serviceIdentifier: this.#serviceIdentifier,
+            type: core_1.bindingTypeValues.Factory,
+        };
+        this.#callback(binding);
+        return new BindWhenOnFluentSyntaxImplementation(binding);
+    }
+    toProvider(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    provider) {
+        const binding = {
+            cache: {
+                isRight: false,
+                value: undefined,
+            },
+            id: (0, getBindingId_1.getBindingId)(),
+            isSatisfiedBy: BindingConstraintUtils_1.BindingConstraintUtils.always,
+            moduleId: this.#containerModuleId,
+            onActivation: undefined,
+            onDeactivation: undefined,
+            provider,
+            scope: core_1.bindingScopeValues.Singleton,
+            serviceIdentifier: this.#serviceIdentifier,
+            type: core_1.bindingTypeValues.Provider,
+        };
+        this.#callback(binding);
+        return new BindWhenOnFluentSyntaxImplementation(binding);
+    }
+    toService(service) {
+        const binding = {
+            id: (0, getBindingId_1.getBindingId)(),
+            isSatisfiedBy: BindingConstraintUtils_1.BindingConstraintUtils.always,
+            moduleId: this.#containerModuleId,
+            serviceIdentifier: this.#serviceIdentifier,
+            targetServiceIdentifier: service,
+            type: core_1.bindingTypeValues.ServiceRedirection,
+        };
+        this.#callback(binding);
+    }
+    #buildResolvedValueMetadata(options) {
+        const resolvedValueMetadata = {
+            arguments: (options ?? []).map((injectOption) => {
+                if ((0, isResolvedValueMetadataInjectOptions_1.isResolvedValueMetadataInjectOptions)(injectOption)) {
+                    return {
+                        kind: injectOption.isMultiple === true
+                            ? core_1.ResolvedValueElementMetadataKind.multipleInjection
+                            : core_1.ResolvedValueElementMetadataKind.singleInjection,
+                        name: injectOption.name,
+                        optional: injectOption.optional ?? false,
+                        tags: new Map((injectOption.tags ?? []).map((tag) => [
+                            tag.key,
+                            tag.value,
+                        ])),
+                        value: injectOption.serviceIdentifier,
+                    };
+                }
+                else {
+                    return {
+                        kind: core_1.ResolvedValueElementMetadataKind.singleInjection,
+                        name: undefined,
+                        optional: false,
+                        tags: new Map(),
+                        value: injectOption,
+                    };
+                }
+            }),
+        };
+        return resolvedValueMetadata;
+    }
+}
+exports.BindToFluentSyntaxImplementation = BindToFluentSyntaxImplementation;
+class BindOnFluentSyntaxImplementation {
+    #binding;
+    constructor(binding) {
+        this.#binding = binding;
+    }
+    onActivation(activation) {
+        this.#binding.onActivation = activation;
+        return new BindWhenFluentSyntaxImplementation(this.#binding);
+    }
+    onDeactivation(deactivation) {
+        this.#binding.onDeactivation = deactivation;
+        return new BindWhenFluentSyntaxImplementation(this.#binding);
+    }
+}
+exports.BindOnFluentSyntaxImplementation = BindOnFluentSyntaxImplementation;
+class BindWhenFluentSyntaxImplementation {
+    #binding;
+    constructor(binding) {
+        this.#binding = binding;
+    }
+    when(constraint) {
+        this.#binding.isSatisfiedBy = constraint;
+        return new BindOnFluentSyntaxImplementation(this.#binding);
+    }
+    whenAnyAncestor(constraint) {
+        return this.when((0, isAnyAncestorBindingConstraints_1.isAnyAncestorBindingConstraints)(constraint));
+    }
+    whenAnyAncestorIs(serviceIdentifier) {
+        return this.when((0, isAnyAncestorBindingConstraintsWithServiceId_1.isAnyAncestorBindingConstraintsWithServiceId)(serviceIdentifier));
+    }
+    whenAnyAncestorNamed(name) {
+        return this.when((0, isAnyAncestorBindingConstraintsWithName_1.isAnyAncestorBindingConstraintsWithName)(name));
+    }
+    whenAnyAncestorTagged(tag, tagValue) {
+        return this.when((0, isAnyAncestorBindingConstraintsWithTag_1.isAnyAncestorBindingConstraintsWithTag)(tag, tagValue));
+    }
+    whenDefault() {
+        return this.when(isBindingConstraintsWithNoNameNorTags_1.isBindingConstraintsWithNoNameNorTags);
+    }
+    whenNamed(name) {
+        return this.when((0, isBindingConstraintsWithName_1.isBindingConstraintsWithName)(name));
+    }
+    whenNoParent(constraint) {
+        return this.when((0, isNotParentBindingConstraints_1.isNotParentBindingConstraints)(constraint));
+    }
+    whenNoParentIs(serviceIdentifier) {
+        return this.when((0, isNotParentBindingConstraintsWithServiceId_1.isNotParentBindingConstraintsWithServiceId)(serviceIdentifier));
+    }
+    whenNoParentNamed(name) {
+        return this.when((0, isNotParentBindingConstraintsWithName_1.isNotParentBindingConstraintsWithName)(name));
+    }
+    whenNoParentTagged(tag, tagValue) {
+        return this.when((0, isNotParentBindingConstraintsWithTag_1.isNotParentBindingConstraintsWithTag)(tag, tagValue));
+    }
+    whenParent(constraint) {
+        return this.when((0, isParentBindingConstraints_1.isParentBindingConstraints)(constraint));
+    }
+    whenParentIs(serviceIdentifier) {
+        return this.when((0, isParentBindingConstraintsWithServiceId_1.isParentBindingConstraintsWithServiceId)(serviceIdentifier));
+    }
+    whenParentNamed(name) {
+        return this.when((0, isParentBindingConstraintsWithName_1.isParentBindingConstraintsWithName)(name));
+    }
+    whenParentTagged(tag, tagValue) {
+        return this.when((0, isParentBindingConstraintsWithTag_1.isParentBindingConstraintsWithTag)(tag, tagValue));
+    }
+    whenTagged(tag, tagValue) {
+        return this.when((0, isBindingConstraintsWithTag_1.isBindingConstraintsWithTag)(tag, tagValue));
+    }
+    whenNoAncestor(constraint) {
+        return this.when((0, isNoAncestorBindingConstraints_1.isNoAncestorBindingConstraints)(constraint));
+    }
+    whenNoAncestorIs(serviceIdentifier) {
+        return this.when((0, isNoAncestorBindingConstraintsWithServiceId_1.isNoAncestorBindingConstraintsWithServiceId)(serviceIdentifier));
+    }
+    whenNoAncestorNamed(name) {
+        return this.when((0, isNoAncestorBindingConstraintsWithName_1.isNoAncestorBindingConstraintsWithName)(name));
+    }
+    whenNoAncestorTagged(tag, tagValue) {
+        return this.when((0, isNoAncestorBindingConstraintsWithTag_1.isNoAncestorBindingConstraintsWithTag)(tag, tagValue));
+    }
+}
+exports.BindWhenFluentSyntaxImplementation = BindWhenFluentSyntaxImplementation;
+class BindWhenOnFluentSyntaxImplementation extends BindWhenFluentSyntaxImplementation {
+    #bindOnFluentSyntax;
+    constructor(binding) {
+        super(binding);
+        this.#bindOnFluentSyntax = new BindOnFluentSyntaxImplementation(binding);
+    }
+    onActivation(activation) {
+        return this.#bindOnFluentSyntax.onActivation(activation);
+    }
+    onDeactivation(deactivation) {
+        return this.#bindOnFluentSyntax.onDeactivation(deactivation);
+    }
+}
+exports.BindWhenOnFluentSyntaxImplementation = BindWhenOnFluentSyntaxImplementation;
+class BindInWhenOnFluentSyntaxImplementation extends BindWhenOnFluentSyntaxImplementation {
+    #bindInFluentSyntax;
+    constructor(binding) {
+        super(binding);
+        this.#bindInFluentSyntax = new BindInFluentSyntaxImplementation(binding);
+    }
+    inRequestScope() {
+        return this.#bindInFluentSyntax.inRequestScope();
+    }
+    inSingletonScope() {
+        return this.#bindInFluentSyntax.inSingletonScope();
+    }
+    inTransientScope() {
+        return this.#bindInFluentSyntax.inTransientScope();
+    }
+}
+exports.BindInWhenOnFluentSyntaxImplementation = BindInWhenOnFluentSyntaxImplementation;
+//# sourceMappingURL=BindingFluentSyntaxImplementation.js.map
+
+/***/ }),
+
+/***/ 54:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getContainerModuleId = getContainerModuleId;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
+const ID_METADATA = '@inversifyjs/container/bindingId';
+function getContainerModuleId() {
+    const bindingId = (0, reflect_metadata_utils_1.getOwnReflectMetadata)(Object, ID_METADATA) ?? 0;
+    if (bindingId === Number.MAX_SAFE_INTEGER) {
+        (0, reflect_metadata_utils_1.setReflectMetadata)(Object, ID_METADATA, Number.MIN_SAFE_INTEGER);
+    }
+    else {
+        (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(Object, ID_METADATA, () => bindingId, (id) => id + 1);
+    }
+    return bindingId;
+}
+//# sourceMappingURL=getContainerModuleId.js.map
+
+/***/ }),
+
+/***/ 7647:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BindingConstraintUtils = void 0;
+class BindingConstraintUtils {
+    static always = (_bindingConstraints) => {
+        return true;
+    };
+}
+exports.BindingConstraintUtils = BindingConstraintUtils;
+//# sourceMappingURL=BindingConstraintUtils.js.map
+
+/***/ }),
+
+/***/ 5258:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ContainerModule = void 0;
+const getContainerModuleId_1 = __nccwpck_require__(54);
+class ContainerModule {
+    #id;
+    #load;
+    constructor(load) {
+        this.#id = (0, getContainerModuleId_1.getContainerModuleId)();
+        this.#load = load;
+    }
+    get id() {
+        return this.#id;
+    }
+    async load(options) {
+        await this.#load(options);
+    }
+}
+exports.ContainerModule = ContainerModule;
+//# sourceMappingURL=ContainerModule.js.map
+
+/***/ }),
+
+/***/ 7628:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Container = void 0;
+const common_1 = __nccwpck_require__(9160);
+const core_1 = __nccwpck_require__(4922);
+const BindingFluentSyntaxImplementation_1 = __nccwpck_require__(7769);
+const InversifyContainerError_1 = __nccwpck_require__(8360);
+const InversifyContainerErrorKind_1 = __nccwpck_require__(2418);
+const DEFAULT_DEFAULT_SCOPE = core_1.bindingScopeValues.Transient;
+class Container {
+    #activationService;
+    #bindingService;
+    #deactivationService;
+    #getActivationsResolutionParam;
+    #getBindingsPlanParams;
+    #options;
+    #planResultCacheService;
+    #resolutionContext;
+    #setBindingParamsPlan;
+    #snapshots;
+    constructor(options) {
+        this.#getActivationsResolutionParam = (serviceIdentifier) => this.#activationService.get(serviceIdentifier);
+        this.#planResultCacheService = new core_1.PlanResultCacheService();
+        this.#resolutionContext = this.#buildResolutionContext();
+        if (options?.parent === undefined) {
+            this.#activationService = core_1.ActivationsService.build(undefined);
+            this.#bindingService = core_1.BindingService.build(undefined);
+            this.#deactivationService = core_1.DeactivationsService.build(undefined);
+        }
+        else {
+            this.#activationService = core_1.ActivationsService.build(options.parent.#activationService);
+            this.#bindingService = core_1.BindingService.build(options.parent.#bindingService);
+            this.#deactivationService = core_1.DeactivationsService.build(options.parent.#deactivationService);
+            options.parent.#planResultCacheService.subscribe(this.#planResultCacheService);
+        }
+        this.#getBindingsPlanParams = this.#bindingService.get.bind(this.#bindingService);
+        this.#setBindingParamsPlan = this.#setBinding.bind(this);
+        this.#options = {
+            autobind: options?.autobind ?? false,
+            defaultScope: options?.defaultScope ?? DEFAULT_DEFAULT_SCOPE,
+        };
+        this.#snapshots = [];
+    }
+    bind(serviceIdentifier) {
+        return new BindingFluentSyntaxImplementation_1.BindToFluentSyntaxImplementation((binding) => {
+            this.#setBinding(binding);
+        }, undefined, this.#options.defaultScope, serviceIdentifier);
+    }
+    get(serviceIdentifier, options) {
+        const planResult = this.#buildPlanResult(false, serviceIdentifier, options);
+        const resolvedValue = this.#getFromPlanResult(planResult);
+        if ((0, common_1.isPromise)(resolvedValue)) {
+            throw new InversifyContainerError_1.InversifyContainerError(InversifyContainerErrorKind_1.InversifyContainerErrorKind.invalidOperation, `Unexpected asyncronous service when resolving service "${(0, common_1.stringifyServiceIdentifier)(serviceIdentifier)}"`);
+        }
+        return resolvedValue;
+    }
+    getAll(serviceIdentifier, options) {
+        const planResult = this.#buildPlanResult(true, serviceIdentifier, options);
+        const resolvedValue = this.#getFromPlanResult(planResult);
+        if ((0, common_1.isPromise)(resolvedValue)) {
+            throw new InversifyContainerError_1.InversifyContainerError(InversifyContainerErrorKind_1.InversifyContainerErrorKind.invalidOperation, `Unexpected asyncronous service when resolving service "${(0, common_1.stringifyServiceIdentifier)(serviceIdentifier)}"`);
+        }
+        return resolvedValue;
+    }
+    async getAllAsync(serviceIdentifier, options) {
+        const planResult = this.#buildPlanResult(true, serviceIdentifier, options);
+        return this.#getFromPlanResult(planResult);
+    }
+    async getAsync(serviceIdentifier, options) {
+        const planResult = this.#buildPlanResult(false, serviceIdentifier, options);
+        return this.#getFromPlanResult(planResult);
+    }
+    isBound(serviceIdentifier, options) {
+        const bindings = this.#bindingService.get(serviceIdentifier);
+        return this.#isAnyValidBinding(serviceIdentifier, bindings, options);
+    }
+    isCurrentBound(serviceIdentifier, options) {
+        const bindings = this.#bindingService.getNonParentBindings(serviceIdentifier);
+        return this.#isAnyValidBinding(serviceIdentifier, bindings, options);
+    }
+    async load(...modules) {
+        await Promise.all(modules.map(async (module) => module.load(this.#buildContainerModuleLoadOptions(module.id))));
+    }
+    onActivation(serviceIdentifier, activation) {
+        this.#activationService.add(activation, {
+            serviceId: serviceIdentifier,
+        });
+    }
+    onDeactivation(serviceIdentifier, deactivation) {
+        this.#deactivationService.add(deactivation, {
+            serviceId: serviceIdentifier,
+        });
+    }
+    restore() {
+        const snapshot = this.#snapshots.pop();
+        if (snapshot === undefined) {
+            throw new InversifyContainerError_1.InversifyContainerError(InversifyContainerErrorKind_1.InversifyContainerErrorKind.invalidOperation, 'No snapshot available to restore');
+        }
+        this.#activationService = snapshot.activationService;
+        this.#bindingService = snapshot.bindingService;
+        this.#deactivationService = snapshot.deactivationService;
+        this.#resetComputedProperties();
+    }
+    snapshot() {
+        this.#snapshots.push({
+            activationService: this.#activationService.clone(),
+            bindingService: this.#bindingService.clone(),
+            deactivationService: this.#deactivationService.clone(),
+        });
+    }
+    async unbind(serviceIdentifier) {
+        await (0, core_1.resolveServiceDeactivations)(this.#buildDeactivationParams(), serviceIdentifier);
+        this.#activationService.removeAllByServiceId(serviceIdentifier);
+        this.#bindingService.removeAllByServiceId(serviceIdentifier);
+        this.#deactivationService.removeAllByServiceId(serviceIdentifier);
+        this.#planResultCacheService.clearCache();
+    }
+    async unbindAll() {
+        const deactivationParams = this.#buildDeactivationParams();
+        const nonParentBoundServiceIds = [
+            ...this.#bindingService.getNonParentBoundServices(),
+        ];
+        await Promise.all(nonParentBoundServiceIds.map(async (serviceId) => (0, core_1.resolveServiceDeactivations)(deactivationParams, serviceId)));
+        /*
+         * Removing service related objects here so unload is deterministic.
+         *
+         * Removing service related objects as soon as resolveModuleDeactivations takes
+         * effect leads to module deactivations not triggering previously deleted
+         * deactivations, introducing non determinism depending in the order in which
+         * services are deactivated.
+         */
+        for (const serviceId of nonParentBoundServiceIds) {
+            this.#activationService.removeAllByServiceId(serviceId);
+            this.#bindingService.removeAllByServiceId(serviceId);
+            this.#deactivationService.removeAllByServiceId(serviceId);
+        }
+        this.#planResultCacheService.clearCache();
+    }
+    async unload(...modules) {
+        const deactivationParams = this.#buildDeactivationParams();
+        await Promise.all(modules.map((module) => (0, core_1.resolveModuleDeactivations)(deactivationParams, module.id)));
+        /*
+         * Removing module related objects here so unload is deterministic.
+         *
+         * Removing modules as soon as resolveModuleDeactivations takes effect leads to
+         * module deactivations not triggering previously deleted deactivations,
+         * introducing non determinism depending in the order in which modules are
+         * deactivated.
+         */
+        for (const module of modules) {
+            this.#activationService.removeAllByModuleId(module.id);
+            this.#bindingService.removeAllByModuleId(module.id);
+            this.#deactivationService.removeAllByModuleId(module.id);
+        }
+        this.#planResultCacheService.clearCache();
+    }
+    #buildContainerModuleLoadOptions(moduleId) {
+        return {
+            bind: (serviceIdentifier) => {
+                return new BindingFluentSyntaxImplementation_1.BindToFluentSyntaxImplementation((binding) => {
+                    this.#setBinding(binding);
+                }, moduleId, this.#options.defaultScope, serviceIdentifier);
+            },
+            isBound: this.isBound.bind(this),
+            onActivation: (serviceIdentifier, activation) => {
+                this.#activationService.add(activation, {
+                    moduleId,
+                    serviceId: serviceIdentifier,
+                });
+            },
+            onDeactivation: (serviceIdentifier, deactivation) => {
+                this.#deactivationService.add(deactivation, {
+                    moduleId,
+                    serviceId: serviceIdentifier,
+                });
+            },
+            unbind: this.unbind.bind(this),
+        };
+    }
+    #buildDeactivationParams() {
+        return {
+            getBindings: (serviceIdentifier) => this.#bindingService.get(serviceIdentifier),
+            getBindingsFromModule: (moduleId) => this.#bindingService.getByModuleId(moduleId),
+            getClassMetadata: core_1.getClassMetadata,
+            getDeactivations: (serviceIdentifier) => this.#deactivationService.get(serviceIdentifier),
+        };
+    }
+    #buildGetPlanOptions(isMultiple, serviceIdentifier, options) {
+        return {
+            isMultiple,
+            name: options?.name,
+            optional: options?.optional,
+            serviceIdentifier,
+            tag: options?.tag,
+        };
+    }
+    #buildPlanParams(isMultiple, serviceIdentifier, options) {
+        const planParams = {
+            autobindOptions: (options?.autobind ?? this.#options.autobind)
+                ? {
+                    scope: this.#options.defaultScope,
+                }
+                : undefined,
+            getBindings: this.#getBindingsPlanParams,
+            getClassMetadata: core_1.getClassMetadata,
+            rootConstraints: {
+                isMultiple,
+                serviceIdentifier,
+            },
+            servicesBranch: new Set(),
+            setBinding: this.#setBindingParamsPlan,
+        };
+        this.#handlePlanParamsRootConstraints(planParams, options);
+        return planParams;
+    }
+    #buildPlanResult(isMultiple, serviceIdentifier, options) {
+        const getPlanOptions = this.#buildGetPlanOptions(isMultiple, serviceIdentifier, options);
+        const planResultFromCache = this.#planResultCacheService.get(getPlanOptions);
+        if (planResultFromCache !== undefined) {
+            return planResultFromCache;
+        }
+        const planResult = (0, core_1.plan)(this.#buildPlanParams(isMultiple, serviceIdentifier, options));
+        this.#planResultCacheService.set(getPlanOptions, planResult);
+        return planResult;
+    }
+    #buildResolutionContext() {
+        return {
+            get: this.get.bind(this),
+            getAll: this.getAll.bind(this),
+            getAllAsync: this.getAllAsync.bind(this),
+            getAsync: this.getAsync.bind(this),
+        };
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+    #getFromPlanResult(planResult) {
+        return (0, core_1.resolve)({
+            context: this.#resolutionContext,
+            getActivations: this.#getActivationsResolutionParam,
+            planResult,
+            requestScopeCache: new Map(),
+        });
+    }
+    #handlePlanParamsRootConstraints(planParams, options) {
+        if (options === undefined) {
+            return;
+        }
+        if (options.name !== undefined) {
+            planParams.rootConstraints.name = options.name;
+        }
+        if (options.optional === true) {
+            planParams.rootConstraints.isOptional = true;
+        }
+        if (options.tag !== undefined) {
+            planParams.rootConstraints.tag = {
+                key: options.tag.key,
+                value: options.tag.value,
+            };
+        }
+    }
+    #isAnyValidBinding(serviceIdentifier, bindings, options) {
+        if (bindings === undefined) {
+            return false;
+        }
+        const bindingConstraints = {
+            getAncestor: () => undefined,
+            name: options?.name,
+            serviceIdentifier,
+            tags: new Map(),
+        };
+        if (options?.tag !== undefined) {
+            bindingConstraints.tags.set(options.tag.key, options.tag.value);
+        }
+        for (const binding of bindings) {
+            if (binding.isSatisfiedBy(bindingConstraints)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    #resetComputedProperties() {
+        this.#planResultCacheService.clearCache();
+        this.#getActivationsResolutionParam = (serviceIdentifier) => this.#activationService.get(serviceIdentifier);
+        this.#getBindingsPlanParams = this.#bindingService.get.bind(this.#bindingService);
+        this.#resolutionContext = this.#buildResolutionContext();
+        this.#setBindingParamsPlan = this.#setBinding.bind(this);
+    }
+    #setBinding(binding) {
+        this.#bindingService.set(binding);
+        this.#planResultCacheService.clearCache();
+    }
+}
+exports.Container = Container;
+//# sourceMappingURL=Container.js.map
+
+/***/ }),
+
+/***/ 8360:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InversifyContainerError = void 0;
+const isAppErrorSymbol = Symbol.for('@inversifyjs/container/InversifyContainerError');
+class InversifyContainerError extends Error {
+    [isAppErrorSymbol];
+    kind;
+    constructor(kind, message, options) {
+        super(message, options);
+        this[isAppErrorSymbol] = true;
+        this.kind = kind;
+    }
+    static is(value) {
+        return (typeof value === 'object' &&
+            value !== null &&
+            value[isAppErrorSymbol] === true);
+    }
+    static isErrorOfKind(value, kind) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        return InversifyContainerError.is(value) && value.kind === kind;
+    }
+}
+exports.InversifyContainerError = InversifyContainerError;
+//# sourceMappingURL=InversifyContainerError.js.map
+
+/***/ }),
+
+/***/ 2418:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InversifyContainerErrorKind = void 0;
+var InversifyContainerErrorKind;
+(function (InversifyContainerErrorKind) {
+    InversifyContainerErrorKind[InversifyContainerErrorKind["invalidOperation"] = 0] = "invalidOperation";
+})(InversifyContainerErrorKind || (exports.InversifyContainerErrorKind = InversifyContainerErrorKind = {}));
+//# sourceMappingURL=InversifyContainerErrorKind.js.map
+
+/***/ }),
+
+/***/ 2466:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InversifyContainerErrorKind = exports.InversifyContainerError = exports.ContainerModule = exports.Container = void 0;
+__nccwpck_require__(477);
+const ContainerModule_1 = __nccwpck_require__(5258);
+Object.defineProperty(exports, "ContainerModule", ({ enumerable: true, get: function () { return ContainerModule_1.ContainerModule; } }));
+const Container_1 = __nccwpck_require__(7628);
+Object.defineProperty(exports, "Container", ({ enumerable: true, get: function () { return Container_1.Container; } }));
+const InversifyContainerError_1 = __nccwpck_require__(8360);
+Object.defineProperty(exports, "InversifyContainerError", ({ enumerable: true, get: function () { return InversifyContainerError_1.InversifyContainerError; } }));
+const InversifyContainerErrorKind_1 = __nccwpck_require__(2418);
+Object.defineProperty(exports, "InversifyContainerErrorKind", ({ enumerable: true, get: function () { return InversifyContainerErrorKind_1.InversifyContainerErrorKind; } }));
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 1393:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isScopedBinding = isScopedBinding;
+function isScopedBinding(binding) {
+    return (binding.scope !==
+        undefined);
+}
+//# sourceMappingURL=isScopedBinding.js.map
+
+/***/ }),
+
+/***/ 1597:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.stringifyBinding = stringifyBinding;
+const common_1 = __nccwpck_require__(9160);
+const BindingType_1 = __nccwpck_require__(8810);
+function stringifyBinding(binding) {
+    switch (binding.type) {
+        case BindingType_1.bindingTypeValues.Instance:
+            return `[ type: "${binding.type}", serviceIdentifier: "${(0, common_1.stringifyServiceIdentifier)(binding.serviceIdentifier)}", scope: "${binding.scope}", implementationType: "${binding.implementationType.name}" ]`;
+        case BindingType_1.bindingTypeValues.ServiceRedirection:
+            return `[ type: "${binding.type}", serviceIdentifier: "${(0, common_1.stringifyServiceIdentifier)(binding.serviceIdentifier)}", redirection: "${(0, common_1.stringifyServiceIdentifier)(binding.targetServiceIdentifier)}" ]`;
+        default:
+            return `[ type: "${binding.type}", serviceIdentifier: "${(0, common_1.stringifyServiceIdentifier)(binding.serviceIdentifier)}", scope: "${binding.scope}" ]`;
+    }
+}
+//# sourceMappingURL=stringifyBinding.js.map
+
+/***/ }),
+
+/***/ 414:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BindingConstraintsImplementation = void 0;
+class BindingConstraintsImplementation {
+    #node;
+    constructor(node) {
+        this.#node = node;
+    }
+    get name() {
+        return this.#node.elem.name;
+    }
+    get serviceIdentifier() {
+        return this.#node.elem.serviceIdentifier;
+    }
+    get tags() {
+        return this.#node.elem.tags;
+    }
+    getAncestor() {
+        if (this.#node.previous === undefined) {
+            return undefined;
+        }
+        return new BindingConstraintsImplementation(this.#node.previous);
+    }
+}
+exports.BindingConstraintsImplementation = BindingConstraintsImplementation;
+//# sourceMappingURL=BindingConstraintsImplementation.js.map
+
+/***/ }),
+
+/***/ 2412:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.bindingScopeValues = void 0;
+exports.bindingScopeValues = {
+    Request: 'Request',
+    Singleton: 'Singleton',
+    Transient: 'Transient',
+};
+//# sourceMappingURL=BindingScope.js.map
+
+/***/ }),
+
+/***/ 8810:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.bindingTypeValues = void 0;
+exports.bindingTypeValues = {
+    ConstantValue: 'ConstantValue',
+    DynamicValue: 'DynamicValue',
+    Factory: 'Factory',
+    Instance: 'Instance',
+    Provider: 'Provider',
+    ResolvedValue: 'ResolvedValue',
+    ServiceRedirection: 'ServiceRedirection',
+};
+//# sourceMappingURL=BindingType.js.map
+
+/***/ }),
+
+/***/ 2033:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ActivationsService = void 0;
+const chain_1 = __nccwpck_require__(9408);
+const OneToManyMapStar_1 = __nccwpck_require__(4101);
+var ActivationRelationKind;
+(function (ActivationRelationKind) {
+    ActivationRelationKind["moduleId"] = "moduleId";
+    ActivationRelationKind["serviceId"] = "serviceId";
+})(ActivationRelationKind || (ActivationRelationKind = {}));
+class ActivationsService {
+    #activationMaps;
+    #parent;
+    constructor(parent, activationMaps) {
+        this.#activationMaps =
+            activationMaps ??
+                new OneToManyMapStar_1.OneToManyMapStar({
+                    moduleId: {
+                        isOptional: true,
+                    },
+                    serviceId: {
+                        isOptional: false,
+                    },
+                });
+        this.#parent = parent;
+    }
+    static build(parent) {
+        return new ActivationsService(parent);
+    }
+    add(activation, relation) {
+        this.#activationMaps.add(activation, relation);
+    }
+    clone() {
+        const clone = new ActivationsService(this.#parent, this.#activationMaps.clone());
+        return clone;
+    }
+    get(serviceIdentifier) {
+        const activationIterables = [];
+        const activations = this.#activationMaps.get(ActivationRelationKind.serviceId, serviceIdentifier);
+        if (activations !== undefined) {
+            activationIterables.push(activations);
+        }
+        const parentActivations = this.#parent?.get(serviceIdentifier);
+        if (parentActivations !== undefined) {
+            activationIterables.push(parentActivations);
+        }
+        if (activationIterables.length === 0) {
+            return undefined;
+        }
+        return (0, chain_1.chain)(...activationIterables);
+    }
+    removeAllByModuleId(moduleId) {
+        this.#activationMaps.removeByRelation(ActivationRelationKind.moduleId, moduleId);
+    }
+    removeAllByServiceId(serviceId) {
+        this.#activationMaps.removeByRelation(ActivationRelationKind.serviceId, serviceId);
+    }
+}
+exports.ActivationsService = ActivationsService;
+//# sourceMappingURL=ActivationsService.js.map
+
+/***/ }),
+
+/***/ 4861:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BindingService = void 0;
+const OneToManyMapStar_1 = __nccwpck_require__(4101);
+var BindingRelationKind;
+(function (BindingRelationKind) {
+    BindingRelationKind["moduleId"] = "moduleId";
+    BindingRelationKind["serviceId"] = "serviceId";
+})(BindingRelationKind || (BindingRelationKind = {}));
+class BindingService {
+    #bindingMaps;
+    #parent;
+    constructor(parent, bindingMaps) {
+        this.#bindingMaps =
+            bindingMaps ??
+                new OneToManyMapStar_1.OneToManyMapStar({
+                    moduleId: {
+                        isOptional: true,
+                    },
+                    serviceId: {
+                        isOptional: false,
+                    },
+                });
+        this.#parent = parent;
+    }
+    static build(parent) {
+        return new BindingService(parent);
+    }
+    clone() {
+        const clone = new BindingService(this.#parent, this.#bindingMaps.clone());
+        return clone;
+    }
+    get(serviceIdentifier) {
+        return (this.getNonParentBindings(serviceIdentifier) ??
+            this.#parent?.get(serviceIdentifier));
+    }
+    getNonParentBindings(serviceId) {
+        return this.#bindingMaps.get(BindingRelationKind.serviceId, serviceId);
+    }
+    getNonParentBoundServices() {
+        return this.#bindingMaps.getAllKeys(BindingRelationKind.serviceId);
+    }
+    getByModuleId(moduleId) {
+        return (this.#bindingMaps.get(BindingRelationKind.moduleId, moduleId) ?? this.#parent?.getByModuleId(moduleId));
+    }
+    removeAllByModuleId(moduleId) {
+        this.#bindingMaps.removeByRelation(BindingRelationKind.moduleId, moduleId);
+    }
+    removeAllByServiceId(serviceId) {
+        this.#bindingMaps.removeByRelation(BindingRelationKind.serviceId, serviceId);
+    }
+    set(binding) {
+        const relation = {
+            [BindingRelationKind.serviceId]: binding.serviceIdentifier,
+        };
+        if (binding.moduleId !== undefined) {
+            relation[BindingRelationKind.moduleId] = binding.moduleId;
+        }
+        this.#bindingMaps.add(binding, relation);
+    }
+}
+exports.BindingService = BindingService;
+//# sourceMappingURL=BindingService.js.map
+
+/***/ }),
+
+/***/ 2682:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DeactivationsService = void 0;
+const chain_1 = __nccwpck_require__(9408);
+const OneToManyMapStar_1 = __nccwpck_require__(4101);
+var DeactivationRelationKind;
+(function (DeactivationRelationKind) {
+    DeactivationRelationKind["moduleId"] = "moduleId";
+    DeactivationRelationKind["serviceId"] = "serviceId";
+})(DeactivationRelationKind || (DeactivationRelationKind = {}));
+class DeactivationsService {
+    #deactivationMaps;
+    #parent;
+    constructor(parent, deactivationMaps) {
+        this.#deactivationMaps =
+            deactivationMaps ??
+                new OneToManyMapStar_1.OneToManyMapStar({
+                    moduleId: {
+                        isOptional: true,
+                    },
+                    serviceId: {
+                        isOptional: false,
+                    },
+                });
+        this.#parent = parent;
+    }
+    static build(parent) {
+        return new DeactivationsService(parent);
+    }
+    add(deactivation, relation) {
+        this.#deactivationMaps.add(deactivation, relation);
+    }
+    clone() {
+        const clone = new DeactivationsService(this.#parent, this.#deactivationMaps.clone());
+        return clone;
+    }
+    get(serviceIdentifier) {
+        const deactivationIterables = [];
+        const deactivations = this.#deactivationMaps.get(DeactivationRelationKind.serviceId, serviceIdentifier);
+        if (deactivations !== undefined) {
+            deactivationIterables.push(deactivations);
+        }
+        const parentDeactivations = this.#parent?.get(serviceIdentifier);
+        if (parentDeactivations !== undefined) {
+            deactivationIterables.push(parentDeactivations);
+        }
+        if (deactivationIterables.length === 0) {
+            return undefined;
+        }
+        return (0, chain_1.chain)(...deactivationIterables);
+    }
+    removeAllByModuleId(moduleId) {
+        this.#deactivationMaps.removeByRelation(DeactivationRelationKind.moduleId, moduleId);
+    }
+    removeAllByServiceId(serviceId) {
+        this.#deactivationMaps.removeByRelation(DeactivationRelationKind.serviceId, serviceId);
+    }
+}
+exports.DeactivationsService = DeactivationsService;
+//# sourceMappingURL=DeactivationsService.js.map
+
+/***/ }),
+
+/***/ 9408:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.chain = chain;
+function* chain(...iterables) {
+    for (const iterable of iterables) {
+        yield* iterable;
+    }
+}
+//# sourceMappingURL=chain.js.map
+
+/***/ }),
+
+/***/ 2715:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getSelf = getSelf;
+function getSelf(self) {
+    return self;
+}
+//# sourceMappingURL=getSelf.js.map
+
+/***/ }),
+
+/***/ 4101:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OneToManyMapStar = void 0;
+const NOT_FOUND_INDEX = -1;
+/**
+ * Data structure able to efficiently manage a set of models related to a set of properties in a one to many relation.
+ */
+class OneToManyMapStar {
+    #modelToRelationMap;
+    #relationToModelsMaps;
+    #spec;
+    constructor(spec) {
+        this.#modelToRelationMap = new Map();
+        this.#relationToModelsMaps = {};
+        for (const specProperty of Reflect.ownKeys(spec)) {
+            this.#relationToModelsMaps[specProperty] = new Map();
+        }
+        this.#spec = spec;
+    }
+    add(model, relation) {
+        this.#buildOrGetModelArray(model).push(relation);
+        for (const relationKey of Reflect.ownKeys(relation)) {
+            this.#buildOrGetRelationModels(relationKey, relation[relationKey]).push(model);
+        }
+    }
+    clone() {
+        const properties = Reflect.ownKeys(this.#spec);
+        const clone = new OneToManyMapStar(this.#spec);
+        this.#pushEntriesIntoMap(this.#modelToRelationMap, clone.#modelToRelationMap);
+        for (const property of properties) {
+            this.#pushEntriesIntoMap(this.#relationToModelsMaps[property], clone.#relationToModelsMaps[property]);
+        }
+        return clone;
+    }
+    get(key, value) {
+        return this.#relationToModelsMaps[key].get(value);
+    }
+    getAllKeys(key) {
+        return this.#relationToModelsMaps[key].keys();
+    }
+    removeByRelation(key, value) {
+        const models = this.get(key, value);
+        if (models === undefined) {
+            return;
+        }
+        const uniqueModelsSet = new Set(models);
+        for (const model of uniqueModelsSet) {
+            const relations = this.#modelToRelationMap.get(model);
+            if (relations === undefined) {
+                throw new Error('Expecting model relation, none found');
+            }
+            for (const relation of relations) {
+                if (relation[key] === value) {
+                    this.#removeModelFromRelationMaps(model, relation);
+                }
+            }
+            this.#modelToRelationMap.delete(model);
+        }
+    }
+    #buildOrGetModelArray(model) {
+        let relations = this.#modelToRelationMap.get(model);
+        if (relations === undefined) {
+            relations = [];
+            this.#modelToRelationMap.set(model, relations);
+        }
+        return relations;
+    }
+    #buildOrGetRelationModels(relationKey, relationValue) {
+        let models = this.#relationToModelsMaps[relationKey].get(relationValue);
+        if (models === undefined) {
+            models = [];
+            this.#relationToModelsMaps[relationKey].set(relationValue, models);
+        }
+        return models;
+    }
+    #pushEntriesIntoMap(source, target) {
+        for (const [key, value] of source) {
+            target.set(key, [...value]);
+        }
+    }
+    #removeModelFromRelationMaps(model, relation) {
+        for (const relationKey of Reflect.ownKeys(relation)) {
+            this.#removeModelFromRelationMap(model, relationKey, relation[relationKey]);
+        }
+    }
+    #removeModelFromRelationMap(model, relationKey, relationValue) {
+        const relationModels = this.#relationToModelsMaps[relationKey].get(relationValue);
+        if (relationModels !== undefined) {
+            const index = relationModels.indexOf(model);
+            if (index !== NOT_FOUND_INDEX) {
+                relationModels.splice(index, 1);
+            }
+            if (relationModels.length === 0) {
+                this.#relationToModelsMaps[relationKey].delete(relationValue);
+            }
+        }
+    }
+}
+exports.OneToManyMapStar = OneToManyMapStar;
+//# sourceMappingURL=OneToManyMapStar.js.map
+
+/***/ }),
+
+/***/ 6479:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SingleInmutableLinkedList = void 0;
+class SingleInmutableLinkedList {
+    last;
+    constructor(last) {
+        this.last = last;
+    }
+    concat(elem) {
+        return new SingleInmutableLinkedList({
+            elem,
+            previous: this.last,
+        });
+    }
+    [Symbol.iterator]() {
+        let node = this.last;
+        return {
+            next: () => {
+                if (node === undefined) {
+                    return {
+                        done: true,
+                        value: undefined,
+                    };
+                }
+                const elem = node.elem;
+                node = node.previous;
+                return {
+                    done: false,
+                    value: elem,
+                };
+            },
+        };
+    }
+}
+exports.SingleInmutableLinkedList = SingleInmutableLinkedList;
+//# sourceMappingURL=SingleInmutableLinkedList.js.map
+
+/***/ }),
+
+/***/ 2361:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.decorate = decorate;
+function decorate(decorators, target, parameterIndexOrProperty) {
+    const parsedDecorators = Array.isArray(decorators)
+        ? decorators
+        : [decorators];
+    if (parameterIndexOrProperty === undefined) {
+        // Asume ClassDecorator[]
+        Reflect.decorate(parsedDecorators, target);
+        return;
+    }
+    if (typeof parameterIndexOrProperty === 'number') {
+        // Asume ParameterDecorator[]
+        for (const decorator of parsedDecorators) {
+            decorator(target, undefined, parameterIndexOrProperty);
+        }
+        return;
+    }
+    Reflect.decorate(parsedDecorators, target.prototype, parameterIndexOrProperty);
+}
+//# sourceMappingURL=decorate.js.map
+
+/***/ }),
+
+/***/ 5934:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getDecoratorInfo = getDecoratorInfo;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+const DecoratorInfoKind_1 = __nccwpck_require__(432);
+function getDecoratorInfo(target, propertyKey, parameterIndexOrDescriptor) {
+    if (parameterIndexOrDescriptor === undefined) {
+        if (propertyKey === undefined) {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.unknown, 'Unexpected undefined property and index values');
+        }
+        return {
+            kind: DecoratorInfoKind_1.DecoratorInfoKind.property,
+            property: propertyKey,
+            targetClass: target.constructor,
+        };
+    }
+    if (typeof parameterIndexOrDescriptor === 'number') {
+        return {
+            index: parameterIndexOrDescriptor,
+            kind: DecoratorInfoKind_1.DecoratorInfoKind.parameter,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+            targetClass: target,
+        };
+    }
+    return {
+        kind: DecoratorInfoKind_1.DecoratorInfoKind.method,
+        method: propertyKey,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+        targetClass: target,
+    };
+}
+//# sourceMappingURL=getDecoratorInfo.js.map
+
+/***/ }),
+
+/***/ 2001:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.stringifyDecoratorInfo = stringifyDecoratorInfo;
+const DecoratorInfoKind_1 = __nccwpck_require__(432);
+function stringifyDecoratorInfo(decoratorTargetInfo) {
+    switch (decoratorTargetInfo.kind) {
+        case DecoratorInfoKind_1.DecoratorInfoKind.method:
+            return `[class: "${decoratorTargetInfo.targetClass.name}", method: "${decoratorTargetInfo.method.toString()}"]`;
+        case DecoratorInfoKind_1.DecoratorInfoKind.parameter:
+            return `[class: "${decoratorTargetInfo.targetClass.name}", index: "${decoratorTargetInfo.index.toString()}"]`;
+        case DecoratorInfoKind_1.DecoratorInfoKind.property:
+            return `[class: "${decoratorTargetInfo.targetClass.name}", property: "${decoratorTargetInfo.property.toString()}"]`;
+    }
+}
+//# sourceMappingURL=stringifyDecoratorInfo.js.map
+
+/***/ }),
+
+/***/ 432:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DecoratorInfoKind = void 0;
+var DecoratorInfoKind;
+(function (DecoratorInfoKind) {
+    DecoratorInfoKind[DecoratorInfoKind["method"] = 0] = "method";
+    DecoratorInfoKind[DecoratorInfoKind["parameter"] = 1] = "parameter";
+    DecoratorInfoKind[DecoratorInfoKind["property"] = 2] = "property";
+})(DecoratorInfoKind || (exports.DecoratorInfoKind = DecoratorInfoKind = {}));
+//# sourceMappingURL=DecoratorInfoKind.js.map
+
+/***/ }),
+
 /***/ 120:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InversifyCoreError = exports.isAppErrorSymbol = void 0;
-exports.isAppErrorSymbol = Symbol.for('@inversifyjs/core/InversifyCoreError');
+exports.InversifyCoreError = void 0;
+const isAppErrorSymbol = Symbol.for('@inversifyjs/core/InversifyCoreError');
 class InversifyCoreError extends Error {
-    [exports.isAppErrorSymbol];
+    [isAppErrorSymbol];
     kind;
     constructor(kind, message, options) {
         super(message, options);
-        this[exports.isAppErrorSymbol] = true;
+        this[isAppErrorSymbol] = true;
         this.kind = kind;
     }
     static is(value) {
         return (typeof value === 'object' &&
             value !== null &&
-            value[exports.isAppErrorSymbol] === true);
+            value[isAppErrorSymbol] === true);
     }
     static isErrorOfKind(value, kind) {
         return InversifyCoreError.is(value) && value.kind === kind;
@@ -37750,7 +39524,8 @@ var InversifyCoreErrorKind;
     InversifyCoreErrorKind[InversifyCoreErrorKind["injectionDecoratorConflict"] = 0] = "injectionDecoratorConflict";
     InversifyCoreErrorKind[InversifyCoreErrorKind["missingInjectionDecorator"] = 1] = "missingInjectionDecorator";
     InversifyCoreErrorKind[InversifyCoreErrorKind["planning"] = 2] = "planning";
-    InversifyCoreErrorKind[InversifyCoreErrorKind["unknown"] = 3] = "unknown";
+    InversifyCoreErrorKind[InversifyCoreErrorKind["resolution"] = 3] = "resolution";
+    InversifyCoreErrorKind[InversifyCoreErrorKind["unknown"] = 4] = "unknown";
 })(InversifyCoreErrorKind || (exports.InversifyCoreErrorKind = InversifyCoreErrorKind = {}));
 //# sourceMappingURL=InversifyCoreErrorKind.js.map
 
@@ -37762,228 +39537,773 @@ var InversifyCoreErrorKind;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LegacyTargetImpl = exports.getTargets = exports.getClassMetadataFromMetadataReader = exports.getClassMetadata = exports.getClassElementMetadataFromLegacyMetadata = exports.ClassElementMetadataKind = void 0;
-const getTargets_1 = __nccwpck_require__(840);
-Object.defineProperty(exports, "getTargets", ({ enumerable: true, get: function () { return getTargets_1.getTargets; } }));
-const LegacyTargetImpl_1 = __nccwpck_require__(7810);
-Object.defineProperty(exports, "LegacyTargetImpl", ({ enumerable: true, get: function () { return LegacyTargetImpl_1.LegacyTargetImpl; } }));
-const getClassElementMetadataFromLegacyMetadata_1 = __nccwpck_require__(5622);
-Object.defineProperty(exports, "getClassElementMetadataFromLegacyMetadata", ({ enumerable: true, get: function () { return getClassElementMetadataFromLegacyMetadata_1.getClassElementMetadataFromLegacyMetadata; } }));
+exports.unmanaged = exports.tagged = exports.resolveServiceDeactivations = exports.resolveModuleDeactivations = exports.ResolvedValueElementMetadataKind = exports.resolve = exports.preDestroy = exports.postConstruct = exports.PlanResultCacheService = exports.plan = exports.optional = exports.named = exports.multiInject = exports.injectFromBase = exports.injectable = exports.inject = exports.getClassMetadata = exports.decorate = exports.DeactivationsService = exports.ClassElementMetadataKind = exports.bindingTypeValues = exports.BindingService = exports.bindingScopeValues = exports.ActivationsService = void 0;
+const BindingScope_1 = __nccwpck_require__(2412);
+Object.defineProperty(exports, "bindingScopeValues", ({ enumerable: true, get: function () { return BindingScope_1.bindingScopeValues; } }));
+const BindingType_1 = __nccwpck_require__(8810);
+Object.defineProperty(exports, "bindingTypeValues", ({ enumerable: true, get: function () { return BindingType_1.bindingTypeValues; } }));
+const ActivationsService_1 = __nccwpck_require__(2033);
+Object.defineProperty(exports, "ActivationsService", ({ enumerable: true, get: function () { return ActivationsService_1.ActivationsService; } }));
+const BindingService_1 = __nccwpck_require__(4861);
+Object.defineProperty(exports, "BindingService", ({ enumerable: true, get: function () { return BindingService_1.BindingService; } }));
+const DeactivationsService_1 = __nccwpck_require__(2682);
+Object.defineProperty(exports, "DeactivationsService", ({ enumerable: true, get: function () { return DeactivationsService_1.DeactivationsService; } }));
+const decorate_1 = __nccwpck_require__(2361);
+Object.defineProperty(exports, "decorate", ({ enumerable: true, get: function () { return decorate_1.decorate; } }));
 const getClassMetadata_1 = __nccwpck_require__(2928);
 Object.defineProperty(exports, "getClassMetadata", ({ enumerable: true, get: function () { return getClassMetadata_1.getClassMetadata; } }));
-const getClassMetadataFromMetadataReader_1 = __nccwpck_require__(6734);
-Object.defineProperty(exports, "getClassMetadataFromMetadataReader", ({ enumerable: true, get: function () { return getClassMetadataFromMetadataReader_1.getClassMetadataFromMetadataReader; } }));
+const inject_1 = __nccwpck_require__(9040);
+Object.defineProperty(exports, "inject", ({ enumerable: true, get: function () { return inject_1.inject; } }));
+const injectable_1 = __nccwpck_require__(8772);
+Object.defineProperty(exports, "injectable", ({ enumerable: true, get: function () { return injectable_1.injectable; } }));
+const injectFromBase_1 = __nccwpck_require__(6285);
+Object.defineProperty(exports, "injectFromBase", ({ enumerable: true, get: function () { return injectFromBase_1.injectFromBase; } }));
+const multiInject_1 = __nccwpck_require__(765);
+Object.defineProperty(exports, "multiInject", ({ enumerable: true, get: function () { return multiInject_1.multiInject; } }));
+const named_1 = __nccwpck_require__(4960);
+Object.defineProperty(exports, "named", ({ enumerable: true, get: function () { return named_1.named; } }));
+const optional_1 = __nccwpck_require__(2281);
+Object.defineProperty(exports, "optional", ({ enumerable: true, get: function () { return optional_1.optional; } }));
+const postConstruct_1 = __nccwpck_require__(5822);
+Object.defineProperty(exports, "postConstruct", ({ enumerable: true, get: function () { return postConstruct_1.postConstruct; } }));
+const preDestroy_1 = __nccwpck_require__(2644);
+Object.defineProperty(exports, "preDestroy", ({ enumerable: true, get: function () { return preDestroy_1.preDestroy; } }));
+const tagged_1 = __nccwpck_require__(2653);
+Object.defineProperty(exports, "tagged", ({ enumerable: true, get: function () { return tagged_1.tagged; } }));
+const unmanaged_1 = __nccwpck_require__(833);
+Object.defineProperty(exports, "unmanaged", ({ enumerable: true, get: function () { return unmanaged_1.unmanaged; } }));
 const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
 Object.defineProperty(exports, "ClassElementMetadataKind", ({ enumerable: true, get: function () { return ClassElementMetadataKind_1.ClassElementMetadataKind; } }));
+const ResolvedValueElementMetadataKind_1 = __nccwpck_require__(2645);
+Object.defineProperty(exports, "ResolvedValueElementMetadataKind", ({ enumerable: true, get: function () { return ResolvedValueElementMetadataKind_1.ResolvedValueElementMetadataKind; } }));
+const plan_1 = __nccwpck_require__(478);
+Object.defineProperty(exports, "plan", ({ enumerable: true, get: function () { return plan_1.plan; } }));
+const PlanResultCacheService_1 = __nccwpck_require__(2852);
+Object.defineProperty(exports, "PlanResultCacheService", ({ enumerable: true, get: function () { return PlanResultCacheService_1.PlanResultCacheService; } }));
+const resolve_1 = __nccwpck_require__(3765);
+Object.defineProperty(exports, "resolve", ({ enumerable: true, get: function () { return resolve_1.resolve; } }));
+const resolveModuleDeactivations_1 = __nccwpck_require__(2529);
+Object.defineProperty(exports, "resolveModuleDeactivations", ({ enumerable: true, get: function () { return resolveModuleDeactivations_1.resolveModuleDeactivations; } }));
+const resolveServiceDeactivations_1 = __nccwpck_require__(3796);
+Object.defineProperty(exports, "resolveServiceDeactivations", ({ enumerable: true, get: function () { return resolveServiceDeactivations_1.resolveServiceDeactivations; } }));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ 8220:
+/***/ 7388:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTargetId = getTargetId;
+exports.decrementPendingClassMetadataCount = decrementPendingClassMetadataCount;
 const reflect_metadata_utils_1 = __nccwpck_require__(2732);
-const ID_METADATA = '@inversifyjs/core/targetId';
-function getTargetId() {
-    const targetId = (0, reflect_metadata_utils_1.getReflectMetadata)(Object, ID_METADATA) ?? 0;
-    if (targetId === Number.MAX_SAFE_INTEGER) {
-        (0, reflect_metadata_utils_1.updateReflectMetadata)(Object, ID_METADATA, targetId, () => Number.MIN_SAFE_INTEGER);
-    }
-    else {
-        (0, reflect_metadata_utils_1.updateReflectMetadata)(Object, ID_METADATA, targetId, (id) => id + 1);
-    }
-    return targetId;
-}
-//# sourceMappingURL=getTargetId.js.map
-
-/***/ }),
-
-/***/ 840:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTargets = void 0;
-const getClassMetadata_1 = __nccwpck_require__(2928);
-const getClassMetadataFromMetadataReader_1 = __nccwpck_require__(6734);
-const getClassMetadataProperties_1 = __nccwpck_require__(7525);
-const getClassMetadataPropertiesFromMetadataReader_1 = __nccwpck_require__(4411);
-const getTargetsFromMetadataProviders_1 = __nccwpck_require__(979);
-const getTargets = (metadataReader) => {
-    const getClassMetadataFn = metadataReader === undefined
-        ? getClassMetadata_1.getClassMetadata
-        : (type) => (0, getClassMetadataFromMetadataReader_1.getClassMetadataFromMetadataReader)(type, metadataReader);
-    const getClassMetadataPropertiesFn = metadataReader === undefined
-        ? getClassMetadataProperties_1.getClassMetadataProperties
-        : (type) => (0, getClassMetadataPropertiesFromMetadataReader_1.getClassMetadataPropertiesFromMetadataReader)(type, metadataReader);
-    return (0, getTargetsFromMetadataProviders_1.getTargetsFromMetadataProviders)(getClassMetadataFn, getClassMetadataPropertiesFn);
-};
-exports.getTargets = getTargets;
-//# sourceMappingURL=getTargets.js.map
-
-/***/ }),
-
-/***/ 979:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getTargetsFromMetadataProviders = getTargetsFromMetadataProviders;
-const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
-const getBaseType_1 = __nccwpck_require__(255);
-const LegacyTargetImpl_1 = __nccwpck_require__(7810);
-function getTargetsFromMetadataProviders(getClassMetadata, getClassMetadataProperties) {
-    return function getTagets(type) {
-        const classMetadata = getClassMetadata(type);
-        let baseType = (0, getBaseType_1.getBaseType)(type);
-        while (baseType !== undefined && baseType !== Object) {
-            const classMetadataProperties = getClassMetadataProperties(baseType);
-            for (const [propertyKey, propertyValue] of classMetadataProperties) {
-                if (!classMetadata.properties.has(propertyKey)) {
-                    classMetadata.properties.set(propertyKey, propertyValue);
-                }
-            }
-            baseType = (0, getBaseType_1.getBaseType)(baseType);
+const pendingClassMetadataCountReflectKey_1 = __nccwpck_require__(7389);
+const getDefaultPendingClassMetadataCount_1 = __nccwpck_require__(2105);
+const MaybeClassElementMetadataKind_1 = __nccwpck_require__(2442);
+function decrementPendingClassMetadataCount(type) {
+    return (metadata) => {
+        if (metadata !== undefined &&
+            metadata.kind === MaybeClassElementMetadataKind_1.MaybeClassElementMetadataKind.unknown) {
+            (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(type, pendingClassMetadataCountReflectKey_1.pendingClassMetadataCountReflectKey, getDefaultPendingClassMetadataCount_1.getDefaultPendingClassMetadataCount, (count) => count - 1);
         }
-        const targets = [];
-        for (const constructorArgument of classMetadata.constructorArguments) {
-            if (constructorArgument.kind !== ClassElementMetadataKind_1.ClassElementMetadataKind.unmanaged) {
-                const targetName = constructorArgument.targetName ?? '';
-                targets.push(new LegacyTargetImpl_1.LegacyTargetImpl(targetName, constructorArgument, 'ConstructorArgument'));
-            }
-        }
-        for (const [property, metadata] of classMetadata.properties) {
-            if (metadata.kind !== ClassElementMetadataKind_1.ClassElementMetadataKind.unmanaged) {
-                const targetName = metadata.targetName ?? property;
-                targets.push(new LegacyTargetImpl_1.LegacyTargetImpl(targetName, metadata, 'ClassProperty'));
-            }
-        }
-        return targets;
     };
 }
-//# sourceMappingURL=getTargetsFromMetadataProviders.js.map
+//# sourceMappingURL=decrementPendingClassMetadataCount.js.map
 
 /***/ }),
 
-/***/ 7810:
+/***/ 3732:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LegacyTargetImpl = void 0;
-const common_1 = __nccwpck_require__(9160);
-const getLegacyMetadata_1 = __nccwpck_require__(8031);
-const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
-const keys_1 = __nccwpck_require__(3016);
-const LegacyQueryableStringImpl_1 = __nccwpck_require__(4731);
-const getDescription_1 = __nccwpck_require__(6294);
-const getTargetId_1 = __nccwpck_require__(8220);
-class LegacyTargetImpl {
-    #metadata;
-    #id;
-    #identifier;
-    #lazyLegacyMetadata;
-    #name;
-    #type;
-    constructor(identifier, metadata, type) {
-        this.#id = (0, getTargetId_1.getTargetId)();
-        this.#identifier = identifier;
-        this.#lazyLegacyMetadata = undefined;
-        this.#metadata = metadata;
-        this.#name = new LegacyQueryableStringImpl_1.LegacyQueryableStringImpl(typeof identifier === 'string' ? identifier : (0, getDescription_1.getDescription)(identifier));
-        this.#type = type;
-    }
-    get id() {
-        return this.#id;
-    }
-    /**
-     * If this is a class property target, this is the name of the property to be injected
-     */
-    get identifier() {
-        return this.#identifier;
-    }
-    get metadata() {
-        if (this.#lazyLegacyMetadata === undefined) {
-            this.#lazyLegacyMetadata = (0, getLegacyMetadata_1.getLegacyMetadata)(this.#metadata);
+exports.incrementPendingClassMetadataCount = incrementPendingClassMetadataCount;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
+const pendingClassMetadataCountReflectKey_1 = __nccwpck_require__(7389);
+const getDefaultPendingClassMetadataCount_1 = __nccwpck_require__(2105);
+function incrementPendingClassMetadataCount(type) {
+    return (metadata) => {
+        if (metadata === undefined) {
+            (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(type, pendingClassMetadataCountReflectKey_1.pendingClassMetadataCountReflectKey, getDefaultPendingClassMetadataCount_1.getDefaultPendingClassMetadataCount, (count) => count + 1);
         }
-        return this.#lazyLegacyMetadata;
-    }
-    get name() {
-        return this.#name;
-    }
-    get type() {
-        return this.#type;
-    }
-    get serviceIdentifier() {
-        if (common_1.LazyServiceIdentifier.is(this.#metadata.value)) {
-            return this.#metadata.value.unwrap();
-        }
-        else {
-            return this.#metadata.value;
-        }
-    }
-    getCustomTags() {
-        return [...this.#metadata.tags.entries()].map(([key, value]) => ({
-            key,
-            value,
-        }));
-    }
-    getNamedTag() {
-        return this.#metadata.name === undefined
-            ? null
-            : {
-                key: keys_1.NAMED_TAG,
-                value: this.#metadata.name,
-            };
-    }
-    hasTag(key) {
-        return this.metadata.some((metadata) => metadata.key === key);
-    }
-    isArray() {
-        return this.#metadata.kind === ClassElementMetadataKind_1.ClassElementMetadataKind.multipleInjection;
-    }
-    isNamed() {
-        return this.#metadata.name !== undefined;
-    }
-    isOptional() {
-        return this.#metadata.optional;
-    }
-    isTagged() {
-        return this.#metadata.tags.size > 0;
-    }
-    matchesArray(name) {
-        return this.isArray() && this.#metadata.value === name;
-    }
-    matchesNamedTag(name) {
-        return this.#metadata.name === name;
-    }
-    matchesTag(key) {
-        return (value) => this.metadata.some((metadata) => metadata.key === key && metadata.value === value);
-    }
+    };
 }
-exports.LegacyTargetImpl = LegacyTargetImpl;
-//# sourceMappingURL=LegacyTargetImpl.js.map
+//# sourceMappingURL=incrementPendingClassMetadataCount.js.map
 
 /***/ }),
 
-/***/ 7537:
+/***/ 6965:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.assertConstructorMetadataArrayFilled = assertConstructorMetadataArrayFilled;
+exports.setIsInjectableFlag = setIsInjectableFlag;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
 const InversifyCoreError_1 = __nccwpck_require__(120);
 const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
-function assertConstructorMetadataArrayFilled(type, value) {
+const classIsInjectableFlagReflectKey_1 = __nccwpck_require__(5445);
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+function setIsInjectableFlag(target) {
+    const isInjectableFlag = (0, reflect_metadata_utils_1.getOwnReflectMetadata)(target, classIsInjectableFlagReflectKey_1.classIsInjectableFlagReflectKey);
+    if (isInjectableFlag !== undefined) {
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, `Cannot apply @injectable decorator multiple times at class "${target.name}"`);
+    }
+    (0, reflect_metadata_utils_1.setReflectMetadata)(target, classIsInjectableFlagReflectKey_1.classIsInjectableFlagReflectKey, true);
+}
+//# sourceMappingURL=setIsInjectableFlag.js.map
+
+/***/ }),
+
+/***/ 8155:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateClassMetadataWithTypescriptParameterTypes = updateClassMetadataWithTypescriptParameterTypes;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
+const classMetadataReflectKey_1 = __nccwpck_require__(7147);
+const typescriptDesignParameterTypesReflectKey_1 = __nccwpck_require__(2729);
+const buildClassElementMetadataFromTypescriptParameterType_1 = __nccwpck_require__(2960);
+const getDefaultClassMetadata_1 = __nccwpck_require__(8423);
+const isUserlandEmittedType_1 = __nccwpck_require__(531);
+function updateClassMetadataWithTypescriptParameterTypes(target) {
+    const typescriptConstructorArguments = (0, reflect_metadata_utils_1.getOwnReflectMetadata)(target, typescriptDesignParameterTypesReflectKey_1.typescriptParameterTypesReflectKey);
+    if (typescriptConstructorArguments !== undefined) {
+        (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(target, classMetadataReflectKey_1.classMetadataReflectKey, getDefaultClassMetadata_1.getDefaultClassMetadata, updateMaybeClassMetadataWithTypescriptClassMetadata(typescriptConstructorArguments));
+    }
+}
+function updateMaybeClassMetadataWithTypescriptClassMetadata(typescriptConstructorArguments) {
+    return (classMetadata) => {
+        typescriptConstructorArguments.forEach((constructorArgumentType, index) => {
+            if (classMetadata.constructorArguments[index] === undefined &&
+                (0, isUserlandEmittedType_1.isUserlandEmittedType)(constructorArgumentType)) {
+                classMetadata.constructorArguments[index] =
+                    (0, buildClassElementMetadataFromTypescriptParameterType_1.buildClassElementMetadataFromTypescriptParameterType)(constructorArgumentType);
+            }
+        });
+        return classMetadata;
+    };
+}
+//# sourceMappingURL=updateClassMetadataWithTypescriptParameterTypes.js.map
+
+/***/ }),
+
+/***/ 4765:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateMaybeClassMetadataConstructorArgument = updateMaybeClassMetadataConstructorArgument;
+function updateMaybeClassMetadataConstructorArgument(updateMetadata, index) {
+    return (classMetadata) => {
+        const propertyMetadata = classMetadata.constructorArguments[index];
+        classMetadata.constructorArguments[index] =
+            updateMetadata(propertyMetadata);
+        return classMetadata;
+    };
+}
+//# sourceMappingURL=updateMaybeClassMetadataConstructorArgument.js.map
+
+/***/ }),
+
+/***/ 6180:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateMaybeClassMetadataPostConstructor = updateMaybeClassMetadataPostConstructor;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+function updateMaybeClassMetadataPostConstructor(methodName) {
+    return (metadata) => {
+        if (metadata.lifecycle.postConstructMethodName !== undefined) {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, 'Unexpected duplicated postConstruct decorator');
+        }
+        metadata.lifecycle.postConstructMethodName = methodName;
+        return metadata;
+    };
+}
+//# sourceMappingURL=updateMaybeClassMetadataPostConstructor.js.map
+
+/***/ }),
+
+/***/ 7777:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateMaybeClassMetadataPreDestroy = updateMaybeClassMetadataPreDestroy;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+function updateMaybeClassMetadataPreDestroy(methodName) {
+    return (metadata) => {
+        if (metadata.lifecycle.preDestroyMethodName !== undefined) {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, 'Unexpected duplicated preDestroy decorator');
+        }
+        metadata.lifecycle.preDestroyMethodName = methodName;
+        return metadata;
+    };
+}
+//# sourceMappingURL=updateMaybeClassMetadataPreDestroy.js.map
+
+/***/ }),
+
+/***/ 3493:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateMaybeClassMetadataProperty = updateMaybeClassMetadataProperty;
+function updateMaybeClassMetadataProperty(updateMetadata, propertyKey) {
+    return (classMetadata) => {
+        const propertyMetadata = classMetadata.properties.get(propertyKey);
+        classMetadata.properties.set(propertyKey, updateMetadata(propertyMetadata));
+        return classMetadata;
+    };
+}
+//# sourceMappingURL=updateMaybeClassMetadataProperty.js.map
+
+/***/ }),
+
+/***/ 4627:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateMetadataName = updateMetadataName;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+function updateMetadataName(name) {
+    return (metadata) => {
+        if (metadata.name !== undefined) {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, 'Unexpected duplicated named decorator');
+        }
+        metadata.name = name;
+        return metadata;
+    };
+}
+//# sourceMappingURL=updateMetadataName.js.map
+
+/***/ }),
+
+/***/ 7604:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateMetadataOptional = updateMetadataOptional;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+function updateMetadataOptional(metadata) {
+    if (metadata.optional) {
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, 'Unexpected duplicated optional decorator');
+    }
+    metadata.optional = true;
+    return metadata;
+}
+//# sourceMappingURL=updateMetadataOptional.js.map
+
+/***/ }),
+
+/***/ 1766:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateMetadataTag = updateMetadataTag;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+function updateMetadataTag(key, value) {
+    return (metadata) => {
+        if (metadata.tags.has(key)) {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, 'Unexpected duplicated tag decorator with existing tag');
+        }
+        metadata.tags.set(key, value);
+        return metadata;
+    };
+}
+//# sourceMappingURL=updateMetadataTag.js.map
+
+/***/ }),
+
+/***/ 8705:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.assertMetadataFromTypescriptIfManaged = assertMetadataFromTypescriptIfManaged;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+const MaybeClassElementMetadataKind_1 = __nccwpck_require__(2442);
+function assertMetadataFromTypescriptIfManaged(metadata) {
+    if (metadata.kind !== MaybeClassElementMetadataKind_1.MaybeClassElementMetadataKind.unknown &&
+        metadata.isFromTypescriptParamType !== true) {
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, 'Unexpected injection found. Multiple @inject, @multiInject or @unmanaged decorators found');
+    }
+}
+//# sourceMappingURL=assertMetadataFromTypescriptIfManaged.js.map
+
+/***/ }),
+
+/***/ 2215:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildClassElementMetadataFromMaybeClassElementMetadata = buildClassElementMetadataFromMaybeClassElementMetadata;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
+function buildClassElementMetadataFromMaybeClassElementMetadata(buildDefaultMetadata, buildMetadataFromMaybeManagedMetadata) {
+    return (...params) => (metadata) => {
+        if (metadata === undefined) {
+            return buildDefaultMetadata(...params);
+        }
+        if (metadata.kind === ClassElementMetadataKind_1.ClassElementMetadataKind.unmanaged) {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, 'Unexpected injection found. Multiple @inject, @multiInject or @unmanaged decorators found');
+        }
+        return buildMetadataFromMaybeManagedMetadata(metadata, ...params);
+    };
+}
+//# sourceMappingURL=buildClassElementMetadataFromMaybeClassElementMetadata.js.map
+
+/***/ }),
+
+/***/ 2960:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildClassElementMetadataFromTypescriptParameterType = buildClassElementMetadataFromTypescriptParameterType;
+const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
+function buildClassElementMetadataFromTypescriptParameterType(type) {
+    return {
+        isFromTypescriptParamType: true,
+        kind: ClassElementMetadataKind_1.ClassElementMetadataKind.singleInjection,
+        name: undefined,
+        optional: false,
+        tags: new Map(),
+        value: type,
+    };
+}
+//# sourceMappingURL=buildClassElementMetadataFromTypescriptParameterType.js.map
+
+/***/ }),
+
+/***/ 626:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildDefaultManagedMetadata = buildDefaultManagedMetadata;
+function buildDefaultManagedMetadata(kind, serviceIdentifier) {
+    return {
+        kind,
+        name: undefined,
+        optional: false,
+        tags: new Map(),
+        value: serviceIdentifier,
+    };
+}
+//# sourceMappingURL=buildDefaultManagedMetadata.js.map
+
+/***/ }),
+
+/***/ 3347:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildDefaultMaybeClassElementMetadata = buildDefaultMaybeClassElementMetadata;
+const MaybeClassElementMetadataKind_1 = __nccwpck_require__(2442);
+function buildDefaultMaybeClassElementMetadata() {
+    return {
+        kind: MaybeClassElementMetadataKind_1.MaybeClassElementMetadataKind.unknown,
+        name: undefined,
+        optional: false,
+        tags: new Map(),
+    };
+}
+//# sourceMappingURL=buildDefaultMaybeClassElementMetadata.js.map
+
+/***/ }),
+
+/***/ 3507:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildDefaultUnmanagedMetadata = buildDefaultUnmanagedMetadata;
+const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
+function buildDefaultUnmanagedMetadata() {
+    return {
+        kind: ClassElementMetadataKind_1.ClassElementMetadataKind.unmanaged,
+    };
+}
+//# sourceMappingURL=buildDefaultUnmanagedMetadata.js.map
+
+/***/ }),
+
+/***/ 3540:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildManagedMetadataFromMaybeClassElementMetadata = void 0;
+const buildClassElementMetadataFromMaybeClassElementMetadata_1 = __nccwpck_require__(2215);
+const buildDefaultManagedMetadata_1 = __nccwpck_require__(626);
+const buildManagedMetadataFromMaybeManagedMetadata_1 = __nccwpck_require__(6909);
+exports.buildManagedMetadataFromMaybeClassElementMetadata = (0, buildClassElementMetadataFromMaybeClassElementMetadata_1.buildClassElementMetadataFromMaybeClassElementMetadata)(buildDefaultManagedMetadata_1.buildDefaultManagedMetadata, buildManagedMetadataFromMaybeManagedMetadata_1.buildManagedMetadataFromMaybeManagedMetadata);
+//# sourceMappingURL=buildManagedMetadataFromMaybeClassElementMetadata.js.map
+
+/***/ }),
+
+/***/ 6909:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildManagedMetadataFromMaybeManagedMetadata = buildManagedMetadataFromMaybeManagedMetadata;
+const assertMetadataFromTypescriptIfManaged_1 = __nccwpck_require__(8705);
+function buildManagedMetadataFromMaybeManagedMetadata(metadata, kind, serviceIdentifier) {
+    (0, assertMetadataFromTypescriptIfManaged_1.assertMetadataFromTypescriptIfManaged)(metadata);
+    return {
+        ...metadata,
+        kind,
+        value: serviceIdentifier,
+    };
+}
+//# sourceMappingURL=buildManagedMetadataFromMaybeManagedMetadata.js.map
+
+/***/ }),
+
+/***/ 9731:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildMaybeClassElementMetadataFromMaybeClassElementMetadata = buildMaybeClassElementMetadataFromMaybeClassElementMetadata;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
+const buildDefaultMaybeClassElementMetadata_1 = __nccwpck_require__(3347);
+function buildMaybeClassElementMetadataFromMaybeClassElementMetadata(updateMetadata) {
+    return (metadata) => {
+        const definedMetadata = metadata ?? (0, buildDefaultMaybeClassElementMetadata_1.buildDefaultMaybeClassElementMetadata)();
+        switch (definedMetadata.kind) {
+            case ClassElementMetadataKind_1.ClassElementMetadataKind.unmanaged:
+                throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, 'Unexpected injection found. Found @unmanaged injection with additional @named, @optional, @tagged or @targetName injections');
+            default:
+                return updateMetadata(definedMetadata);
+        }
+    };
+}
+//# sourceMappingURL=buildMaybeClassElementMetadataFromMaybeClassElementMetadata.js.map
+
+/***/ }),
+
+/***/ 1119:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildUnmanagedMetadataFromMaybeClassElementMetadata = void 0;
+const buildClassElementMetadataFromMaybeClassElementMetadata_1 = __nccwpck_require__(2215);
+const buildDefaultUnmanagedMetadata_1 = __nccwpck_require__(3507);
+const buildUnmanagedMetadataFromMaybeManagedMetadata_1 = __nccwpck_require__(4524);
+exports.buildUnmanagedMetadataFromMaybeClassElementMetadata = (0, buildClassElementMetadataFromMaybeClassElementMetadata_1.buildClassElementMetadataFromMaybeClassElementMetadata)(buildDefaultUnmanagedMetadata_1.buildDefaultUnmanagedMetadata, buildUnmanagedMetadataFromMaybeManagedMetadata_1.buildUnmanagedMetadataFromMaybeManagedMetadata);
+//# sourceMappingURL=buildUnmanagedMetadataFromMaybeClassElementMetadata.js.map
+
+/***/ }),
+
+/***/ 4524:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildUnmanagedMetadataFromMaybeManagedMetadata = buildUnmanagedMetadataFromMaybeManagedMetadata;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+const assertMetadataFromTypescriptIfManaged_1 = __nccwpck_require__(8705);
+const buildDefaultUnmanagedMetadata_1 = __nccwpck_require__(3507);
+function buildUnmanagedMetadataFromMaybeManagedMetadata(metadata) {
+    (0, assertMetadataFromTypescriptIfManaged_1.assertMetadataFromTypescriptIfManaged)(metadata);
+    if (hasManagedMetadata(metadata)) {
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, 'Unexpected injection found. Found @unmanaged injection with additional @named, @optional, @tagged or @targetName injections');
+    }
+    return (0, buildDefaultUnmanagedMetadata_1.buildDefaultUnmanagedMetadata)();
+}
+function hasManagedMetadata(metadata) {
+    return (metadata.name !== undefined || metadata.optional || metadata.tags.size > 0);
+}
+//# sourceMappingURL=buildUnmanagedMetadataFromMaybeManagedMetadata.js.map
+
+/***/ }),
+
+/***/ 2928:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getClassMetadata = getClassMetadata;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
+const classMetadataReflectKey_1 = __nccwpck_require__(7147);
+const getDefaultClassMetadata_1 = __nccwpck_require__(8423);
+const isPendingClassMetadata_1 = __nccwpck_require__(6489);
+const throwAtInvalidClassMetadata_1 = __nccwpck_require__(6832);
+const validateConstructorMetadataArray_1 = __nccwpck_require__(2817);
+function getClassMetadata(type) {
+    const classMetadata = (0, reflect_metadata_utils_1.getOwnReflectMetadata)(type, classMetadataReflectKey_1.classMetadataReflectKey) ??
+        (0, getDefaultClassMetadata_1.getDefaultClassMetadata)();
+    if ((0, isPendingClassMetadata_1.isPendingClassMetadata)(type)) {
+        (0, throwAtInvalidClassMetadata_1.throwAtInvalidClassMetadata)(type, classMetadata);
+    }
+    else {
+        (0, validateConstructorMetadataArray_1.validateConstructorMetadataArray)(type, classMetadata.constructorArguments);
+        return classMetadata;
+    }
+}
+//# sourceMappingURL=getClassMetadata.js.map
+
+/***/ }),
+
+/***/ 8423:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getDefaultClassMetadata = getDefaultClassMetadata;
+function getDefaultClassMetadata() {
+    return {
+        constructorArguments: [],
+        lifecycle: {
+            postConstructMethodName: undefined,
+            preDestroyMethodName: undefined,
+        },
+        properties: new Map(),
+        scope: undefined,
+    };
+}
+//# sourceMappingURL=getDefaultClassMetadata.js.map
+
+/***/ }),
+
+/***/ 2105:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getDefaultPendingClassMetadataCount = getDefaultPendingClassMetadataCount;
+function getDefaultPendingClassMetadataCount() {
+    return 0;
+}
+//# sourceMappingURL=getDefaultPendingClassMetadataCount.js.map
+
+/***/ }),
+
+/***/ 8168:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getExtendedConstructorArguments = getExtendedConstructorArguments;
+function getExtendedConstructorArguments(options, baseTypeClassMetadata, typeMetadata) {
+    const extendConstructorArguments = options.extendConstructorArguments ?? true;
+    let extendedConstructorArguments;
+    if (extendConstructorArguments) {
+        extendedConstructorArguments = [
+            ...baseTypeClassMetadata.constructorArguments,
+        ];
+        typeMetadata.constructorArguments.map((classElementMetadata, index) => {
+            extendedConstructorArguments[index] = classElementMetadata;
+        });
+    }
+    else {
+        extendedConstructorArguments = typeMetadata.constructorArguments;
+    }
+    return extendedConstructorArguments;
+}
+//# sourceMappingURL=getExtendedConstructorArguments.js.map
+
+/***/ }),
+
+/***/ 7469:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getExtendedProperties = getExtendedProperties;
+const chain_1 = __nccwpck_require__(9408);
+function getExtendedProperties(options, baseTypeClassMetadata, typeMetadata) {
+    const extendProperties = options.extendProperties ?? true;
+    let extendedProperties;
+    if (extendProperties) {
+        extendedProperties = new Map((0, chain_1.chain)(baseTypeClassMetadata.properties, typeMetadata.properties));
+    }
+    else {
+        extendedProperties = typeMetadata.properties;
+    }
+    return extendedProperties;
+}
+//# sourceMappingURL=getExtendedProperties.js.map
+
+/***/ }),
+
+/***/ 586:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.handleInjectionError = handleInjectionError;
+const getDecoratorInfo_1 = __nccwpck_require__(5934);
+const stringifyDecoratorInfo_1 = __nccwpck_require__(2001);
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+function handleInjectionError(target, propertyKey, parameterIndex, error) {
+    if (InversifyCoreError_1.InversifyCoreError.isErrorOfKind(error, InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict)) {
+        const info = (0, getDecoratorInfo_1.getDecoratorInfo)(target, propertyKey, parameterIndex);
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, `Unexpected injection error.
+
+Cause:
+
+${error.message}
+
+Details
+
+${(0, stringifyDecoratorInfo_1.stringifyDecoratorInfo)(info)}`, { cause: error });
+    }
+    throw error;
+}
+//# sourceMappingURL=handleInjectionError.js.map
+
+/***/ }),
+
+/***/ 6489:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isPendingClassMetadata = isPendingClassMetadata;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
+const pendingClassMetadataCountReflectKey_1 = __nccwpck_require__(7389);
+function isPendingClassMetadata(type) {
+    const pendingClassMetadataCount = (0, reflect_metadata_utils_1.getOwnReflectMetadata)(type, pendingClassMetadataCountReflectKey_1.pendingClassMetadataCountReflectKey);
+    return (pendingClassMetadataCount !== undefined && pendingClassMetadataCount !== 0);
+}
+//# sourceMappingURL=isPendingClassMetadata.js.map
+
+/***/ }),
+
+/***/ 531:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isUserlandEmittedType = isUserlandEmittedType;
+const NON_USERLAND_TYPES = [
+    Array,
+    BigInt,
+    Boolean,
+    Function,
+    Number,
+    Object,
+    String,
+];
+function isUserlandEmittedType(type) {
+    return !NON_USERLAND_TYPES.includes(type);
+}
+//# sourceMappingURL=isUserlandEmittedType.js.map
+
+/***/ }),
+
+/***/ 6832:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.throwAtInvalidClassMetadata = throwAtInvalidClassMetadata;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+const MaybeClassElementMetadataKind_1 = __nccwpck_require__(2442);
+function throwAtInvalidClassMetadata(type, classMetadata) {
+    const errors = [];
+    for (let i = 0; i < classMetadata.constructorArguments.length; ++i) {
+        const constructorArgument = classMetadata.constructorArguments[i];
+        if (constructorArgument === undefined ||
+            constructorArgument.kind === MaybeClassElementMetadataKind_1.MaybeClassElementMetadataKind.unknown) {
+            errors.push(`  - Missing or incomplete metadata for type "${type.name}" at constructor argument with index ${i.toString()}.
+Every constructor parameter must be decorated either with @inject, @multiInject or @unmanaged decorator.`);
+        }
+    }
+    for (const [propertyKey, property] of classMetadata.properties) {
+        if (property.kind === MaybeClassElementMetadataKind_1.MaybeClassElementMetadataKind.unknown) {
+            errors.push(`  - Missing or incomplete metadata for type "${type.name}" at property "${propertyKey.toString()}".
+This property must be decorated either with @inject or @multiInject decorator.`);
+        }
+    }
+    if (errors.length === 0) {
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.unknown, `Unexpected class metadata for type "${type.name}" with uncompletion traces.
+This might be caused by one of the following reasons:
+
+1. A third party library is targeting inversify reflection metadata.
+2. A bug is causing the issue. Consider submiting an issue to fix it.`);
+    }
+    throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.missingInjectionDecorator, `Invalid class metadata at type ${type.name}:
+
+${errors.join('\n\n')}`);
+}
+//# sourceMappingURL=throwAtInvalidClassMetadata.js.map
+
+/***/ }),
+
+/***/ 2817:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.validateConstructorMetadataArray = validateConstructorMetadataArray;
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+function validateConstructorMetadataArray(type, value) {
     const undefinedIndexes = [];
+    if (value.length < type.length) {
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.missingInjectionDecorator, `Found unexpected missing metadata on type "${type.name}". "${type.name}" constructor requires at least ${type.length.toString()} arguments, found ${value.length.toString()} instead.
+Are you using @inject, @multiInject or @unmanaged decorators in every non optional constructor argument?
+
+If you're using typescript and want to rely on auto injection, set "emitDecoratorMetadata" compiler option to true`);
+    }
     // Using a for loop to ensure empty values are traversed as well
     for (let i = 0; i < value.length; ++i) {
         const element = value[i];
@@ -37999,391 +40319,348 @@ Are you using @inject, @multiInject or @unmanaged decorators at those indexes?
 If you're using typescript and want to rely on auto injection, set "emitDecoratorMetadata" compiler option to true`);
     }
 }
-//# sourceMappingURL=assertConstructorMetadataArrayFilled.js.map
+//# sourceMappingURL=validateConstructorMetadataArray.js.map
 
 /***/ }),
 
-/***/ 5622:
+/***/ 9040:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getClassElementMetadataFromLegacyMetadata = getClassElementMetadataFromLegacyMetadata;
+exports.inject = inject;
+const decrementPendingClassMetadataCount_1 = __nccwpck_require__(7388);
+const buildManagedMetadataFromMaybeClassElementMetadata_1 = __nccwpck_require__(3540);
+const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
+const injectBase_1 = __nccwpck_require__(6713);
+function inject(serviceIdentifier) {
+    const updateMetadata = (0, buildManagedMetadataFromMaybeClassElementMetadata_1.buildManagedMetadataFromMaybeClassElementMetadata)(ClassElementMetadataKind_1.ClassElementMetadataKind.singleInjection, serviceIdentifier);
+    return (0, injectBase_1.injectBase)(updateMetadata, decrementPendingClassMetadataCount_1.decrementPendingClassMetadataCount);
+}
+//# sourceMappingURL=inject.js.map
+
+/***/ }),
+
+/***/ 6713:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.injectBase = injectBase;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
 const InversifyCoreError_1 = __nccwpck_require__(120);
 const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
-const keys_1 = __nccwpck_require__(3016);
-const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
-function getClassElementMetadataFromLegacyMetadata(metadataList) {
-    const injectMetadata = metadataList.find((metadata) => metadata.key === keys_1.INJECT_TAG);
-    const multiInjectMetadata = metadataList.find((metadata) => metadata.key === keys_1.MULTI_INJECT_TAG);
-    const unmanagedMetadata = metadataList.find((metadata) => metadata.key === keys_1.UNMANAGED_TAG);
-    if (unmanagedMetadata !== undefined) {
-        return getUnmanagedClassElementMetadata(injectMetadata, multiInjectMetadata);
-    }
-    if (multiInjectMetadata === undefined && injectMetadata === undefined) {
-        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.missingInjectionDecorator, 'Expected @inject, @multiInject or @unmanaged metadata');
-    }
-    const nameMetadata = metadataList.find((metadata) => metadata.key === keys_1.NAMED_TAG);
-    const optionalMetadata = metadataList.find((metadata) => metadata.key === keys_1.OPTIONAL_TAG);
-    const targetNameMetadata = metadataList.find((metadata) => metadata.key === keys_1.NAME_TAG);
-    const managedClassElementMetadata = {
-        kind: injectMetadata === undefined
-            ? ClassElementMetadataKind_1.ClassElementMetadataKind.multipleInjection
-            : ClassElementMetadataKind_1.ClassElementMetadataKind.singleInjection,
-        name: nameMetadata?.value,
-        optional: optionalMetadata !== undefined,
-        tags: new Map(metadataList
-            .filter((metadata) => keys_1.NON_CUSTOM_TAG_KEYS.every((customTagKey) => metadata.key !== customTagKey))
-            .map((metadata) => [
-            metadata.key,
-            metadata.value,
-        ])),
-        targetName: targetNameMetadata?.value,
-        value: injectMetadata === undefined
-            ? multiInjectMetadata?.value
-            : injectMetadata.value,
-    };
-    return managedClassElementMetadata;
-}
-function getUnmanagedClassElementMetadata(injectMetadata, multiInjectMetadata) {
-    if (multiInjectMetadata !== undefined || injectMetadata !== undefined) {
-        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.missingInjectionDecorator, 'Expected a single @inject, @multiInject or @unmanaged metadata');
-    }
-    return {
-        kind: ClassElementMetadataKind_1.ClassElementMetadataKind.unmanaged,
-    };
-}
-//# sourceMappingURL=getClassElementMetadataFromLegacyMetadata.js.map
-
-/***/ }),
-
-/***/ 6952:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getClassElementMetadataFromNewable = getClassElementMetadataFromNewable;
-const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
-function getClassElementMetadataFromNewable(type) {
-    return {
-        kind: ClassElementMetadataKind_1.ClassElementMetadataKind.singleInjection,
-        name: undefined,
-        optional: false,
-        tags: new Map(),
-        targetName: undefined,
-        value: type,
-    };
-}
-//# sourceMappingURL=getClassElementMetadataFromNewable.js.map
-
-/***/ }),
-
-/***/ 2928:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getClassMetadata = getClassMetadata;
-const reflect_metadata_utils_1 = __nccwpck_require__(2732);
-const keys_1 = __nccwpck_require__(3016);
-const getClassMetadataConstructorArguments_1 = __nccwpck_require__(560);
-const getClassMetadataProperties_1 = __nccwpck_require__(7525);
-function getClassMetadata(type) {
-    const postConstructMetadata = (0, reflect_metadata_utils_1.getReflectMetadata)(type, keys_1.POST_CONSTRUCT);
-    const preDestroyMetadata = (0, reflect_metadata_utils_1.getReflectMetadata)(type, keys_1.PRE_DESTROY);
-    const classMetadata = {
-        constructorArguments: (0, getClassMetadataConstructorArguments_1.getClassMetadataConstructorArguments)(type),
-        lifecycle: {
-            postConstructMethodName: postConstructMetadata?.value,
-            preDestroyMethodName: preDestroyMetadata?.value,
-        },
-        properties: (0, getClassMetadataProperties_1.getClassMetadataProperties)(type),
-    };
-    return classMetadata;
-}
-//# sourceMappingURL=getClassMetadata.js.map
-
-/***/ }),
-
-/***/ 560:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getClassMetadataConstructorArguments = getClassMetadataConstructorArguments;
-const reflect_metadata_utils_1 = __nccwpck_require__(2732);
-const keys_1 = __nccwpck_require__(3016);
-const assertConstructorMetadataArrayFilled_1 = __nccwpck_require__(7537);
-const getClassElementMetadataFromNewable_1 = __nccwpck_require__(6952);
-const getConstructorArgumentMetadataFromLegacyMetadata_1 = __nccwpck_require__(8561);
-function getClassMetadataConstructorArguments(type) {
-    const typescriptMetadataList = (0, reflect_metadata_utils_1.getReflectMetadata)(type, keys_1.DESIGN_PARAM_TYPES);
-    const constructorParametersLegacyMetadata = (0, reflect_metadata_utils_1.getReflectMetadata)(type, keys_1.TAGGED);
-    const constructorArgumentsMetadata = [];
-    if (constructorParametersLegacyMetadata !== undefined) {
-        for (const [stringifiedIndex, metadataList] of Object.entries(constructorParametersLegacyMetadata)) {
-            const index = parseInt(stringifiedIndex);
-            constructorArgumentsMetadata[index] =
-                (0, getConstructorArgumentMetadataFromLegacyMetadata_1.getConstructorArgumentMetadataFromLegacyMetadata)(type, index, metadataList);
-        }
-    }
-    if (typescriptMetadataList !== undefined) {
-        for (let i = 0; i < typescriptMetadataList.length; ++i) {
-            if (constructorArgumentsMetadata[i] === undefined) {
-                const typescriptMetadata = typescriptMetadataList[i];
-                constructorArgumentsMetadata[i] =
-                    (0, getClassElementMetadataFromNewable_1.getClassElementMetadataFromNewable)(typescriptMetadata);
+const classMetadataReflectKey_1 = __nccwpck_require__(7147);
+const updateMaybeClassMetadataConstructorArgument_1 = __nccwpck_require__(4765);
+const updateMaybeClassMetadataProperty_1 = __nccwpck_require__(3493);
+const getDefaultClassMetadata_1 = __nccwpck_require__(8423);
+const handleInjectionError_1 = __nccwpck_require__(586);
+function injectBase(updateMetadata, updatePendingClassMetadataCount) {
+    const decorator = (target, propertyKey, parameterIndexOrDescriptor) => {
+        try {
+            if (parameterIndexOrDescriptor === undefined) {
+                injectProperty(updateMetadata, updatePendingClassMetadataCount)(target, propertyKey);
+            }
+            else {
+                if (typeof parameterIndexOrDescriptor === 'number') {
+                    injectParameter(updateMetadata, updatePendingClassMetadataCount)(target, propertyKey, parameterIndexOrDescriptor);
+                }
+                else {
+                    injectMethod(updateMetadata, updatePendingClassMetadataCount)(target, propertyKey, parameterIndexOrDescriptor);
+                }
             }
         }
-    }
-    (0, assertConstructorMetadataArrayFilled_1.assertConstructorMetadataArrayFilled)(type, constructorArgumentsMetadata);
-    return constructorArgumentsMetadata;
-}
-//# sourceMappingURL=getClassMetadataConstructorArguments.js.map
-
-/***/ }),
-
-/***/ 5342:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getClassMetadataConstructorArgumentsFromMetadataReader = getClassMetadataConstructorArgumentsFromMetadataReader;
-const assertConstructorMetadataArrayFilled_1 = __nccwpck_require__(7537);
-const getClassElementMetadataFromNewable_1 = __nccwpck_require__(6952);
-const getConstructorArgumentMetadataFromLegacyMetadata_1 = __nccwpck_require__(8561);
-function getClassMetadataConstructorArgumentsFromMetadataReader(type, metadataReader) {
-    const legacyConstructorMetadata = metadataReader.getConstructorMetadata(type);
-    const constructorArgumentsMetadata = [];
-    for (const [stringifiedIndex, metadataList] of Object.entries(legacyConstructorMetadata.userGeneratedMetadata)) {
-        const index = parseInt(stringifiedIndex);
-        constructorArgumentsMetadata[index] =
-            (0, getConstructorArgumentMetadataFromLegacyMetadata_1.getConstructorArgumentMetadataFromLegacyMetadata)(type, index, metadataList);
-    }
-    if (legacyConstructorMetadata.compilerGeneratedMetadata !== undefined) {
-        for (let i = 0; i < legacyConstructorMetadata.compilerGeneratedMetadata.length; ++i) {
-            if (constructorArgumentsMetadata[i] === undefined) {
-                const typescriptMetadata = legacyConstructorMetadata
-                    .compilerGeneratedMetadata[i];
-                constructorArgumentsMetadata[i] =
-                    (0, getClassElementMetadataFromNewable_1.getClassElementMetadataFromNewable)(typescriptMetadata);
-            }
+        catch (error) {
+            (0, handleInjectionError_1.handleInjectionError)(target, propertyKey, parameterIndexOrDescriptor, error);
         }
-    }
-    (0, assertConstructorMetadataArrayFilled_1.assertConstructorMetadataArrayFilled)(type, constructorArgumentsMetadata);
-    return constructorArgumentsMetadata;
-}
-//# sourceMappingURL=getClassMetadataConstructorArgumentsFromMetadataReader.js.map
-
-/***/ }),
-
-/***/ 6734:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getClassMetadataFromMetadataReader = getClassMetadataFromMetadataReader;
-const reflect_metadata_utils_1 = __nccwpck_require__(2732);
-const keys_1 = __nccwpck_require__(3016);
-const getClassMetadataConstructorArgumentsFromMetadataReader_1 = __nccwpck_require__(5342);
-const getClassMetadataPropertiesFromMetadataReader_1 = __nccwpck_require__(4411);
-function getClassMetadataFromMetadataReader(type, metadataReader) {
-    const postConstructMetadata = (0, reflect_metadata_utils_1.getReflectMetadata)(type, keys_1.POST_CONSTRUCT);
-    const preDestroyMetadata = (0, reflect_metadata_utils_1.getReflectMetadata)(type, keys_1.PRE_DESTROY);
-    const classMetadata = {
-        constructorArguments: (0, getClassMetadataConstructorArgumentsFromMetadataReader_1.getClassMetadataConstructorArgumentsFromMetadataReader)(type, metadataReader),
-        lifecycle: {
-            postConstructMethodName: postConstructMetadata?.value,
-            preDestroyMethodName: preDestroyMetadata?.value,
-        },
-        properties: (0, getClassMetadataPropertiesFromMetadataReader_1.getClassMetadataPropertiesFromMetadataReader)(type, metadataReader),
     };
-    return classMetadata;
+    return decorator;
 }
-//# sourceMappingURL=getClassMetadataFromMetadataReader.js.map
+function buildComposedUpdateMetadata(updateMetadata, updatePendingClassMetadataCount) {
+    return (target) => {
+        const updateTargetPendingClassMetadataCount = updatePendingClassMetadataCount(target);
+        return (metadata) => {
+            updateTargetPendingClassMetadataCount(metadata);
+            return updateMetadata(metadata);
+        };
+    };
+}
+function injectMethod(updateMetadata, updatePendingClassMetadataCount) {
+    const buildComposedUpdateMetadataFromTarget = buildComposedUpdateMetadata(updateMetadata, updatePendingClassMetadataCount);
+    return (target, propertyKey, descriptor) => {
+        if (isPropertySetter(descriptor)) {
+            (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(target.constructor, classMetadataReflectKey_1.classMetadataReflectKey, getDefaultClassMetadata_1.getDefaultClassMetadata, (0, updateMaybeClassMetadataProperty_1.updateMaybeClassMetadataProperty)(buildComposedUpdateMetadataFromTarget(target), propertyKey));
+        }
+        else {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, `Found an @inject decorator in a non setter property method.
+Found @inject decorator at method "${propertyKey.toString()}" at class "${target.constructor.name}"`);
+        }
+    };
+}
+function injectParameter(updateMetadata, updatePendingClassMetadataCount) {
+    const buildComposedUpdateMetadataFromTarget = buildComposedUpdateMetadata(updateMetadata, updatePendingClassMetadataCount);
+    return (target, propertyKey, parameterIndex) => {
+        if (isConstructorParameter(target, propertyKey)) {
+            (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(target, classMetadataReflectKey_1.classMetadataReflectKey, getDefaultClassMetadata_1.getDefaultClassMetadata, (0, updateMaybeClassMetadataConstructorArgument_1.updateMaybeClassMetadataConstructorArgument)(buildComposedUpdateMetadataFromTarget(target), parameterIndex));
+        }
+        else {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, `Found an @inject decorator in a non constructor parameter.
+Found @inject decorator at method "${propertyKey?.toString() ?? ''}" at class "${target.constructor.name}"`);
+        }
+    };
+}
+function injectProperty(updateMetadata, updatePendingClassMetadataCount) {
+    const buildComposedUpdateMetadataFromTarget = buildComposedUpdateMetadata(updateMetadata, updatePendingClassMetadataCount);
+    return (target, propertyKey) => {
+        (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(target.constructor, classMetadataReflectKey_1.classMetadataReflectKey, getDefaultClassMetadata_1.getDefaultClassMetadata, (0, updateMaybeClassMetadataProperty_1.updateMaybeClassMetadataProperty)(buildComposedUpdateMetadataFromTarget(target), propertyKey));
+    };
+}
+function isConstructorParameter(target, propertyKey) {
+    return typeof target === 'function' && propertyKey === undefined;
+}
+function isPropertySetter(descriptor) {
+    return descriptor.set !== undefined;
+}
+//# sourceMappingURL=injectBase.js.map
 
 /***/ }),
 
-/***/ 7525:
+/***/ 8764:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getClassMetadataProperties = getClassMetadataProperties;
+exports.injectFrom = injectFrom;
 const reflect_metadata_utils_1 = __nccwpck_require__(2732);
-const keys_1 = __nccwpck_require__(3016);
-const getPropertyMetadataFromLegacyMetadata_1 = __nccwpck_require__(3603);
-function getClassMetadataProperties(type) {
-    const propertiesLegacyMetadata = (0, reflect_metadata_utils_1.getReflectMetadata)(type, keys_1.TAGGED_PROP);
-    const propertiesMetadata = new Map();
-    if (propertiesLegacyMetadata !== undefined) {
-        for (const property of Reflect.ownKeys(propertiesLegacyMetadata)) {
-            const legacyMetadata = propertiesLegacyMetadata[property];
-            propertiesMetadata.set(property, (0, getPropertyMetadataFromLegacyMetadata_1.getPropertyMetadataFromLegacyMetadata)(type, property, legacyMetadata));
-        }
-    }
-    return propertiesMetadata;
+const classMetadataReflectKey_1 = __nccwpck_require__(7147);
+const getClassMetadata_1 = __nccwpck_require__(2928);
+const getDefaultClassMetadata_1 = __nccwpck_require__(8423);
+const getExtendedConstructorArguments_1 = __nccwpck_require__(8168);
+const getExtendedProperties_1 = __nccwpck_require__(7469);
+function injectFrom(options) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    const decorator = (target) => {
+        const baseTypeClassMetadata = (0, getClassMetadata_1.getClassMetadata)(options.type);
+        (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(target, classMetadataReflectKey_1.classMetadataReflectKey, getDefaultClassMetadata_1.getDefaultClassMetadata, composeUpdateReflectMetadataCallback(options, baseTypeClassMetadata));
+    };
+    return decorator;
 }
-//# sourceMappingURL=getClassMetadataProperties.js.map
+function composeUpdateReflectMetadataCallback(options, baseTypeClassMetadata) {
+    const callback = (typeMetadata) => ({
+        constructorArguments: (0, getExtendedConstructorArguments_1.getExtendedConstructorArguments)(options, baseTypeClassMetadata, typeMetadata),
+        lifecycle: typeMetadata.lifecycle,
+        properties: (0, getExtendedProperties_1.getExtendedProperties)(options, baseTypeClassMetadata, typeMetadata),
+        scope: typeMetadata.scope,
+    });
+    return callback;
+}
+//# sourceMappingURL=injectFrom.js.map
 
 /***/ }),
 
-/***/ 4411:
+/***/ 6285:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getClassMetadataPropertiesFromMetadataReader = getClassMetadataPropertiesFromMetadataReader;
-const getPropertyMetadataFromLegacyMetadata_1 = __nccwpck_require__(3603);
-function getClassMetadataPropertiesFromMetadataReader(type, metadataReader) {
-    const propertiesLegacyMetadata = metadataReader.getPropertiesMetadata(type);
-    const propertiesMetadata = new Map();
-    for (const property of Reflect.ownKeys(propertiesLegacyMetadata)) {
-        const legacyMetadata = propertiesLegacyMetadata[property];
-        propertiesMetadata.set(property, (0, getPropertyMetadataFromLegacyMetadata_1.getPropertyMetadataFromLegacyMetadata)(type, property, legacyMetadata));
-    }
-    return propertiesMetadata;
-}
-//# sourceMappingURL=getClassMetadataPropertiesFromMetadataReader.js.map
-
-/***/ }),
-
-/***/ 8561:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getConstructorArgumentMetadataFromLegacyMetadata = getConstructorArgumentMetadataFromLegacyMetadata;
+exports.injectFromBase = injectFromBase;
+const prototype_utils_1 = __nccwpck_require__(4747);
 const InversifyCoreError_1 = __nccwpck_require__(120);
 const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
-const getClassElementMetadataFromLegacyMetadata_1 = __nccwpck_require__(5622);
-function getConstructorArgumentMetadataFromLegacyMetadata(type, index, metadataList) {
-    try {
-        return (0, getClassElementMetadataFromLegacyMetadata_1.getClassElementMetadataFromLegacyMetadata)(metadataList);
-    }
-    catch (error) {
-        if (InversifyCoreError_1.InversifyCoreError.isErrorOfKind(error, InversifyCoreErrorKind_1.InversifyCoreErrorKind.missingInjectionDecorator)) {
-            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.missingInjectionDecorator, `Expected a single @inject, @multiInject or @unmanaged decorator at type "${type.name}" at constructor arguments at index "${index.toString()}"`, { cause: error });
+const injectFrom_1 = __nccwpck_require__(8764);
+function injectFromBase(options) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    return (target) => {
+        const baseType = (0, prototype_utils_1.getBaseType)(target);
+        if (baseType === undefined) {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.injectionDecoratorConflict, `Expected base type for type "${target.name}", none found.`);
         }
-        else {
-            throw error;
-        }
-    }
+        (0, injectFrom_1.injectFrom)({
+            ...options,
+            type: baseType,
+        })(target);
+    };
 }
-//# sourceMappingURL=getConstructorArgumentMetadataFromLegacyMetadata.js.map
+//# sourceMappingURL=injectFromBase.js.map
 
 /***/ }),
 
-/***/ 8031:
+/***/ 8772:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getLegacyMetadata = getLegacyMetadata;
-const keys_1 = __nccwpck_require__(3016);
+exports.injectable = injectable;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
+const classMetadataReflectKey_1 = __nccwpck_require__(7147);
+const setIsInjectableFlag_1 = __nccwpck_require__(6965);
+const updateClassMetadataWithTypescriptParameterTypes_1 = __nccwpck_require__(8155);
+const getDefaultClassMetadata_1 = __nccwpck_require__(8423);
+function injectable(scope) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    return (target) => {
+        (0, setIsInjectableFlag_1.setIsInjectableFlag)(target);
+        (0, updateClassMetadataWithTypescriptParameterTypes_1.updateClassMetadataWithTypescriptParameterTypes)(target);
+        if (scope !== undefined) {
+            (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(target, classMetadataReflectKey_1.classMetadataReflectKey, getDefaultClassMetadata_1.getDefaultClassMetadata, (metadata) => ({
+                ...metadata,
+                scope,
+            }));
+        }
+    };
+}
+//# sourceMappingURL=injectable.js.map
+
+/***/ }),
+
+/***/ 765:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.multiInject = multiInject;
+const decrementPendingClassMetadataCount_1 = __nccwpck_require__(7388);
+const buildManagedMetadataFromMaybeClassElementMetadata_1 = __nccwpck_require__(3540);
 const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
-function getLegacyMetadata(classElementMetadata) {
-    switch (classElementMetadata.kind) {
-        case ClassElementMetadataKind_1.ClassElementMetadataKind.unmanaged:
-            return getUnmanagedLegacyMetadata();
-        default:
-            return getManagedLegacyMetadata(classElementMetadata);
-    }
+const injectBase_1 = __nccwpck_require__(6713);
+function multiInject(serviceIdentifier) {
+    const updateMetadata = (0, buildManagedMetadataFromMaybeClassElementMetadata_1.buildManagedMetadataFromMaybeClassElementMetadata)(ClassElementMetadataKind_1.ClassElementMetadataKind.multipleInjection, serviceIdentifier);
+    return (0, injectBase_1.injectBase)(updateMetadata, decrementPendingClassMetadataCount_1.decrementPendingClassMetadataCount);
 }
-function getManagedLegacyMetadata(classElementMetadata) {
-    const legacyMetadataList = [
-        getManagedKindLegacyMetadata(classElementMetadata),
-    ];
-    if (classElementMetadata.name !== undefined) {
-        legacyMetadataList.push({
-            key: keys_1.NAMED_TAG,
-            value: classElementMetadata.name,
-        });
-    }
-    if (classElementMetadata.optional) {
-        legacyMetadataList.push({
-            key: keys_1.OPTIONAL_TAG,
-            value: true,
-        });
-    }
-    for (const [tagKey, tagValue] of classElementMetadata.tags) {
-        legacyMetadataList.push({
-            key: tagKey,
-            value: tagValue,
-        });
-    }
-    if (classElementMetadata.targetName !== undefined) {
-        legacyMetadataList.push({
-            key: keys_1.NAME_TAG,
-            value: classElementMetadata.targetName,
-        });
-    }
-    return legacyMetadataList;
-}
-function getManagedKindLegacyMetadata(classElementMetadata) {
-    let kindLegacyMetadata;
-    switch (classElementMetadata.kind) {
-        case ClassElementMetadataKind_1.ClassElementMetadataKind.multipleInjection:
-            kindLegacyMetadata = {
-                key: keys_1.MULTI_INJECT_TAG,
-                value: classElementMetadata.value,
-            };
-            break;
-        case ClassElementMetadataKind_1.ClassElementMetadataKind.singleInjection:
-            kindLegacyMetadata = {
-                key: keys_1.INJECT_TAG,
-                value: classElementMetadata.value,
-            };
-            break;
-    }
-    return kindLegacyMetadata;
-}
-function getUnmanagedLegacyMetadata() {
-    return [
-        {
-            key: keys_1.UNMANAGED_TAG,
-            value: true,
-        },
-    ];
-}
-//# sourceMappingURL=getLegacyMetadata.js.map
+//# sourceMappingURL=multiInject.js.map
 
 /***/ }),
 
-/***/ 3603:
+/***/ 4960:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getPropertyMetadataFromLegacyMetadata = getPropertyMetadataFromLegacyMetadata;
-const InversifyCoreError_1 = __nccwpck_require__(120);
-const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
-const getClassElementMetadataFromLegacyMetadata_1 = __nccwpck_require__(5622);
-function getPropertyMetadataFromLegacyMetadata(type, key, metadataList) {
-    try {
-        return (0, getClassElementMetadataFromLegacyMetadata_1.getClassElementMetadataFromLegacyMetadata)(metadataList);
-    }
-    catch (error) {
-        if (InversifyCoreError_1.InversifyCoreError.isErrorOfKind(error, InversifyCoreErrorKind_1.InversifyCoreErrorKind.missingInjectionDecorator)) {
-            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.missingInjectionDecorator, `Expected a single @inject, @multiInject or @unmanaged decorator at type "${type.name}" at property "${key.toString()}"`, { cause: error });
-        }
-        else {
-            throw error;
-        }
-    }
+exports.named = named;
+const incrementPendingClassMetadataCount_1 = __nccwpck_require__(3732);
+const updateMetadataName_1 = __nccwpck_require__(4627);
+const buildMaybeClassElementMetadataFromMaybeClassElementMetadata_1 = __nccwpck_require__(9731);
+const injectBase_1 = __nccwpck_require__(6713);
+function named(name) {
+    const updateMetadata = (0, buildMaybeClassElementMetadataFromMaybeClassElementMetadata_1.buildMaybeClassElementMetadataFromMaybeClassElementMetadata)((0, updateMetadataName_1.updateMetadataName)(name));
+    return (0, injectBase_1.injectBase)(updateMetadata, incrementPendingClassMetadataCount_1.incrementPendingClassMetadataCount);
 }
-//# sourceMappingURL=getPropertyMetadataFromLegacyMetadata.js.map
+//# sourceMappingURL=named.js.map
+
+/***/ }),
+
+/***/ 2281:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.optional = optional;
+const incrementPendingClassMetadataCount_1 = __nccwpck_require__(3732);
+const updateMetadataOptional_1 = __nccwpck_require__(7604);
+const buildMaybeClassElementMetadataFromMaybeClassElementMetadata_1 = __nccwpck_require__(9731);
+const injectBase_1 = __nccwpck_require__(6713);
+function optional() {
+    const updateMetadata = (0, buildMaybeClassElementMetadataFromMaybeClassElementMetadata_1.buildMaybeClassElementMetadataFromMaybeClassElementMetadata)(updateMetadataOptional_1.updateMetadataOptional);
+    return (0, injectBase_1.injectBase)(updateMetadata, incrementPendingClassMetadataCount_1.incrementPendingClassMetadataCount);
+}
+//# sourceMappingURL=optional.js.map
+
+/***/ }),
+
+/***/ 5822:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.postConstruct = postConstruct;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
+const classMetadataReflectKey_1 = __nccwpck_require__(7147);
+const updateMaybeClassMetadataPostConstructor_1 = __nccwpck_require__(6180);
+const getDefaultClassMetadata_1 = __nccwpck_require__(8423);
+const handleInjectionError_1 = __nccwpck_require__(586);
+function postConstruct() {
+    return (target, propertyKey, _descriptor) => {
+        try {
+            (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(target.constructor, classMetadataReflectKey_1.classMetadataReflectKey, getDefaultClassMetadata_1.getDefaultClassMetadata, (0, updateMaybeClassMetadataPostConstructor_1.updateMaybeClassMetadataPostConstructor)(propertyKey));
+        }
+        catch (error) {
+            (0, handleInjectionError_1.handleInjectionError)(target, propertyKey, undefined, error);
+        }
+    };
+}
+//# sourceMappingURL=postConstruct.js.map
+
+/***/ }),
+
+/***/ 2644:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.preDestroy = preDestroy;
+const reflect_metadata_utils_1 = __nccwpck_require__(2732);
+const classMetadataReflectKey_1 = __nccwpck_require__(7147);
+const updateMaybeClassMetadataPreDestroy_1 = __nccwpck_require__(7777);
+const getDefaultClassMetadata_1 = __nccwpck_require__(8423);
+const handleInjectionError_1 = __nccwpck_require__(586);
+function preDestroy() {
+    return (target, propertyKey, _descriptor) => {
+        try {
+            (0, reflect_metadata_utils_1.updateOwnReflectMetadata)(target.constructor, classMetadataReflectKey_1.classMetadataReflectKey, getDefaultClassMetadata_1.getDefaultClassMetadata, (0, updateMaybeClassMetadataPreDestroy_1.updateMaybeClassMetadataPreDestroy)(propertyKey));
+        }
+        catch (error) {
+            (0, handleInjectionError_1.handleInjectionError)(target, propertyKey, undefined, error);
+        }
+    };
+}
+//# sourceMappingURL=preDestroy.js.map
+
+/***/ }),
+
+/***/ 2653:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.tagged = tagged;
+const incrementPendingClassMetadataCount_1 = __nccwpck_require__(3732);
+const updateMetadataTag_1 = __nccwpck_require__(1766);
+const buildMaybeClassElementMetadataFromMaybeClassElementMetadata_1 = __nccwpck_require__(9731);
+const injectBase_1 = __nccwpck_require__(6713);
+function tagged(key, value) {
+    const updateMetadata = (0, buildMaybeClassElementMetadataFromMaybeClassElementMetadata_1.buildMaybeClassElementMetadataFromMaybeClassElementMetadata)((0, updateMetadataTag_1.updateMetadataTag)(key, value));
+    return (0, injectBase_1.injectBase)(updateMetadata, incrementPendingClassMetadataCount_1.incrementPendingClassMetadataCount);
+}
+//# sourceMappingURL=tagged.js.map
+
+/***/ }),
+
+/***/ 833:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.unmanaged = unmanaged;
+const decrementPendingClassMetadataCount_1 = __nccwpck_require__(7388);
+const buildUnmanagedMetadataFromMaybeClassElementMetadata_1 = __nccwpck_require__(1119);
+const injectBase_1 = __nccwpck_require__(6713);
+function unmanaged() {
+    const updateMetadata = (0, buildUnmanagedMetadataFromMaybeClassElementMetadata_1.buildUnmanagedMetadataFromMaybeClassElementMetadata)();
+    return (0, injectBase_1.injectBase)(updateMetadata, decrementPendingClassMetadataCount_1.decrementPendingClassMetadataCount);
+}
+//# sourceMappingURL=unmanaged.js.map
 
 /***/ }),
 
@@ -38404,7 +40681,1590 @@ var ClassElementMetadataKind;
 
 /***/ }),
 
-/***/ 255:
+/***/ 2442:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MaybeClassElementMetadataKind = void 0;
+var MaybeClassElementMetadataKind;
+(function (MaybeClassElementMetadataKind) {
+    MaybeClassElementMetadataKind[MaybeClassElementMetadataKind["unknown"] = 32] = "unknown";
+})(MaybeClassElementMetadataKind || (exports.MaybeClassElementMetadataKind = MaybeClassElementMetadataKind = {}));
+//# sourceMappingURL=MaybeClassElementMetadataKind.js.map
+
+/***/ }),
+
+/***/ 2645:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ResolvedValueElementMetadataKind = void 0;
+var ResolvedValueElementMetadataKind;
+(function (ResolvedValueElementMetadataKind) {
+    ResolvedValueElementMetadataKind[ResolvedValueElementMetadataKind["multipleInjection"] = 0] = "multipleInjection";
+    ResolvedValueElementMetadataKind[ResolvedValueElementMetadataKind["singleInjection"] = 1] = "singleInjection";
+})(ResolvedValueElementMetadataKind || (exports.ResolvedValueElementMetadataKind = ResolvedValueElementMetadataKind = {}));
+//# sourceMappingURL=ResolvedValueElementMetadataKind.js.map
+
+/***/ }),
+
+/***/ 2458:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.addBranchService = addBranchService;
+const common_1 = __nccwpck_require__(9160);
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+function addBranchService(params, serviceIdentifier) {
+    if (params.servicesBranch.has(serviceIdentifier)) {
+        throwError(params, serviceIdentifier);
+    }
+    params.servicesBranch.add(serviceIdentifier);
+}
+function stringifyServiceIdentifierTrace(serviceIdentifiers) {
+    return [...serviceIdentifiers].map(common_1.stringifyServiceIdentifier).join(' -> ');
+}
+function throwError(params, serviceIdentifier) {
+    const stringifiedCircularDependencies = stringifyServiceIdentifierTrace([
+        ...params.servicesBranch,
+        serviceIdentifier,
+    ]);
+    throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.planning, `Circular dependency found: ${stringifiedCircularDependencies}`);
+}
+//# sourceMappingURL=addBranchService.js.map
+
+/***/ }),
+
+/***/ 3769:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildFilteredServiceBindings = buildFilteredServiceBindings;
+const BindingType_1 = __nccwpck_require__(8810);
+function buildFilteredServiceBindings(params, bindingConstraints, options) {
+    const serviceIdentifier = options?.customServiceIdentifier ?? bindingConstraints.serviceIdentifier;
+    const serviceBindings = [
+        ...(params.getBindings(serviceIdentifier) ?? []),
+    ];
+    const filteredBindings = serviceBindings.filter((binding) => binding.isSatisfiedBy(bindingConstraints));
+    if (filteredBindings.length === 0 &&
+        params.autobindOptions !== undefined &&
+        typeof serviceIdentifier === 'function') {
+        const binding = buildInstanceBinding(params.autobindOptions, serviceIdentifier);
+        params.setBinding(binding);
+        filteredBindings.push(binding);
+    }
+    return filteredBindings;
+}
+function buildInstanceBinding(autobindOptions, serviceIdentifier) {
+    return {
+        cache: {
+            isRight: false,
+            value: undefined,
+        },
+        id: 0,
+        implementationType: serviceIdentifier,
+        isSatisfiedBy: () => true,
+        moduleId: undefined,
+        onActivation: undefined,
+        onDeactivation: undefined,
+        scope: autobindOptions.scope,
+        serviceIdentifier,
+        type: BindingType_1.bindingTypeValues.Instance,
+    };
+}
+//# sourceMappingURL=buildFilteredServiceBindings.js.map
+
+/***/ }),
+
+/***/ 6533:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.checkPlanServiceRedirectionBindingNodeSingleInjectionBindings = checkPlanServiceRedirectionBindingNodeSingleInjectionBindings;
+const isPlanServiceRedirectionBindingNode_1 = __nccwpck_require__(4872);
+const throwErrorWhenUnexpectedBindingsAmountFound_1 = __nccwpck_require__(7888);
+const SINGLE_INJECTION_BINDINGS = 1;
+function checkPlanServiceRedirectionBindingNodeSingleInjectionBindings(serviceRedirectionBindingNode, isOptional, bindingConstraints) {
+    if (serviceRedirectionBindingNode.redirections.length ===
+        SINGLE_INJECTION_BINDINGS) {
+        const [planBindingNode] = serviceRedirectionBindingNode.redirections;
+        if ((0, isPlanServiceRedirectionBindingNode_1.isPlanServiceRedirectionBindingNode)(planBindingNode)) {
+            checkPlanServiceRedirectionBindingNodeSingleInjectionBindings(planBindingNode, isOptional, bindingConstraints);
+        }
+        return;
+    }
+    (0, throwErrorWhenUnexpectedBindingsAmountFound_1.throwErrorWhenUnexpectedBindingsAmountFound)(serviceRedirectionBindingNode.redirections, isOptional, serviceRedirectionBindingNode, bindingConstraints);
+}
+//# sourceMappingURL=checkPlanServiceRedirectionBindingNodeSingleInjectionBindings.js.map
+
+/***/ }),
+
+/***/ 8455:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.checkServiceNodeSingleInjectionBindings = checkServiceNodeSingleInjectionBindings;
+const checkPlanServiceRedirectionBindingNodeSingleInjectionBindings_1 = __nccwpck_require__(6533);
+const isPlanServiceRedirectionBindingNode_1 = __nccwpck_require__(4872);
+const throwErrorWhenUnexpectedBindingsAmountFound_1 = __nccwpck_require__(7888);
+const SINGLE_INJECTION_BINDINGS = 1;
+function checkServiceNodeSingleInjectionBindings(serviceNode, isOptional, bindingConstraints) {
+    if (Array.isArray(serviceNode.bindings)) {
+        if (serviceNode.bindings.length === SINGLE_INJECTION_BINDINGS) {
+            const [planBindingNode] = serviceNode.bindings;
+            if ((0, isPlanServiceRedirectionBindingNode_1.isPlanServiceRedirectionBindingNode)(planBindingNode)) {
+                (0, checkPlanServiceRedirectionBindingNodeSingleInjectionBindings_1.checkPlanServiceRedirectionBindingNodeSingleInjectionBindings)(planBindingNode, isOptional, bindingConstraints);
+            }
+            return;
+        }
+    }
+    (0, throwErrorWhenUnexpectedBindingsAmountFound_1.throwErrorWhenUnexpectedBindingsAmountFound)(serviceNode.bindings, isOptional, serviceNode, bindingConstraints);
+}
+//# sourceMappingURL=checkServiceNodeSingleInjectionBindings.js.map
+
+/***/ }),
+
+/***/ 513:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isInstanceBindingNode = isInstanceBindingNode;
+const BindingType_1 = __nccwpck_require__(8810);
+function isInstanceBindingNode(node) {
+    return node.binding.type === BindingType_1.bindingTypeValues.Instance;
+}
+//# sourceMappingURL=isInstanceBindingNode.js.map
+
+/***/ }),
+
+/***/ 4872:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isPlanServiceRedirectionBindingNode = isPlanServiceRedirectionBindingNode;
+function isPlanServiceRedirectionBindingNode(node) {
+    return (node.redirections !==
+        undefined);
+}
+//# sourceMappingURL=isPlanServiceRedirectionBindingNode.js.map
+
+/***/ }),
+
+/***/ 478:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.plan = plan;
+const common_1 = __nccwpck_require__(9160);
+const BindingConstraintsImplementation_1 = __nccwpck_require__(414);
+const BindingType_1 = __nccwpck_require__(8810);
+const SingleInmutableLinkedList_1 = __nccwpck_require__(6479);
+const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
+const ResolvedValueElementMetadataKind_1 = __nccwpck_require__(2645);
+const addBranchService_1 = __nccwpck_require__(2458);
+const buildFilteredServiceBindings_1 = __nccwpck_require__(3769);
+const checkServiceNodeSingleInjectionBindings_1 = __nccwpck_require__(8455);
+const isInstanceBindingNode_1 = __nccwpck_require__(513);
+const isPlanServiceRedirectionBindingNode_1 = __nccwpck_require__(4872);
+function plan(params) {
+    const tags = new Map();
+    if (params.rootConstraints.tag !== undefined) {
+        tags.set(params.rootConstraints.tag.key, params.rootConstraints.tag.value);
+    }
+    const bindingConstraintsList = new SingleInmutableLinkedList_1.SingleInmutableLinkedList({
+        elem: {
+            name: params.rootConstraints.name,
+            serviceIdentifier: params.rootConstraints.serviceIdentifier,
+            tags,
+        },
+        previous: undefined,
+    });
+    const bindingConstraints = new BindingConstraintsImplementation_1.BindingConstraintsImplementation(bindingConstraintsList.last);
+    const filteredServiceBindings = (0, buildFilteredServiceBindings_1.buildFilteredServiceBindings)(params, bindingConstraints);
+    const serviceNodeBindings = [];
+    const serviceNode = {
+        bindings: serviceNodeBindings,
+        parent: undefined,
+        serviceIdentifier: params.rootConstraints.serviceIdentifier,
+    };
+    serviceNodeBindings.push(...buildServiceNodeBindings(params, bindingConstraintsList, filteredServiceBindings, serviceNode));
+    if (!params.rootConstraints.isMultiple) {
+        (0, checkServiceNodeSingleInjectionBindings_1.checkServiceNodeSingleInjectionBindings)(serviceNode, params.rootConstraints.isOptional ?? false, bindingConstraints);
+        const [planBindingNode] = serviceNodeBindings;
+        serviceNode.bindings = planBindingNode;
+    }
+    return {
+        tree: {
+            root: serviceNode,
+        },
+    };
+}
+function buildInstancePlanBindingNode(params, binding, bindingConstraintsList, parentNode) {
+    const classMetadata = params.getClassMetadata(binding.implementationType);
+    const childNode = {
+        binding: binding,
+        classMetadata,
+        constructorParams: [],
+        parent: parentNode,
+        propertyParams: new Map(),
+    };
+    const subplanParams = {
+        autobindOptions: params.autobindOptions,
+        getBindings: params.getBindings,
+        getClassMetadata: params.getClassMetadata,
+        node: childNode,
+        servicesBranch: params.servicesBranch,
+        setBinding: params.setBinding,
+    };
+    return subplan(subplanParams, bindingConstraintsList);
+}
+function buildPlanServiceNodeFromClassElementMetadata(params, bindingConstraintsList, elementMetadata) {
+    if (elementMetadata.kind === ClassElementMetadataKind_1.ClassElementMetadataKind.unmanaged) {
+        return undefined;
+    }
+    const serviceIdentifier = common_1.LazyServiceIdentifier.is(elementMetadata.value)
+        ? elementMetadata.value.unwrap()
+        : elementMetadata.value;
+    const updatedBindingConstraintsList = bindingConstraintsList.concat({
+        name: elementMetadata.name,
+        serviceIdentifier,
+        tags: elementMetadata.tags,
+    });
+    const bindingConstraints = new BindingConstraintsImplementation_1.BindingConstraintsImplementation(updatedBindingConstraintsList.last);
+    const filteredServiceBindings = (0, buildFilteredServiceBindings_1.buildFilteredServiceBindings)(params, bindingConstraints);
+    const serviceNodeBindings = [];
+    const serviceNode = {
+        bindings: serviceNodeBindings,
+        parent: params.node,
+        serviceIdentifier,
+    };
+    serviceNodeBindings.push(...buildServiceNodeBindings(params, updatedBindingConstraintsList, filteredServiceBindings, serviceNode));
+    if (elementMetadata.kind === ClassElementMetadataKind_1.ClassElementMetadataKind.singleInjection) {
+        (0, checkServiceNodeSingleInjectionBindings_1.checkServiceNodeSingleInjectionBindings)(serviceNode, elementMetadata.optional, bindingConstraints);
+        const [planBindingNode] = serviceNodeBindings;
+        serviceNode.bindings = planBindingNode;
+    }
+    return serviceNode;
+}
+function buildPlanServiceNodeFromResolvedValueElementMetadata(params, bindingConstraintsList, elementMetadata) {
+    const serviceIdentifier = common_1.LazyServiceIdentifier.is(elementMetadata.value)
+        ? elementMetadata.value.unwrap()
+        : elementMetadata.value;
+    const updatedBindingConstraintsList = bindingConstraintsList.concat({
+        name: elementMetadata.name,
+        serviceIdentifier,
+        tags: elementMetadata.tags,
+    });
+    const bindingConstraints = new BindingConstraintsImplementation_1.BindingConstraintsImplementation(updatedBindingConstraintsList.last);
+    const filteredServiceBindings = (0, buildFilteredServiceBindings_1.buildFilteredServiceBindings)(params, bindingConstraints);
+    const serviceNodeBindings = [];
+    const serviceNode = {
+        bindings: serviceNodeBindings,
+        parent: params.node,
+        serviceIdentifier,
+    };
+    serviceNodeBindings.push(...buildServiceNodeBindings(params, updatedBindingConstraintsList, filteredServiceBindings, serviceNode));
+    if (elementMetadata.kind === ResolvedValueElementMetadataKind_1.ResolvedValueElementMetadataKind.singleInjection) {
+        (0, checkServiceNodeSingleInjectionBindings_1.checkServiceNodeSingleInjectionBindings)(serviceNode, elementMetadata.optional, bindingConstraints);
+        const [planBindingNode] = serviceNodeBindings;
+        serviceNode.bindings = planBindingNode;
+    }
+    return serviceNode;
+}
+function buildResolvedValuePlanBindingNode(params, binding, bindingConstraintsList, parentNode) {
+    const childNode = {
+        binding: binding,
+        params: [],
+        parent: parentNode,
+    };
+    const subplanParams = {
+        autobindOptions: params.autobindOptions,
+        getBindings: params.getBindings,
+        getClassMetadata: params.getClassMetadata,
+        node: childNode,
+        servicesBranch: params.servicesBranch,
+        setBinding: params.setBinding,
+    };
+    return subplan(subplanParams, bindingConstraintsList);
+}
+function buildServiceNodeBindings(params, bindingConstraintsList, serviceBindings, parentNode) {
+    const serviceIdentifier = (0, isPlanServiceRedirectionBindingNode_1.isPlanServiceRedirectionBindingNode)(parentNode)
+        ? parentNode.binding.targetServiceIdentifier
+        : parentNode.serviceIdentifier;
+    (0, addBranchService_1.addBranchService)(params, serviceIdentifier);
+    const planBindingNodes = [];
+    for (const binding of serviceBindings) {
+        switch (binding.type) {
+            case BindingType_1.bindingTypeValues.Instance: {
+                planBindingNodes.push(buildInstancePlanBindingNode(params, binding, bindingConstraintsList, parentNode));
+                break;
+            }
+            case BindingType_1.bindingTypeValues.ResolvedValue: {
+                planBindingNodes.push(buildResolvedValuePlanBindingNode(params, binding, bindingConstraintsList, parentNode));
+                break;
+            }
+            case BindingType_1.bindingTypeValues.ServiceRedirection: {
+                const planBindingNode = buildServiceRedirectionPlanBindingNode(params, bindingConstraintsList, binding, parentNode);
+                planBindingNodes.push(planBindingNode);
+                break;
+            }
+            default:
+                planBindingNodes.push({
+                    binding: binding,
+                    parent: parentNode,
+                });
+        }
+    }
+    params.servicesBranch.delete(serviceIdentifier);
+    return planBindingNodes;
+}
+function buildServiceRedirectionPlanBindingNode(params, bindingConstraintsList, binding, parentNode) {
+    const childNode = {
+        binding,
+        parent: parentNode,
+        redirections: [],
+    };
+    const bindingConstraints = new BindingConstraintsImplementation_1.BindingConstraintsImplementation(bindingConstraintsList.last);
+    const filteredServiceBindings = (0, buildFilteredServiceBindings_1.buildFilteredServiceBindings)(params, bindingConstraints, {
+        customServiceIdentifier: binding.targetServiceIdentifier,
+    });
+    childNode.redirections.push(...buildServiceNodeBindings(params, bindingConstraintsList, filteredServiceBindings, childNode));
+    return childNode;
+}
+function subplan(params, bindingConstraintsList) {
+    if ((0, isInstanceBindingNode_1.isInstanceBindingNode)(params.node)) {
+        return subplanInstanceBindingNode(params, params.node, bindingConstraintsList);
+    }
+    else {
+        return subplanResolvedValueBindingNode(params, params.node, bindingConstraintsList);
+    }
+}
+function subplanInstanceBindingNode(params, node, bindingConstraintsList) {
+    const classMetadata = node.classMetadata;
+    for (const [index, elementMetadata,] of classMetadata.constructorArguments.entries()) {
+        node.constructorParams[index] =
+            buildPlanServiceNodeFromClassElementMetadata(params, bindingConstraintsList, elementMetadata);
+    }
+    for (const [propertyKey, elementMetadata] of classMetadata.properties) {
+        const planServiceNode = buildPlanServiceNodeFromClassElementMetadata(params, bindingConstraintsList, elementMetadata);
+        if (planServiceNode !== undefined) {
+            node.propertyParams.set(propertyKey, planServiceNode);
+        }
+    }
+    return params.node;
+}
+function subplanResolvedValueBindingNode(params, node, bindingConstraintsList) {
+    const resolvedValueMetadata = node.binding.metadata;
+    for (const [index, elementMetadata,] of resolvedValueMetadata.arguments.entries()) {
+        node.params[index] = buildPlanServiceNodeFromResolvedValueElementMetadata(params, bindingConstraintsList, elementMetadata);
+    }
+    return params.node;
+}
+//# sourceMappingURL=plan.js.map
+
+/***/ }),
+
+/***/ 7888:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.throwErrorWhenUnexpectedBindingsAmountFound = throwErrorWhenUnexpectedBindingsAmountFound;
+const common_1 = __nccwpck_require__(9160);
+const stringifyBinding_1 = __nccwpck_require__(1597);
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+const isPlanServiceRedirectionBindingNode_1 = __nccwpck_require__(4872);
+function throwErrorWhenUnexpectedBindingsAmountFound(bindings, isOptional, node, bindingConstraints) {
+    let serviceIdentifier;
+    let parentServiceIdentifier;
+    if ((0, isPlanServiceRedirectionBindingNode_1.isPlanServiceRedirectionBindingNode)(node)) {
+        serviceIdentifier = node.binding.targetServiceIdentifier;
+        parentServiceIdentifier = node.binding.serviceIdentifier;
+    }
+    else {
+        serviceIdentifier = node.serviceIdentifier;
+        parentServiceIdentifier = node.parent?.binding.serviceIdentifier;
+    }
+    if (Array.isArray(bindings)) {
+        throwErrorWhenMultipleUnexpectedBindingsAmountFound(bindings, isOptional, serviceIdentifier, parentServiceIdentifier, bindingConstraints);
+    }
+    else {
+        throwErrorWhenSingleUnexpectedBindingFound(bindings, isOptional, serviceIdentifier, parentServiceIdentifier, bindingConstraints);
+    }
+}
+function throwBindingNotFoundError(serviceIdentifier, parentServiceIdentifier, bindingConstraints) {
+    const errorMessage = `No bindings found for service: "${(0, common_1.stringifyServiceIdentifier)(serviceIdentifier)}".
+
+Trying to resolve bindings for "${stringifyParentServiceIdentifier(serviceIdentifier, parentServiceIdentifier)}".
+
+${stringifyBindingConstraints(bindingConstraints)}`;
+    throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.planning, errorMessage);
+}
+function throwErrorWhenMultipleUnexpectedBindingsAmountFound(bindings, isOptional, serviceIdentifier, parentServiceIdentifier, bindingConstraints) {
+    if (bindings.length === 0) {
+        if (!isOptional) {
+            throwBindingNotFoundError(serviceIdentifier, parentServiceIdentifier, bindingConstraints);
+        }
+    }
+    else {
+        const errorMessage = `Ambiguous bindings found for service: "${(0, common_1.stringifyServiceIdentifier)(serviceIdentifier)}".
+
+Registered bindings:
+
+${bindings.map((binding) => (0, stringifyBinding_1.stringifyBinding)(binding.binding)).join('\n')}
+
+Trying to resolve bindings for "${stringifyParentServiceIdentifier(serviceIdentifier, parentServiceIdentifier)}".
+
+${stringifyBindingConstraints(bindingConstraints)}`;
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.planning, errorMessage);
+    }
+}
+function throwErrorWhenSingleUnexpectedBindingFound(bindings, isOptional, serviceIdentifier, parentServiceIdentifier, bindingConstraints) {
+    if (bindings === undefined && !isOptional) {
+        throwBindingNotFoundError(serviceIdentifier, parentServiceIdentifier, bindingConstraints);
+    }
+    else {
+        return;
+    }
+}
+function stringifyParentServiceIdentifier(serviceIdentifier, parentServiceIdentifier) {
+    return parentServiceIdentifier === undefined
+        ? `${(0, common_1.stringifyServiceIdentifier)(serviceIdentifier)} (Root service)`
+        : (0, common_1.stringifyServiceIdentifier)(parentServiceIdentifier);
+}
+function stringifyBindingConstraints(bindingConstraints) {
+    const stringifiedTags = bindingConstraints.tags.size === 0
+        ? ''
+        : `
+- tags:
+  - ${[...bindingConstraints.tags.keys()].map((key) => key.toString()).join('\n  - ')}`;
+    return `Binding constraints:
+- service identifier: ${(0, common_1.stringifyServiceIdentifier)(bindingConstraints.serviceIdentifier)}
+- name: ${bindingConstraints.name?.toString() ?? '-'}${stringifiedTags}`;
+}
+//# sourceMappingURL=throwErrorWhenUnexpectedBindingsAmountFound.js.map
+
+/***/ }),
+
+/***/ 2852:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PlanResultCacheService = void 0;
+var GetPlanBooleanOptionsMask;
+(function (GetPlanBooleanOptionsMask) {
+    GetPlanBooleanOptionsMask[GetPlanBooleanOptionsMask["singleMandatory"] = 0] = "singleMandatory";
+    GetPlanBooleanOptionsMask[GetPlanBooleanOptionsMask["singleOptional"] = 1] = "singleOptional";
+    GetPlanBooleanOptionsMask[GetPlanBooleanOptionsMask["multipleMandatory"] = 2] = "multipleMandatory";
+    GetPlanBooleanOptionsMask[GetPlanBooleanOptionsMask["multipleOptional"] = 3] = "multipleOptional";
+    // Must be the last one
+    GetPlanBooleanOptionsMask[GetPlanBooleanOptionsMask["length"] = 4] = "length";
+})(GetPlanBooleanOptionsMask || (GetPlanBooleanOptionsMask = {}));
+/**
+ * Service to cache plans.
+ *
+ * This class is used to cache plans and to notify PlanService subscribers when the cache is cleared.
+ * The cache should be cleared when a new binding is registered or when a binding is unregistered.
+ *
+ * Subscribers are supposed to be plan services from child containers.
+ *
+ * Ancestor binding constraints are the reason to avoid reusing plans from plan children nodes.
+ */
+class PlanResultCacheService {
+    #serviceIdToValuePlanMap;
+    #namedServiceIdToValuePlanMap;
+    #taggedServiceIdToValuePlanMap;
+    #namedTaggedServiceIdToValuePlanMap;
+    #subscribers;
+    constructor() {
+        this.#serviceIdToValuePlanMap = this.#buildInitializedMapArray();
+        this.#namedServiceIdToValuePlanMap = this.#buildInitializedMapArray();
+        this.#namedTaggedServiceIdToValuePlanMap = this.#buildInitializedMapArray();
+        this.#taggedServiceIdToValuePlanMap = this.#buildInitializedMapArray();
+        this.#subscribers = [];
+    }
+    clearCache() {
+        for (const map of this.#getMaps()) {
+            map.clear();
+        }
+        for (const subscriber of this.#subscribers) {
+            subscriber.clearCache();
+        }
+    }
+    get(options) {
+        if (options.name === undefined) {
+            if (options.tag === undefined) {
+                return this.#getMapFromMapArray(this.#serviceIdToValuePlanMap, options).get(options.serviceIdentifier);
+            }
+            else {
+                return this.#getMapFromMapArray(this.#taggedServiceIdToValuePlanMap, options)
+                    .get(options.serviceIdentifier)
+                    ?.get(options.tag.key)
+                    ?.get(options.tag.value);
+            }
+        }
+        else {
+            if (options.tag === undefined) {
+                return this.#getMapFromMapArray(this.#namedServiceIdToValuePlanMap, options)
+                    .get(options.serviceIdentifier)
+                    ?.get(options.name);
+            }
+            else {
+                return this.#getMapFromMapArray(this.#namedTaggedServiceIdToValuePlanMap, options)
+                    .get(options.serviceIdentifier)
+                    ?.get(options.name)
+                    ?.get(options.tag.key)
+                    ?.get(options.tag.value);
+            }
+        }
+    }
+    set(options, planResult) {
+        if (options.name === undefined) {
+            if (options.tag === undefined) {
+                this.#getMapFromMapArray(this.#serviceIdToValuePlanMap, options).set(options.serviceIdentifier, planResult);
+            }
+            else {
+                this.#getOrBuildMapValueFromMapMap(this.#getOrBuildMapValueFromMapMap(this.#getMapFromMapArray(this.#taggedServiceIdToValuePlanMap, options), options.serviceIdentifier), options.tag.key).set(options.tag.value, planResult);
+            }
+        }
+        else {
+            if (options.tag === undefined) {
+                this.#getOrBuildMapValueFromMapMap(this.#getMapFromMapArray(this.#namedServiceIdToValuePlanMap, options), options.serviceIdentifier).set(options.name, planResult);
+            }
+            else {
+                this.#getOrBuildMapValueFromMapMap(this.#getOrBuildMapValueFromMapMap(this.#getOrBuildMapValueFromMapMap(this.#getMapFromMapArray(this.#namedTaggedServiceIdToValuePlanMap, options), options.serviceIdentifier), options.name), options.tag.key).set(options.tag.value, planResult);
+            }
+        }
+    }
+    subscribe(subscriber) {
+        this.#subscribers.push(subscriber);
+    }
+    #buildInitializedMapArray() {
+        const mapArray = new Array(GetPlanBooleanOptionsMask.length);
+        for (let i = 0; i < mapArray.length; ++i) {
+            mapArray[i] = new Map();
+        }
+        return mapArray;
+    }
+    #getOrBuildMapValueFromMapMap(map, key) {
+        let valueMap = map.get(key);
+        if (valueMap === undefined) {
+            valueMap = new Map();
+            map.set(key, valueMap);
+        }
+        return valueMap;
+    }
+    #getMapFromMapArray(mapArray, options) {
+        return mapArray[this.#getMapArrayIndex(options)];
+    }
+    #getMaps() {
+        return [
+            ...this.#serviceIdToValuePlanMap,
+            ...this.#namedServiceIdToValuePlanMap,
+            ...this.#namedTaggedServiceIdToValuePlanMap,
+            ...this.#taggedServiceIdToValuePlanMap,
+        ];
+    }
+    #getMapArrayIndex(options) {
+        if (options.isMultiple) {
+            if (options.optional === true) {
+                return GetPlanBooleanOptionsMask.multipleOptional;
+            }
+            else {
+                return GetPlanBooleanOptionsMask.multipleMandatory;
+            }
+        }
+        else {
+            if (options.optional === true) {
+                return GetPlanBooleanOptionsMask.singleOptional;
+            }
+            else {
+                return GetPlanBooleanOptionsMask.singleMandatory;
+            }
+        }
+    }
+}
+exports.PlanResultCacheService = PlanResultCacheService;
+//# sourceMappingURL=PlanResultCacheService.js.map
+
+/***/ }),
+
+/***/ 5445:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.classIsInjectableFlagReflectKey = void 0;
+exports.classIsInjectableFlagReflectKey = '@inversifyjs/core/classIsInjectableFlagReflectKey';
+//# sourceMappingURL=classIsInjectableFlagReflectKey.js.map
+
+/***/ }),
+
+/***/ 7147:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.classMetadataReflectKey = void 0;
+exports.classMetadataReflectKey = '@inversifyjs/core/classMetadataReflectKey';
+//# sourceMappingURL=classMetadataReflectKey.js.map
+
+/***/ }),
+
+/***/ 7389:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.pendingClassMetadataCountReflectKey = void 0;
+exports.pendingClassMetadataCountReflectKey = '@inversifyjs/core/pendingClassMetadataCountReflectKey';
+//# sourceMappingURL=pendingClassMetadataCountReflectKey.js.map
+
+/***/ }),
+
+/***/ 2729:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.typescriptParameterTypesReflectKey = void 0;
+exports.typescriptParameterTypesReflectKey = 'design:paramtypes';
+//# sourceMappingURL=typescriptDesignParameterTypesReflectKey.js.map
+
+/***/ }),
+
+/***/ 298:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.cacheResolvedValue = cacheResolvedValue;
+const common_1 = __nccwpck_require__(9160);
+function cacheResolvedValue(binding, resolvedValue) {
+    if ((0, common_1.isPromise)(resolvedValue)) {
+        binding.cache = {
+            isRight: true,
+            value: resolvedValue,
+        };
+        return resolvedValue.then((syncResolvedValue) => cacheSyncResolvedValue(binding, syncResolvedValue));
+    }
+    return cacheSyncResolvedValue(binding, resolvedValue);
+}
+function cacheSyncResolvedValue(binding, resolvedValue) {
+    binding.cache = {
+        isRight: true,
+        value: resolvedValue,
+    };
+    return resolvedValue;
+}
+//# sourceMappingURL=cacheResolvedValue.js.map
+
+/***/ }),
+
+/***/ 3765:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolve = resolve;
+const common_1 = __nccwpck_require__(9160);
+const BindingType_1 = __nccwpck_require__(8810);
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+const isPlanServiceRedirectionBindingNode_1 = __nccwpck_require__(4872);
+const resolveConstantValueBinding_1 = __nccwpck_require__(1251);
+const resolveDynamicValueBinding_1 = __nccwpck_require__(3726);
+const resolveFactoryBinding_1 = __nccwpck_require__(9385);
+const resolveInstanceBindingConstructorParams_1 = __nccwpck_require__(2503);
+const resolveInstanceBindingNode_1 = __nccwpck_require__(9705);
+const resolveInstanceBindingNodeAsyncFromConstructorParams_1 = __nccwpck_require__(7291);
+const resolveInstanceBindingNodeFromConstructorParams_1 = __nccwpck_require__(615);
+const resolveProviderBinding_1 = __nccwpck_require__(4791);
+const resolveResolvedValueBindingNode_1 = __nccwpck_require__(3903);
+const resolveResolvedValueBindingParams_1 = __nccwpck_require__(3053);
+const resolveScopedInstanceBindingNode_1 = __nccwpck_require__(5717);
+const resolveScopedResolvedValueBindingNode_1 = __nccwpck_require__(9715);
+const resolveServiceRedirectionBindingNode_1 = __nccwpck_require__(2913);
+const setInstanceProperties_1 = __nccwpck_require__(2883);
+const setInstanceProperties = (0, setInstanceProperties_1.setInstanceProperties)(resolveServiceNode);
+const resolveServiceRedirectionBindingNode = (0, resolveServiceRedirectionBindingNode_1.resolveServiceRedirectionBindingNode)(resolveBindingNode);
+const resolveInstanceBindingNode = (0, resolveInstanceBindingNode_1.resolveInstanceBindingNode)(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(0, resolveInstanceBindingConstructorParams_1.resolveInstanceBindingConstructorParams)(resolveServiceNode), (0, resolveInstanceBindingNodeAsyncFromConstructorParams_1.resolveInstanceBindingNodeAsyncFromConstructorParams)((0, resolveInstanceBindingNodeFromConstructorParams_1.resolveInstanceBindingNodeFromConstructorParams)(setInstanceProperties)), (0, resolveInstanceBindingNodeFromConstructorParams_1.resolveInstanceBindingNodeFromConstructorParams)(setInstanceProperties));
+const resolveResolvedValueBindingNode = (0, resolveResolvedValueBindingNode_1.resolveResolvedValueBindingNode)(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(0, resolveResolvedValueBindingParams_1.resolveResolvedValueBindingParams)(resolveServiceNode));
+const resolveScopedInstanceBindingNode = (0, resolveScopedInstanceBindingNode_1.resolveScopedInstanceBindingNode)(resolveInstanceBindingNode);
+const resolveScopedResolvedValueBindingNode = (0, resolveScopedResolvedValueBindingNode_1.resolveScopedResolvedValueBindingNode)(resolveResolvedValueBindingNode);
+function resolve(params) {
+    const serviceNode = params.planResult.tree.root;
+    return resolveServiceNode(params, serviceNode);
+}
+function resolveBindingNode(params, planBindingNode) {
+    switch (planBindingNode.binding.type) {
+        case BindingType_1.bindingTypeValues.ConstantValue:
+            return (0, resolveConstantValueBinding_1.resolveConstantValueBinding)(params, planBindingNode.binding);
+        case BindingType_1.bindingTypeValues.DynamicValue:
+            return (0, resolveDynamicValueBinding_1.resolveDynamicValueBinding)(params, planBindingNode.binding);
+        case BindingType_1.bindingTypeValues.Factory:
+            return (0, resolveFactoryBinding_1.resolveFactoryBinding)(params, planBindingNode.binding);
+        case BindingType_1.bindingTypeValues.Instance:
+            return resolveScopedInstanceBindingNode(params, planBindingNode);
+        case BindingType_1.bindingTypeValues.Provider:
+            return (0, resolveProviderBinding_1.resolveProviderBinding)(params, planBindingNode.binding);
+        case BindingType_1.bindingTypeValues.ResolvedValue:
+            return resolveScopedResolvedValueBindingNode(params, planBindingNode);
+    }
+}
+function resolveServiceNode(params, serviceNode) {
+    if (serviceNode.bindings === undefined) {
+        return undefined;
+    }
+    if (Array.isArray(serviceNode.bindings)) {
+        return resolveMultipleBindingServiceNode(params, serviceNode.bindings);
+    }
+    return resolveSingleBindingServiceNode(params, serviceNode.bindings);
+}
+function resolveMultipleBindingServiceNode(params, bindings) {
+    const resolvedValues = [];
+    for (const binding of bindings) {
+        if ((0, isPlanServiceRedirectionBindingNode_1.isPlanServiceRedirectionBindingNode)(binding)) {
+            resolvedValues.push(...resolveServiceRedirectionBindingNode(params, binding));
+        }
+        else {
+            resolvedValues.push(resolveBindingNode(params, binding));
+        }
+    }
+    if (resolvedValues.some(common_1.isPromise)) {
+        return Promise.all(resolvedValues);
+    }
+    return resolvedValues;
+}
+function resolveSingleBindingServiceNode(params, binding) {
+    if ((0, isPlanServiceRedirectionBindingNode_1.isPlanServiceRedirectionBindingNode)(binding)) {
+        const resolvedValues = resolveServiceRedirectionBindingNode(params, binding);
+        if (resolvedValues.length === 1) {
+            return resolvedValues[0];
+        }
+        else {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.resolution, 'Unexpected multiple resolved values on single injection');
+        }
+    }
+    else {
+        return resolveBindingNode(params, binding);
+    }
+}
+//# sourceMappingURL=resolve.js.map
+
+/***/ }),
+
+/***/ 3219:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveBindingActivations = resolveBindingActivations;
+const common_1 = __nccwpck_require__(9160);
+const resolveBindingServiceActivations_1 = __nccwpck_require__(8064);
+function resolveBindingActivations(params, binding, value) {
+    let activationResult = value;
+    if (binding.onActivation !== undefined) {
+        const onActivation = binding.onActivation;
+        if ((0, common_1.isPromise)(activationResult)) {
+            activationResult = activationResult.then((resolved) => onActivation(params.context, resolved));
+        }
+        else {
+            activationResult = onActivation(params.context, activationResult);
+        }
+    }
+    return (0, resolveBindingServiceActivations_1.resolveBindingServiceActivations)(params, binding.serviceIdentifier, activationResult);
+}
+//# sourceMappingURL=resolveBindingActivations.js.map
+
+/***/ }),
+
+/***/ 7838:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveBindingDeactivations = resolveBindingDeactivations;
+const common_1 = __nccwpck_require__(9160);
+const resolveBindingPreDestroy_1 = __nccwpck_require__(1669);
+const resolveBindingServiceDeactivations_1 = __nccwpck_require__(8485);
+const CACHE_KEY_TYPE = 'cache';
+function resolveBindingDeactivations(params, binding) {
+    const preDestroyResult = (0, resolveBindingPreDestroy_1.resolveBindingPreDestroy)(params, binding);
+    if (preDestroyResult === undefined) {
+        return resolveBindingDeactivationsAfterPreDestroy(params, binding);
+    }
+    return preDestroyResult.then(() => resolveBindingDeactivationsAfterPreDestroy(params, binding));
+}
+function resolveBindingDeactivationsAfterPreDestroy(params, binding) {
+    const bindingCache = binding.cache;
+    if ((0, common_1.isPromise)(bindingCache.value)) {
+        return bindingCache.value.then((resolvedValue) => resolveBindingDeactivationsAfterPreDestroyFromValue(params, binding, resolvedValue));
+    }
+    return resolveBindingDeactivationsAfterPreDestroyFromValue(params, binding, bindingCache.value);
+}
+function resolveBindingDeactivationsAfterPreDestroyFromValue(params, binding, resolvedValue) {
+    let deactivationResult = undefined;
+    if (binding.onDeactivation !== undefined) {
+        const bindingDeactivation = binding.onDeactivation;
+        deactivationResult = bindingDeactivation(resolvedValue);
+    }
+    if (deactivationResult === undefined) {
+        return (0, resolveBindingServiceDeactivations_1.resolveBindingServiceDeactivations)(params, binding.serviceIdentifier, resolvedValue);
+    }
+    else {
+        return deactivationResult.then(() => (0, resolveBindingServiceDeactivations_1.resolveBindingServiceDeactivations)(params, binding.serviceIdentifier, resolvedValue));
+    }
+}
+//# sourceMappingURL=resolveBindingDeactivations.js.map
+
+/***/ }),
+
+/***/ 1669:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveBindingPreDestroy = resolveBindingPreDestroy;
+const common_1 = __nccwpck_require__(9160);
+const BindingType_1 = __nccwpck_require__(8810);
+const CACHE_KEY_TYPE = 'cache';
+function resolveBindingPreDestroy(params, binding) {
+    if (binding.type === BindingType_1.bindingTypeValues.Instance) {
+        const classMetadata = params.getClassMetadata(binding.implementationType);
+        const instance = binding.cache
+            .value;
+        if ((0, common_1.isPromise)(instance)) {
+            return instance.then((instance) => resolveInstancePreDestroy(classMetadata, instance));
+        }
+        else {
+            return resolveInstancePreDestroy(classMetadata, instance);
+        }
+    }
+}
+function resolveInstancePreDestroy(classMetadata, instance) {
+    if (classMetadata.lifecycle.preDestroyMethodName !== undefined &&
+        typeof instance[classMetadata.lifecycle.preDestroyMethodName] === 'function') {
+        return instance[classMetadata.lifecycle.preDestroyMethodName]();
+    }
+}
+//# sourceMappingURL=resolveBindingPreDestroy.js.map
+
+/***/ }),
+
+/***/ 8064:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveBindingServiceActivations = resolveBindingServiceActivations;
+const common_1 = __nccwpck_require__(9160);
+function resolveBindingServiceActivations(params, serviceIdentifier, value) {
+    const activations = params.getActivations(serviceIdentifier);
+    if (activations === undefined) {
+        return value;
+    }
+    if ((0, common_1.isPromise)(value)) {
+        return resolveBindingActivationsFromIteratorAsync(params, value, activations[Symbol.iterator]());
+    }
+    return resolveBindingActivationsFromIterator(params, value, activations[Symbol.iterator]());
+}
+function resolveBindingActivationsFromIterator(params, value, activationsIterator) {
+    let activatedValue = value;
+    let activationIteratorResult = activationsIterator.next();
+    while (activationIteratorResult.done !== true) {
+        const nextActivatedValue = activationIteratorResult.value(params.context, activatedValue);
+        if ((0, common_1.isPromise)(nextActivatedValue)) {
+            return resolveBindingActivationsFromIteratorAsync(params, nextActivatedValue, activationsIterator);
+        }
+        else {
+            activatedValue = nextActivatedValue;
+        }
+        activationIteratorResult = activationsIterator.next();
+    }
+    return activatedValue;
+}
+async function resolveBindingActivationsFromIteratorAsync(params, value, activationsIterator) {
+    let activatedValue = await value;
+    let activationIteratorResult = activationsIterator.next();
+    while (activationIteratorResult.done !== true) {
+        activatedValue = await activationIteratorResult.value(params.context, activatedValue);
+        activationIteratorResult = activationsIterator.next();
+    }
+    return activatedValue;
+}
+//# sourceMappingURL=resolveBindingServiceActivations.js.map
+
+/***/ }),
+
+/***/ 8485:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveBindingServiceDeactivations = resolveBindingServiceDeactivations;
+const common_1 = __nccwpck_require__(9160);
+function resolveBindingServiceDeactivations(params, serviceIdentifier, value) {
+    const deactivations = params.getDeactivations(serviceIdentifier);
+    if (deactivations === undefined) {
+        return undefined;
+    }
+    if ((0, common_1.isPromise)(value)) {
+        return resolveBindingDeactivationsFromIteratorAsync(value, deactivations[Symbol.iterator]());
+    }
+    return resolveBindingDeactivationsFromIterator(value, deactivations[Symbol.iterator]());
+}
+function resolveBindingDeactivationsFromIterator(value, deactivationsIterator) {
+    let deactivationIteratorResult = deactivationsIterator.next();
+    while (deactivationIteratorResult.done !== true) {
+        const nextDeactivationValue = deactivationIteratorResult.value(value);
+        if ((0, common_1.isPromise)(nextDeactivationValue)) {
+            return resolveBindingDeactivationsFromIteratorAsync(value, deactivationsIterator);
+        }
+        deactivationIteratorResult = deactivationsIterator.next();
+    }
+}
+async function resolveBindingDeactivationsFromIteratorAsync(value, deactivationsIterator) {
+    const resolvedValue = await value;
+    let deactivationIteratorResult = deactivationsIterator.next();
+    while (deactivationIteratorResult.done !== true) {
+        await deactivationIteratorResult.value(resolvedValue);
+        deactivationIteratorResult = deactivationsIterator.next();
+    }
+}
+//# sourceMappingURL=resolveBindingServiceDeactivations.js.map
+
+/***/ }),
+
+/***/ 3931:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveBindingsDeactivations = resolveBindingsDeactivations;
+const isScopedBinding_1 = __nccwpck_require__(1393);
+const BindingScope_1 = __nccwpck_require__(2412);
+const resolveBindingDeactivations_1 = __nccwpck_require__(7838);
+const CACHE_KEY_TYPE = 'cache';
+function resolveBindingsDeactivations(params, bindings) {
+    if (bindings === undefined) {
+        return;
+    }
+    const singletonScopedBindings = filterCachedSinglentonScopedBindings(bindings);
+    const deactivationPromiseResults = [];
+    for (const binding of singletonScopedBindings) {
+        const deactivationResult = (0, resolveBindingDeactivations_1.resolveBindingDeactivations)(params, binding);
+        if (deactivationResult !== undefined) {
+            deactivationPromiseResults.push(deactivationResult);
+        }
+    }
+    if (deactivationPromiseResults.length > 0) {
+        return Promise.all(deactivationPromiseResults).then(() => undefined);
+    }
+}
+function filterCachedSinglentonScopedBindings(bindings) {
+    const filteredBindings = [];
+    for (const binding of bindings) {
+        if ((0, isScopedBinding_1.isScopedBinding)(binding) &&
+            binding.scope === BindingScope_1.bindingScopeValues.Singleton &&
+            binding.cache.isRight) {
+            filteredBindings.push(binding);
+        }
+    }
+    return filteredBindings;
+}
+//# sourceMappingURL=resolveBindingsDeactivations.js.map
+
+/***/ }),
+
+/***/ 1251:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveConstantValueBinding = void 0;
+const resolveConstantValueBindingCallback_1 = __nccwpck_require__(117);
+const resolveSingletonScopedBinding_1 = __nccwpck_require__(791);
+exports.resolveConstantValueBinding = (0, resolveSingletonScopedBinding_1.resolveSingletonScopedBinding)(resolveConstantValueBindingCallback_1.resolveConstantValueBindingCallback);
+//# sourceMappingURL=resolveConstantValueBinding.js.map
+
+/***/ }),
+
+/***/ 3726:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveDynamicValueBinding = void 0;
+const resolveDynamicValueBindingCallback_1 = __nccwpck_require__(4542);
+const resolveScopedBinding_1 = __nccwpck_require__(4032);
+exports.resolveDynamicValueBinding = (0, resolveScopedBinding_1.resolveScopedBinding)(resolveDynamicValueBindingCallback_1.resolveDynamicValueBindingCallback);
+//# sourceMappingURL=resolveDynamicValueBinding.js.map
+
+/***/ }),
+
+/***/ 9385:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveFactoryBinding = void 0;
+const resolveFactoryBindingCallback_1 = __nccwpck_require__(9268);
+const resolveSingletonScopedBinding_1 = __nccwpck_require__(791);
+exports.resolveFactoryBinding = (0, resolveSingletonScopedBinding_1.resolveSingletonScopedBinding)(resolveFactoryBindingCallback_1.resolveFactoryBindingCallback);
+//# sourceMappingURL=resolveFactoryBinding.js.map
+
+/***/ }),
+
+/***/ 2503:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveInstanceBindingConstructorParams = resolveInstanceBindingConstructorParams;
+const common_1 = __nccwpck_require__(9160);
+function resolveInstanceBindingConstructorParams(resolveServiceNode) {
+    return (params, node) => {
+        const constructorResolvedValues = [];
+        for (const constructorParam of node.constructorParams) {
+            if (constructorParam === undefined) {
+                constructorResolvedValues.push(undefined);
+            }
+            else {
+                constructorResolvedValues.push(resolveServiceNode(params, constructorParam));
+            }
+        }
+        return constructorResolvedValues.some(common_1.isPromise)
+            ? Promise.all(constructorResolvedValues)
+            : constructorResolvedValues;
+    };
+}
+//# sourceMappingURL=resolveInstanceBindingConstructorParams.js.map
+
+/***/ }),
+
+/***/ 9705:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveInstanceBindingNode = resolveInstanceBindingNode;
+const common_1 = __nccwpck_require__(9160);
+function resolveInstanceBindingNode(resolveInstanceBindingConstructorParams, resolveInstanceBindingNodeAsyncFromConstructorParams, resolveInstanceBindingNodeFromConstructorParams) {
+    return (params, node) => {
+        const constructorValues = resolveInstanceBindingConstructorParams(params, node);
+        if ((0, common_1.isPromise)(constructorValues)) {
+            return resolveInstanceBindingNodeAsyncFromConstructorParams(constructorValues, params, node);
+        }
+        return resolveInstanceBindingNodeFromConstructorParams(constructorValues, params, node);
+    };
+}
+//# sourceMappingURL=resolveInstanceBindingNode.js.map
+
+/***/ }),
+
+/***/ 7291:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveInstanceBindingNodeAsyncFromConstructorParams = resolveInstanceBindingNodeAsyncFromConstructorParams;
+function resolveInstanceBindingNodeAsyncFromConstructorParams(resolveInstanceBindingNodeFromConstructorParams) {
+    return async (constructorValues, params, node) => {
+        const constructorResolvedValues = await constructorValues;
+        return resolveInstanceBindingNodeFromConstructorParams(constructorResolvedValues, params, node);
+    };
+}
+//# sourceMappingURL=resolveInstanceBindingNodeAsyncFromConstructorParams.js.map
+
+/***/ }),
+
+/***/ 615:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveInstanceBindingNodeFromConstructorParams = resolveInstanceBindingNodeFromConstructorParams;
+const common_1 = __nccwpck_require__(9160);
+const resolvePostConstruct_1 = __nccwpck_require__(1378);
+function resolveInstanceBindingNodeFromConstructorParams(setInstanceProperties) {
+    return (constructorValues, params, node) => {
+        const instance = new node.binding.implementationType(...constructorValues);
+        const propertiesAssignmentResult = setInstanceProperties(params, instance, node);
+        if ((0, common_1.isPromise)(propertiesAssignmentResult)) {
+            return propertiesAssignmentResult.then(() => (0, resolvePostConstruct_1.resolvePostConstruct)(instance, node.binding, node.classMetadata.lifecycle.postConstructMethodName));
+        }
+        return (0, resolvePostConstruct_1.resolvePostConstruct)(instance, node.binding, node.classMetadata.lifecycle.postConstructMethodName);
+    };
+}
+//# sourceMappingURL=resolveInstanceBindingNodeFromConstructorParams.js.map
+
+/***/ }),
+
+/***/ 2529:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveModuleDeactivations = resolveModuleDeactivations;
+const resolveBindingsDeactivations_1 = __nccwpck_require__(3931);
+function resolveModuleDeactivations(params, moduleId) {
+    const bindings = params.getBindingsFromModule(moduleId);
+    return (0, resolveBindingsDeactivations_1.resolveBindingsDeactivations)(params, bindings);
+}
+//# sourceMappingURL=resolveModuleDeactivations.js.map
+
+/***/ }),
+
+/***/ 1378:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolvePostConstruct = resolvePostConstruct;
+const common_1 = __nccwpck_require__(9160);
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+function resolvePostConstruct(instance, binding, postConstructMethodName) {
+    const postConstructResult = invokePostConstruct(instance, binding, postConstructMethodName);
+    if ((0, common_1.isPromise)(postConstructResult)) {
+        return postConstructResult.then(() => instance);
+    }
+    return instance;
+}
+function invokePostConstruct(instance, binding, postConstructMethodName) {
+    if (postConstructMethodName === undefined) {
+        return;
+    }
+    if (postConstructMethodName in instance) {
+        if (typeof instance[postConstructMethodName] === 'function') {
+            let postConstructResult;
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                postConstructResult = instance[postConstructMethodName]();
+            }
+            catch (error) {
+                throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.resolution, `Unexpected error found when calling "${postConstructMethodName.toString()}" @postConstruct decorated method on class "${binding.implementationType.name}"`, {
+                    cause: error,
+                });
+            }
+            if ((0, common_1.isPromise)(postConstructResult)) {
+                return invokePostConstructAsync(binding, postConstructMethodName, postConstructResult);
+            }
+        }
+        else {
+            throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.resolution, `Expecting a "${postConstructMethodName.toString()}" method when resolving "${binding.implementationType.name}" class @postConstruct decorated method, a non function property was found instead.`);
+        }
+    }
+    else {
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.resolution, `Expecting a "${postConstructMethodName.toString()}" property when resolving "${binding.implementationType.name}" class @postConstruct decorated method, none found.`);
+    }
+}
+async function invokePostConstructAsync(binding, postConstructMethodName, postConstructResult) {
+    try {
+        await postConstructResult;
+    }
+    catch (error) {
+        throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.resolution, `Unexpected error found when calling "${postConstructMethodName.toString()}" @postConstruct decorated method on class "${binding.implementationType.name}"`, {
+            cause: error,
+        });
+    }
+}
+//# sourceMappingURL=resolvePostConstruct.js.map
+
+/***/ }),
+
+/***/ 4791:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveProviderBinding = void 0;
+const resolveProviderBindingCallback_1 = __nccwpck_require__(5339);
+const resolveSingletonScopedBinding_1 = __nccwpck_require__(791);
+exports.resolveProviderBinding = (0, resolveSingletonScopedBinding_1.resolveSingletonScopedBinding)(resolveProviderBindingCallback_1.resolveProviderBindingCallback);
+//# sourceMappingURL=resolveProviderBinding.js.map
+
+/***/ }),
+
+/***/ 3903:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveResolvedValueBindingNode = resolveResolvedValueBindingNode;
+const common_1 = __nccwpck_require__(9160);
+function resolveResolvedValueBindingNode(resolveResolvedValueBindingParams) {
+    return (params, node) => {
+        const paramValues = resolveResolvedValueBindingParams(params, node);
+        if ((0, common_1.isPromise)(paramValues)) {
+            return paramValues.then((resolvedParamValues) => node.binding.factory(...resolvedParamValues));
+        }
+        return node.binding.factory(...paramValues);
+    };
+}
+//# sourceMappingURL=resolveResolvedValueBindingNode.js.map
+
+/***/ }),
+
+/***/ 3053:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveResolvedValueBindingParams = resolveResolvedValueBindingParams;
+const common_1 = __nccwpck_require__(9160);
+function resolveResolvedValueBindingParams(resolveServiceNode) {
+    return (params, node) => {
+        const paramsResolvedValues = [];
+        for (const param of node.params) {
+            paramsResolvedValues.push(resolveServiceNode(params, param));
+        }
+        return paramsResolvedValues.some(common_1.isPromise)
+            ? Promise.all(paramsResolvedValues)
+            : paramsResolvedValues;
+    };
+}
+//# sourceMappingURL=resolveResolvedValueBindingParams.js.map
+
+/***/ }),
+
+/***/ 5449:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveScoped = resolveScoped;
+const BindingScope_1 = __nccwpck_require__(2412);
+const cacheResolvedValue_1 = __nccwpck_require__(298);
+const resolveBindingActivations_1 = __nccwpck_require__(3219);
+function resolveScoped(getBinding, resolve) {
+    return (params, arg) => {
+        const binding = getBinding(arg);
+        switch (binding.scope) {
+            case BindingScope_1.bindingScopeValues.Singleton: {
+                if (binding.cache.isRight) {
+                    return binding.cache.value;
+                }
+                const resolvedValue = (0, resolveBindingActivations_1.resolveBindingActivations)(params, binding, resolve(params, arg));
+                return (0, cacheResolvedValue_1.cacheResolvedValue)(binding, resolvedValue);
+            }
+            case BindingScope_1.bindingScopeValues.Request: {
+                if (params.requestScopeCache.has(binding.id)) {
+                    return params.requestScopeCache.get(binding.id);
+                }
+                const resolvedValue = (0, resolveBindingActivations_1.resolveBindingActivations)(params, binding, resolve(params, arg));
+                params.requestScopeCache.set(binding.id, resolvedValue);
+                return resolvedValue;
+            }
+            case BindingScope_1.bindingScopeValues.Transient:
+                return (0, resolveBindingActivations_1.resolveBindingActivations)(params, binding, resolve(params, arg));
+        }
+    };
+}
+//# sourceMappingURL=resolveScoped.js.map
+
+/***/ }),
+
+/***/ 4032:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveScopedBinding = void 0;
+const getSelf_1 = __nccwpck_require__(2715);
+const resolveScoped_1 = __nccwpck_require__(5449);
+const resolveScopedBinding = (resolve) => (0, resolveScoped_1.resolveScoped)(getSelf_1.getSelf, resolve);
+exports.resolveScopedBinding = resolveScopedBinding;
+//# sourceMappingURL=resolveScopedBinding.js.map
+
+/***/ }),
+
+/***/ 5717:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveScopedInstanceBindingNode = void 0;
+const getInstanceNodeBinding_1 = __nccwpck_require__(2350);
+const resolveScoped_1 = __nccwpck_require__(5449);
+const resolveScopedInstanceBindingNode = (resolve) => (0, resolveScoped_1.resolveScoped)(getInstanceNodeBinding_1.getInstanceNodeBinding, resolve);
+exports.resolveScopedInstanceBindingNode = resolveScopedInstanceBindingNode;
+//# sourceMappingURL=resolveScopedInstanceBindingNode.js.map
+
+/***/ }),
+
+/***/ 9715:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveScopedResolvedValueBindingNode = void 0;
+const getResolvedValueNodeBinding_1 = __nccwpck_require__(3790);
+const resolveScoped_1 = __nccwpck_require__(5449);
+const resolveScopedResolvedValueBindingNode = (resolve) => (0, resolveScoped_1.resolveScoped)(getResolvedValueNodeBinding_1.getResolvedValueNodeBinding, resolve);
+exports.resolveScopedResolvedValueBindingNode = resolveScopedResolvedValueBindingNode;
+//# sourceMappingURL=resolveScopedResolvedValueBindingNode.js.map
+
+/***/ }),
+
+/***/ 3796:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveServiceDeactivations = resolveServiceDeactivations;
+const resolveBindingsDeactivations_1 = __nccwpck_require__(3931);
+function resolveServiceDeactivations(params, serviceIdentifier) {
+    const bindings = params.getBindings(serviceIdentifier);
+    return (0, resolveBindingsDeactivations_1.resolveBindingsDeactivations)(params, bindings);
+}
+//# sourceMappingURL=resolveServiceDeactivations.js.map
+
+/***/ }),
+
+/***/ 2913:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveServiceRedirectionBindingNode = resolveServiceRedirectionBindingNode;
+const isPlanServiceRedirectionBindingNode_1 = __nccwpck_require__(4872);
+function resolveServiceRedirectionBindingNode(resolveBindingNode) {
+    function innerResolveServiceRedirectionBindingNode(params, node) {
+        const resolvedValues = [];
+        for (const redirection of node.redirections) {
+            if ((0, isPlanServiceRedirectionBindingNode_1.isPlanServiceRedirectionBindingNode)(redirection)) {
+                resolvedValues.push(...innerResolveServiceRedirectionBindingNode(params, redirection));
+            }
+            else {
+                resolvedValues.push(resolveBindingNode(params, redirection));
+            }
+        }
+        return resolvedValues;
+    }
+    return innerResolveServiceRedirectionBindingNode;
+}
+//# sourceMappingURL=resolveServiceRedirectionBindingNode.js.map
+
+/***/ }),
+
+/***/ 791:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveSingletonScopedBinding = resolveSingletonScopedBinding;
+const cacheResolvedValue_1 = __nccwpck_require__(298);
+const resolveBindingActivations_1 = __nccwpck_require__(3219);
+function resolveSingletonScopedBinding(resolve) {
+    return (params, binding) => {
+        if (binding.cache.isRight) {
+            return binding.cache.value;
+        }
+        const resolvedValue = (0, resolveBindingActivations_1.resolveBindingActivations)(params, binding, resolve(params, binding));
+        return (0, cacheResolvedValue_1.cacheResolvedValue)(binding, resolvedValue);
+    };
+}
+//# sourceMappingURL=resolveSingletonScopedBinding.js.map
+
+/***/ }),
+
+/***/ 2883:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.setInstanceProperties = setInstanceProperties;
+const common_1 = __nccwpck_require__(9160);
+const InversifyCoreError_1 = __nccwpck_require__(120);
+const InversifyCoreErrorKind_1 = __nccwpck_require__(2130);
+const ClassElementMetadataKind_1 = __nccwpck_require__(5334);
+function setInstanceProperties(resolveServiceNode) {
+    return (params, instance, node) => {
+        const propertyAssignmentPromises = [];
+        for (const [propertyKey, propertyNode] of node.propertyParams) {
+            const metadata = node.classMetadata.properties.get(propertyKey);
+            if (metadata === undefined) {
+                throw new InversifyCoreError_1.InversifyCoreError(InversifyCoreErrorKind_1.InversifyCoreErrorKind.resolution, `Expecting metadata at property "${propertyKey.toString()}", none found`);
+            }
+            if (metadata.kind !== ClassElementMetadataKind_1.ClassElementMetadataKind.unmanaged &&
+                propertyNode.bindings !== undefined) {
+                instance[propertyKey] = resolveServiceNode(params, propertyNode);
+                if ((0, common_1.isPromise)(instance[propertyKey])) {
+                    propertyAssignmentPromises.push((async () => {
+                        instance[propertyKey] = await instance[propertyKey];
+                    })());
+                }
+            }
+        }
+        if (propertyAssignmentPromises.length > 0) {
+            return Promise.all(propertyAssignmentPromises).then(() => undefined);
+        }
+    };
+}
+//# sourceMappingURL=setInstanceProperties.js.map
+
+/***/ }),
+
+/***/ 2350:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getInstanceNodeBinding = getInstanceNodeBinding;
+function getInstanceNodeBinding(node) {
+    return node.binding;
+}
+//# sourceMappingURL=getInstanceNodeBinding.js.map
+
+/***/ }),
+
+/***/ 3790:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getResolvedValueNodeBinding = getResolvedValueNodeBinding;
+function getResolvedValueNodeBinding(node) {
+    return node.binding;
+}
+//# sourceMappingURL=getResolvedValueNodeBinding.js.map
+
+/***/ }),
+
+/***/ 117:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveConstantValueBindingCallback = resolveConstantValueBindingCallback;
+function resolveConstantValueBindingCallback(_params, binding) {
+    return binding.value;
+}
+//# sourceMappingURL=resolveConstantValueBindingCallback.js.map
+
+/***/ }),
+
+/***/ 4542:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveDynamicValueBindingCallback = resolveDynamicValueBindingCallback;
+function resolveDynamicValueBindingCallback(params, binding) {
+    return binding.value(params.context);
+}
+//# sourceMappingURL=resolveDynamicValueBindingCallback.js.map
+
+/***/ }),
+
+/***/ 9268:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveFactoryBindingCallback = resolveFactoryBindingCallback;
+function resolveFactoryBindingCallback(params, binding) {
+    return binding.factory(params.context);
+}
+//# sourceMappingURL=resolveFactoryBindingCallback.js.map
+
+/***/ }),
+
+/***/ 5339:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveProviderBindingCallback = resolveProviderBindingCallback;
+function resolveProviderBindingCallback(params, binding) {
+    return binding.provider(params.context);
+}
+//# sourceMappingURL=resolveProviderBindingCallback.js.map
+
+/***/ }),
+
+/***/ 4747:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getBaseType = void 0;
+const getBaseType_1 = __nccwpck_require__(3872);
+Object.defineProperty(exports, "getBaseType", ({ enumerable: true, get: function () { return getBaseType_1.getBaseType; } }));
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 3872:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -38420,112 +42280,39 @@ function getBaseType(type) {
 
 /***/ }),
 
-/***/ 3016:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NON_CUSTOM_TAG_KEYS = exports.PRE_DESTROY = exports.POST_CONSTRUCT = exports.DESIGN_PARAM_TYPES = exports.PARAM_TYPES = exports.TAGGED_PROP = exports.TAGGED = exports.MULTI_INJECT_TAG = exports.INJECT_TAG = exports.OPTIONAL_TAG = exports.UNMANAGED_TAG = exports.NAME_TAG = exports.NAMED_TAG = void 0;
-// Used for named bindings
-exports.NAMED_TAG = 'named';
-exports.NAME_TAG = 'name';
-// The for unmanaged injections (in base classes when using inheritance)
-exports.UNMANAGED_TAG = 'unmanaged';
-// The for optional injections
-exports.OPTIONAL_TAG = 'optional';
-// The type of the binding at design time
-exports.INJECT_TAG = 'inject';
-// The type of the binding at design type for multi-injections
-exports.MULTI_INJECT_TAG = 'multi_inject';
-// used to store constructor arguments tags
-exports.TAGGED = 'inversify:tagged';
-// used to store class properties tags
-exports.TAGGED_PROP = 'inversify:tagged_props';
-// used to store types to be injected
-exports.PARAM_TYPES = 'inversify:paramtypes';
-// used to access design time types
-exports.DESIGN_PARAM_TYPES = 'design:paramtypes';
-// used to identify postConstruct functions
-exports.POST_CONSTRUCT = 'post_construct';
-// used to identify preDestroy functions
-exports.PRE_DESTROY = 'pre_destroy';
-function getNonCustomTagKeys() {
-    return [
-        exports.INJECT_TAG,
-        exports.MULTI_INJECT_TAG,
-        exports.NAME_TAG,
-        exports.UNMANAGED_TAG,
-        exports.NAMED_TAG,
-        exports.OPTIONAL_TAG,
-    ];
-}
-exports.NON_CUSTOM_TAG_KEYS = getNonCustomTagKeys();
-//# sourceMappingURL=keys.js.map
-
-/***/ }),
-
-/***/ 4731:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LegacyQueryableStringImpl = void 0;
-class LegacyQueryableStringImpl {
-    #str;
-    constructor(str) {
-        this.#str = str;
-    }
-    startsWith(searchString) {
-        return this.#str.startsWith(searchString);
-    }
-    endsWith(searchString) {
-        return this.#str.endsWith(searchString);
-    }
-    contains(searchString) {
-        return this.#str.includes(searchString);
-    }
-    equals(compareString) {
-        return this.#str === compareString;
-    }
-    value() {
-        return this.#str;
-    }
-}
-exports.LegacyQueryableStringImpl = LegacyQueryableStringImpl;
-//# sourceMappingURL=LegacyQueryableStringImpl.js.map
-
-/***/ }),
-
-/***/ 6294:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getDescription = getDescription;
-const SYMBOL_INDEX_START = 7;
-const SYMBOL_INDEX_END = -1;
-function getDescription(symbol) {
-    return symbol.toString().slice(SYMBOL_INDEX_START, SYMBOL_INDEX_END);
-}
-//# sourceMappingURL=getDescription.js.map
-
-/***/ }),
-
 /***/ 2732:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateReflectMetadata = exports.getReflectMetadata = void 0;
+exports.updateReflectMetadata = exports.updateOwnReflectMetadata = exports.setReflectMetadata = exports.getOwnReflectMetadata = exports.getReflectMetadata = void 0;
+const getOwnReflectMetadata_1 = __nccwpck_require__(3649);
+Object.defineProperty(exports, "getOwnReflectMetadata", ({ enumerable: true, get: function () { return getOwnReflectMetadata_1.getOwnReflectMetadata; } }));
 const getReflectMetadata_1 = __nccwpck_require__(6905);
 Object.defineProperty(exports, "getReflectMetadata", ({ enumerable: true, get: function () { return getReflectMetadata_1.getReflectMetadata; } }));
+const setReflectMetadata_1 = __nccwpck_require__(8789);
+Object.defineProperty(exports, "setReflectMetadata", ({ enumerable: true, get: function () { return setReflectMetadata_1.setReflectMetadata; } }));
+const updateOwnReflectMetadata_1 = __nccwpck_require__(9332);
+Object.defineProperty(exports, "updateOwnReflectMetadata", ({ enumerable: true, get: function () { return updateOwnReflectMetadata_1.updateOwnReflectMetadata; } }));
 const updateReflectMetadata_1 = __nccwpck_require__(5742);
 Object.defineProperty(exports, "updateReflectMetadata", ({ enumerable: true, get: function () { return updateReflectMetadata_1.updateReflectMetadata; } }));
 //# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 3649:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getOwnReflectMetadata = getOwnReflectMetadata;
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+function getOwnReflectMetadata(target, metadataKey) {
+    return Reflect.getOwnMetadata(metadataKey, target);
+}
+//# sourceMappingURL=getOwnReflectMetadata.js.map
 
 /***/ }),
 
@@ -38544,6 +42331,37 @@ function getReflectMetadata(target, metadataKey) {
 
 /***/ }),
 
+/***/ 8789:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.setReflectMetadata = setReflectMetadata;
+function setReflectMetadata(target, metadataKey, metadata) {
+    Reflect.defineMetadata(metadataKey, metadata, target);
+}
+//# sourceMappingURL=setReflectMetadata.js.map
+
+/***/ }),
+
+/***/ 9332:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateOwnReflectMetadata = updateOwnReflectMetadata;
+const getOwnReflectMetadata_1 = __nccwpck_require__(3649);
+function updateOwnReflectMetadata(target, metadataKey, buildDefaultValue, callback) {
+    const metadata = (0, getOwnReflectMetadata_1.getOwnReflectMetadata)(target, metadataKey) ?? buildDefaultValue();
+    const updatedMetadata = callback(metadata);
+    Reflect.defineMetadata(metadataKey, updatedMetadata, target);
+}
+//# sourceMappingURL=updateOwnReflectMetadata.js.map
+
+/***/ }),
+
 /***/ 5742:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -38552,8 +42370,8 @@ function getReflectMetadata(target, metadataKey) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.updateReflectMetadata = updateReflectMetadata;
 const getReflectMetadata_1 = __nccwpck_require__(6905);
-function updateReflectMetadata(target, metadataKey, defaultValue, callback) {
-    const metadata = (0, getReflectMetadata_1.getReflectMetadata)(target, metadataKey) ?? defaultValue;
+function updateReflectMetadata(target, metadataKey, buildDefaultValue, callback) {
+    const metadata = (0, getReflectMetadata_1.getReflectMetadata)(target, metadataKey) ?? buildDefaultValue();
     const updatedMetadata = callback(metadata);
     Reflect.defineMetadata(metadataKey, updatedMetadata, target);
 }
@@ -38561,3848 +42379,34 @@ function updateReflectMetadata(target, metadataKey, defaultValue, callback) {
 
 /***/ }),
 
-/***/ 7070:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.decorate = decorate;
-exports.tagParameter = tagParameter;
-exports.tagProperty = tagProperty;
-exports.createTaggedDecorator = createTaggedDecorator;
-const ERROR_MSGS = __importStar(__nccwpck_require__(8332));
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const js_1 = __nccwpck_require__(106);
-function targetIsConstructorFunction(target) {
-    return target.prototype !== undefined;
-}
-function _throwIfMethodParameter(parameterName) {
-    if (parameterName !== undefined) {
-        throw new Error(ERROR_MSGS.INVALID_DECORATOR_OPERATION);
-    }
-}
-function tagParameter(annotationTarget, parameterName, parameterIndex, metadata) {
-    _throwIfMethodParameter(parameterName);
-    _tagParameterOrProperty(METADATA_KEY.TAGGED, annotationTarget, parameterIndex.toString(), metadata);
-}
-function tagProperty(annotationTarget, propertyName, metadata) {
-    if (targetIsConstructorFunction(annotationTarget)) {
-        throw new Error(ERROR_MSGS.INVALID_DECORATOR_OPERATION);
-    }
-    _tagParameterOrProperty(METADATA_KEY.TAGGED_PROP, annotationTarget.constructor, propertyName, metadata);
-}
-function _ensureNoMetadataKeyDuplicates(metadata) {
-    let metadatas = [];
-    if (Array.isArray(metadata)) {
-        metadatas = metadata;
-        const duplicate = (0, js_1.getFirstArrayDuplicate)(metadatas.map((md) => md.key));
-        if (duplicate !== undefined) {
-            throw new Error(`${ERROR_MSGS.DUPLICATED_METADATA} ${duplicate.toString()}`);
-        }
-    }
-    else {
-        metadatas = [metadata];
-    }
-    return metadatas;
-}
-function _tagParameterOrProperty(metadataKey, annotationTarget, key, metadata) {
-    const metadatas = _ensureNoMetadataKeyDuplicates(metadata);
-    let paramsOrPropertiesMetadata = {};
-    // read metadata if available
-    if (Reflect.hasOwnMetadata(metadataKey, annotationTarget)) {
-        paramsOrPropertiesMetadata = Reflect.getMetadata(metadataKey, annotationTarget);
-    }
-    let paramOrPropertyMetadata = paramsOrPropertiesMetadata[key];
-    if (paramOrPropertyMetadata === undefined) {
-        paramOrPropertyMetadata = [];
-    }
-    else {
-        for (const m of paramOrPropertyMetadata) {
-            if (metadatas.some((md) => md.key === m.key)) {
-                throw new Error(`${ERROR_MSGS.DUPLICATED_METADATA} ${m.key.toString()}`);
-            }
-        }
-    }
-    // set metadata
-    paramOrPropertyMetadata.push(...metadatas);
-    paramsOrPropertiesMetadata[key] = paramOrPropertyMetadata;
-    Reflect.defineMetadata(metadataKey, paramsOrPropertiesMetadata, annotationTarget);
-}
-function createTaggedDecorator(metadata) {
-    return (target, targetKey, indexOrPropertyDescriptor) => {
-        if (typeof indexOrPropertyDescriptor === 'number') {
-            tagParameter(target, targetKey, indexOrPropertyDescriptor, metadata);
-        }
-        else {
-            tagProperty(target, targetKey, metadata);
-        }
-    };
-}
-function _decorate(decorators, target) {
-    Reflect.decorate(decorators, target);
-}
-function _param(paramIndex, decorator) {
-    return function (target, key) {
-        decorator(target, key, paramIndex);
-    };
-}
-// Allows VanillaJS developers to use decorators:
-// decorate(injectable(), FooBar);
-// decorate(targetName('foo', 'bar'), FooBar);
-// decorate(named('foo'), FooBar, 0);
-// decorate(tagged('bar'), FooBar, 1);
-function decorate(decorator, target, parameterIndexOrProperty) {
-    if (typeof parameterIndexOrProperty === 'number') {
-        _decorate([_param(parameterIndexOrProperty, decorator)], target);
-    }
-    else if (typeof parameterIndexOrProperty === 'string') {
-        Reflect.decorate([decorator], target, parameterIndexOrProperty);
-    }
-    else {
-        _decorate([decorator], target);
-    }
-}
-//# sourceMappingURL=decorator_utils.js.map
-
-/***/ }),
-
-/***/ 4884:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.inject = void 0;
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const inject_base_1 = __nccwpck_require__(470);
-const inject = (0, inject_base_1.injectBase)(METADATA_KEY.INJECT_TAG);
-exports.inject = inject;
-//# sourceMappingURL=inject.js.map
-
-/***/ }),
-
-/***/ 470:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.injectBase = injectBase;
-const error_msgs_1 = __nccwpck_require__(8332);
-const metadata_1 = __nccwpck_require__(1824);
-const decorator_utils_1 = __nccwpck_require__(7070);
-function injectBase(metadataKey) {
-    return (serviceIdentifier) => {
-        return (target, targetKey, indexOrPropertyDescriptor) => {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            if (serviceIdentifier === undefined) {
-                const className = typeof target === 'function' ? target.name : target.constructor.name;
-                throw new Error((0, error_msgs_1.UNDEFINED_INJECT_ANNOTATION)(className));
-            }
-            (0, decorator_utils_1.createTaggedDecorator)(new metadata_1.Metadata(metadataKey, serviceIdentifier))(target, targetKey, indexOrPropertyDescriptor);
-        };
-    };
-}
-//# sourceMappingURL=inject_base.js.map
-
-/***/ }),
-
-/***/ 8984:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.injectable = injectable;
-const ERRORS_MSGS = __importStar(__nccwpck_require__(8332));
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-function injectable() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return function (target) {
-        if (Reflect.hasOwnMetadata(METADATA_KEY.PARAM_TYPES, target)) {
-            throw new Error(ERRORS_MSGS.DUPLICATED_INJECTABLE_DECORATOR);
-        }
-        const types = Reflect.getMetadata(METADATA_KEY.DESIGN_PARAM_TYPES, target) || [];
-        Reflect.defineMetadata(METADATA_KEY.PARAM_TYPES, types, target);
-        return target;
-    };
-}
-//# sourceMappingURL=injectable.js.map
-
-/***/ }),
-
-/***/ 6382:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.multiInject = void 0;
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const inject_base_1 = __nccwpck_require__(470);
-const multiInject = (0, inject_base_1.injectBase)(METADATA_KEY.MULTI_INJECT_TAG);
-exports.multiInject = multiInject;
-//# sourceMappingURL=multi_inject.js.map
-
-/***/ }),
-
-/***/ 3012:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.named = named;
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const metadata_1 = __nccwpck_require__(1824);
-const decorator_utils_1 = __nccwpck_require__(7070);
-// Used to add named metadata which is used to resolve name-based contextual bindings.
-function named(name) {
-    return (0, decorator_utils_1.createTaggedDecorator)(new metadata_1.Metadata(METADATA_KEY.NAMED_TAG, name));
-}
-//# sourceMappingURL=named.js.map
-
-/***/ }),
-
-/***/ 1437:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.optional = optional;
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const metadata_1 = __nccwpck_require__(1824);
-const decorator_utils_1 = __nccwpck_require__(7070);
-function optional() {
-    return (0, decorator_utils_1.createTaggedDecorator)(new metadata_1.Metadata(METADATA_KEY.OPTIONAL_TAG, true));
-}
-//# sourceMappingURL=optional.js.map
-
-/***/ }),
-
-/***/ 5713:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.postConstruct = void 0;
-const ERRORS_MSGS = __importStar(__nccwpck_require__(8332));
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const property_event_decorator_1 = __nccwpck_require__(2065);
-const postConstruct = (0, property_event_decorator_1.propertyEventDecorator)(METADATA_KEY.POST_CONSTRUCT, ERRORS_MSGS.MULTIPLE_POST_CONSTRUCT_METHODS);
-exports.postConstruct = postConstruct;
-//# sourceMappingURL=post_construct.js.map
-
-/***/ }),
-
-/***/ 8361:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.preDestroy = void 0;
-const ERRORS_MSGS = __importStar(__nccwpck_require__(8332));
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const property_event_decorator_1 = __nccwpck_require__(2065);
-const preDestroy = (0, property_event_decorator_1.propertyEventDecorator)(METADATA_KEY.PRE_DESTROY, ERRORS_MSGS.MULTIPLE_PRE_DESTROY_METHODS);
-exports.preDestroy = preDestroy;
-//# sourceMappingURL=pre_destroy.js.map
-
-/***/ }),
-
-/***/ 2065:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.propertyEventDecorator = propertyEventDecorator;
-const metadata_1 = __nccwpck_require__(1824);
-function propertyEventDecorator(eventKey, errorMessage) {
-    return () => {
-        return (target, propertyKey) => {
-            const metadata = new metadata_1.Metadata(eventKey, propertyKey);
-            if (Reflect.hasOwnMetadata(eventKey, target.constructor)) {
-                throw new Error(errorMessage);
-            }
-            Reflect.defineMetadata(eventKey, metadata, target.constructor);
-        };
-    };
-}
-//# sourceMappingURL=property_event_decorator.js.map
-
-/***/ }),
-
-/***/ 6721:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.tagged = tagged;
-const metadata_1 = __nccwpck_require__(1824);
-const decorator_utils_1 = __nccwpck_require__(7070);
-// Used to add custom metadata which is used to resolve metadata-based contextual bindings.
-function tagged(metadataKey, metadataValue) {
-    return (0, decorator_utils_1.createTaggedDecorator)(new metadata_1.Metadata(metadataKey, metadataValue));
-}
-//# sourceMappingURL=tagged.js.map
-
-/***/ }),
-
-/***/ 8988:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.targetName = targetName;
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const metadata_1 = __nccwpck_require__(1824);
-const decorator_utils_1 = __nccwpck_require__(7070);
-function targetName(name) {
-    return function (target, targetKey, index) {
-        const metadata = new metadata_1.Metadata(METADATA_KEY.NAME_TAG, name);
-        (0, decorator_utils_1.tagParameter)(target, targetKey, index, metadata);
-    };
-}
-//# sourceMappingURL=target_name.js.map
-
-/***/ }),
-
-/***/ 9981:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.unmanaged = unmanaged;
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const metadata_1 = __nccwpck_require__(1824);
-const decorator_utils_1 = __nccwpck_require__(7070);
-function unmanaged() {
-    return function (target, targetKey, index) {
-        const metadata = new metadata_1.Metadata(METADATA_KEY.UNMANAGED_TAG, true);
-        (0, decorator_utils_1.tagParameter)(target, targetKey, index, metadata);
-    };
-}
-//# sourceMappingURL=unmanaged.js.map
-
-/***/ }),
-
-/***/ 5887:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Binding = void 0;
-const literal_types_1 = __nccwpck_require__(1208);
-const id_1 = __nccwpck_require__(2036);
-class Binding {
-    id;
-    moduleId;
-    // Determines weather the bindings has been already activated
-    // The activation action takes place when an instance is resolved
-    // If the scope is singleton it only happens once
-    activated;
-    // A runtime identifier because at runtime we don't have interfaces
-    serviceIdentifier;
-    // constructor from binding to or toConstructor
-    implementationType;
-    // Cache used to allow singleton scope and BindingType.ConstantValue bindings
-    cache;
-    // Cache used to allow BindingType.DynamicValue bindings
-    dynamicValue;
-    // The scope mode to be used
-    scope;
-    // The kind of binding
-    type;
-    // A factory method used in BindingType.Factory bindings
-    factory;
-    // An async factory method used in BindingType.Provider bindings
-    provider;
-    // A constraint used to limit the contexts in which this binding is applicable
-    constraint;
-    // On activation handler (invoked just before an instance is added to cache and injected)
-    onActivation;
-    // On deactivation handler (invoked just before an instance is unbinded and removed from container)
-    onDeactivation;
-    constructor(serviceIdentifier, scope) {
-        this.id = (0, id_1.id)();
-        this.activated = false;
-        this.serviceIdentifier = serviceIdentifier;
-        this.scope = scope;
-        this.type = literal_types_1.BindingTypeEnum.Invalid;
-        this.constraint = (_request) => true;
-        this.implementationType = null;
-        this.cache = null;
-        this.factory = null;
-        this.provider = null;
-        this.onActivation = null;
-        this.onDeactivation = null;
-        this.dynamicValue = null;
-    }
-    clone() {
-        const clone = new Binding(this.serviceIdentifier, this.scope);
-        clone.activated =
-            clone.scope === literal_types_1.BindingScopeEnum.Singleton ? this.activated : false;
-        clone.implementationType = this.implementationType;
-        clone.dynamicValue = this.dynamicValue;
-        clone.scope = this.scope;
-        clone.type = this.type;
-        clone.factory = this.factory;
-        clone.provider = this.provider;
-        clone.constraint = this.constraint;
-        clone.onActivation = this.onActivation;
-        clone.onDeactivation = this.onDeactivation;
-        clone.cache = this.cache;
-        return clone;
-    }
-}
-exports.Binding = Binding;
-//# sourceMappingURL=binding.js.map
-
-/***/ }),
-
-/***/ 3995:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BindingCount = void 0;
-var BindingCount;
-(function (BindingCount) {
-    BindingCount[BindingCount["MultipleBindingsAvailable"] = 2] = "MultipleBindingsAvailable";
-    BindingCount[BindingCount["NoBindingsAvailable"] = 0] = "NoBindingsAvailable";
-    BindingCount[BindingCount["OnlyOneBindingAvailable"] = 1] = "OnlyOneBindingAvailable";
-})(BindingCount || (exports.BindingCount = BindingCount = {}));
-//# sourceMappingURL=binding_count.js.map
-
-/***/ }),
-
-/***/ 8332:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.STACK_OVERFLOW = exports.CIRCULAR_DEPENDENCY_IN_FACTORY = exports.ON_DEACTIVATION_ERROR = exports.PRE_DESTROY_ERROR = exports.POST_CONSTRUCT_ERROR = exports.ASYNC_UNBIND_REQUIRED = exports.MULTIPLE_POST_CONSTRUCT_METHODS = exports.MULTIPLE_PRE_DESTROY_METHODS = exports.CONTAINER_OPTIONS_INVALID_SKIP_BASE_CHECK = exports.CONTAINER_OPTIONS_INVALID_AUTO_BIND_INJECTABLE = exports.CONTAINER_OPTIONS_INVALID_DEFAULT_SCOPE = exports.CONTAINER_OPTIONS_MUST_BE_AN_OBJECT = exports.ARGUMENTS_LENGTH_MISMATCH = exports.INVALID_DECORATOR_OPERATION = exports.INVALID_TO_SELF_VALUE = exports.LAZY_IN_SYNC = exports.INVALID_FUNCTION_BINDING = exports.INVALID_MIDDLEWARE_RETURN = exports.NO_MORE_SNAPSHOTS_AVAILABLE = exports.INVALID_BINDING_TYPE = exports.CIRCULAR_DEPENDENCY = exports.UNDEFINED_INJECT_ANNOTATION = exports.TRYING_TO_RESOLVE_BINDINGS = exports.NOT_REGISTERED = exports.CANNOT_UNBIND = exports.AMBIGUOUS_MATCH = exports.KEY_NOT_FOUND = exports.NULL_ARGUMENT = exports.DUPLICATED_METADATA = exports.DUPLICATED_INJECTABLE_DECORATOR = void 0;
-exports.DUPLICATED_INJECTABLE_DECORATOR = 'Cannot apply @injectable decorator multiple times.';
-exports.DUPLICATED_METADATA = 'Metadata key was used more than once in a parameter:';
-exports.NULL_ARGUMENT = 'NULL argument';
-exports.KEY_NOT_FOUND = 'Key Not Found';
-exports.AMBIGUOUS_MATCH = 'Ambiguous match found for serviceIdentifier:';
-exports.CANNOT_UNBIND = 'Could not unbind serviceIdentifier:';
-exports.NOT_REGISTERED = 'No matching bindings found for serviceIdentifier:';
-const TRYING_TO_RESOLVE_BINDINGS = (name) => `Trying to resolve bindings for "${name}"`;
-exports.TRYING_TO_RESOLVE_BINDINGS = TRYING_TO_RESOLVE_BINDINGS;
-const UNDEFINED_INJECT_ANNOTATION = (name) => `@inject called with undefined this could mean that the class ${name} has ` +
-    'a circular dependency problem. You can use a LazyServiceIdentifer to ' +
-    'overcome this limitation.';
-exports.UNDEFINED_INJECT_ANNOTATION = UNDEFINED_INJECT_ANNOTATION;
-exports.CIRCULAR_DEPENDENCY = 'Circular dependency found:';
-exports.INVALID_BINDING_TYPE = 'Invalid binding type:';
-exports.NO_MORE_SNAPSHOTS_AVAILABLE = 'No snapshot available to restore.';
-exports.INVALID_MIDDLEWARE_RETURN = 'Invalid return type in middleware. Middleware must return!';
-exports.INVALID_FUNCTION_BINDING = 'Value provided to function binding must be a function!';
-const LAZY_IN_SYNC = (key) => `You are attempting to construct ${keyToString(key)} in a synchronous way ` +
-    'but it has asynchronous dependencies.';
-exports.LAZY_IN_SYNC = LAZY_IN_SYNC;
-exports.INVALID_TO_SELF_VALUE = 'The toSelf function can only be applied when a constructor is ' +
-    'used as service identifier';
-exports.INVALID_DECORATOR_OPERATION = 'The @inject @multiInject @tagged and @named decorators ' +
-    'must be applied to the parameters of a class constructor or a class property.';
-const ARGUMENTS_LENGTH_MISMATCH = (name) => 'The number of constructor arguments in the derived class ' +
-    `${name} must be >= than the number of constructor arguments of its base class.`;
-exports.ARGUMENTS_LENGTH_MISMATCH = ARGUMENTS_LENGTH_MISMATCH;
-exports.CONTAINER_OPTIONS_MUST_BE_AN_OBJECT = 'Invalid Container constructor argument. Container options ' +
-    'must be an object.';
-exports.CONTAINER_OPTIONS_INVALID_DEFAULT_SCOPE = 'Invalid Container option. Default scope must ' +
-    'be a string ("singleton" or "transient").';
-exports.CONTAINER_OPTIONS_INVALID_AUTO_BIND_INJECTABLE = 'Invalid Container option. Auto bind injectable must ' + 'be a boolean';
-exports.CONTAINER_OPTIONS_INVALID_SKIP_BASE_CHECK = 'Invalid Container option. Skip base check must ' + 'be a boolean';
-exports.MULTIPLE_PRE_DESTROY_METHODS = 'Cannot apply @preDestroy decorator multiple times in the same class';
-exports.MULTIPLE_POST_CONSTRUCT_METHODS = 'Cannot apply @postConstruct decorator multiple times in the same class';
-exports.ASYNC_UNBIND_REQUIRED = 'Attempting to unbind dependency with asynchronous destruction (@preDestroy or onDeactivation)';
-const POST_CONSTRUCT_ERROR = (clazz, errorMessage) => `@postConstruct error in class ${clazz}: ${errorMessage}`;
-exports.POST_CONSTRUCT_ERROR = POST_CONSTRUCT_ERROR;
-const PRE_DESTROY_ERROR = (clazz, errorMessage) => `@preDestroy error in class ${clazz}: ${errorMessage}`;
-exports.PRE_DESTROY_ERROR = PRE_DESTROY_ERROR;
-const ON_DEACTIVATION_ERROR = (clazz, errorMessage) => `onDeactivation() error in class ${clazz}: ${errorMessage}`;
-exports.ON_DEACTIVATION_ERROR = ON_DEACTIVATION_ERROR;
-const CIRCULAR_DEPENDENCY_IN_FACTORY = (factoryType, serviceIdentifier) => `It looks like there is a circular dependency in one of the '${factoryType}' bindings. Please investigate bindings with ` +
-    `service identifier '${serviceIdentifier}'.`;
-exports.CIRCULAR_DEPENDENCY_IN_FACTORY = CIRCULAR_DEPENDENCY_IN_FACTORY;
-exports.STACK_OVERFLOW = 'Maximum call stack size exceeded';
-function keyToString(key) {
-    if (typeof key === 'function') {
-        return `[function/class ${key.name || '<anonymous>'}]`;
-    }
-    if (typeof key === 'symbol') {
-        return key.toString();
-    }
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    return `'${key}'`;
-}
-//# sourceMappingURL=error_msgs.js.map
-
-/***/ }),
-
-/***/ 1208:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TargetTypeEnum = exports.BindingTypeEnum = exports.BindingScopeEnum = void 0;
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const BindingScopeEnum = {
-    Request: 'Request',
-    Singleton: 'Singleton',
-    Transient: 'Transient',
-};
-exports.BindingScopeEnum = BindingScopeEnum;
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const BindingTypeEnum = {
-    ConstantValue: 'ConstantValue',
-    Constructor: 'Constructor',
-    DynamicValue: 'DynamicValue',
-    Factory: 'Factory',
-    Function: 'Function',
-    Instance: 'Instance',
-    Invalid: 'Invalid',
-    Provider: 'Provider',
-};
-exports.BindingTypeEnum = BindingTypeEnum;
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const TargetTypeEnum = {
-    ClassProperty: 'ClassProperty',
-    ConstructorArgument: 'ConstructorArgument',
-    Variable: 'Variable',
-};
-exports.TargetTypeEnum = TargetTypeEnum;
-//# sourceMappingURL=literal_types.js.map
-
-/***/ }),
-
-/***/ 9579:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NON_CUSTOM_TAG_KEYS = exports.PRE_DESTROY = exports.POST_CONSTRUCT = exports.DESIGN_PARAM_TYPES = exports.PARAM_TYPES = exports.TAGGED_PROP = exports.TAGGED = exports.MULTI_INJECT_TAG = exports.INJECT_TAG = exports.OPTIONAL_TAG = exports.UNMANAGED_TAG = exports.NAME_TAG = exports.NAMED_TAG = void 0;
-// Used for named bindings
-exports.NAMED_TAG = 'named';
-// The name of the target at design time
-exports.NAME_TAG = 'name';
-// The for unmanaged injections (in base classes when using inheritance)
-exports.UNMANAGED_TAG = 'unmanaged';
-// The for optional injections
-exports.OPTIONAL_TAG = 'optional';
-// The type of the binding at design time
-exports.INJECT_TAG = 'inject';
-// The type of the binding at design type for multi-injections
-exports.MULTI_INJECT_TAG = 'multi_inject';
-// used to store constructor arguments tags
-exports.TAGGED = 'inversify:tagged';
-// used to store class properties tags
-exports.TAGGED_PROP = 'inversify:tagged_props';
-// used to store types to be injected
-exports.PARAM_TYPES = 'inversify:paramtypes';
-// used to access design time types
-exports.DESIGN_PARAM_TYPES = 'design:paramtypes';
-// used to identify postConstruct functions
-exports.POST_CONSTRUCT = 'post_construct';
-// used to identify preDestroy functions
-exports.PRE_DESTROY = 'pre_destroy';
-function getNonCustomTagKeys() {
-    return [
-        exports.INJECT_TAG,
-        exports.MULTI_INJECT_TAG,
-        exports.NAME_TAG,
-        exports.UNMANAGED_TAG,
-        exports.NAMED_TAG,
-        exports.OPTIONAL_TAG,
-    ];
-}
-exports.NON_CUSTOM_TAG_KEYS = getNonCustomTagKeys();
-//# sourceMappingURL=metadata_keys.js.map
-
-/***/ }),
-
-/***/ 3600:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Container = void 0;
-const binding_1 = __nccwpck_require__(5887);
-const ERROR_MSGS = __importStar(__nccwpck_require__(8332));
-const literal_types_1 = __nccwpck_require__(1208);
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const metadata_reader_1 = __nccwpck_require__(9852);
-const planner_1 = __nccwpck_require__(8845);
-const resolver_1 = __nccwpck_require__(6310);
-const binding_to_syntax_1 = __nccwpck_require__(3952);
-const async_1 = __nccwpck_require__(5345);
-const id_1 = __nccwpck_require__(2036);
-const serialization_1 = __nccwpck_require__(3369);
-const container_snapshot_1 = __nccwpck_require__(4527);
-const lookup_1 = __nccwpck_require__(3917);
-const module_activation_store_1 = __nccwpck_require__(8848);
-class Container {
-    id;
-    parent;
-    options;
-    _middleware;
-    _bindingDictionary;
-    _activations;
-    _deactivations;
-    _snapshots;
-    _metadataReader;
-    _moduleActivationStore;
-    constructor(containerOptions) {
-        const options = containerOptions || {};
-        if (typeof options !== 'object') {
-            throw new Error(ERROR_MSGS.CONTAINER_OPTIONS_MUST_BE_AN_OBJECT);
-        }
-        if (options.defaultScope === undefined) {
-            options.defaultScope = literal_types_1.BindingScopeEnum.Transient;
-        }
-        else if (options.defaultScope !== literal_types_1.BindingScopeEnum.Singleton &&
-            options.defaultScope !== literal_types_1.BindingScopeEnum.Transient &&
-            options.defaultScope !== literal_types_1.BindingScopeEnum.Request) {
-            throw new Error(ERROR_MSGS.CONTAINER_OPTIONS_INVALID_DEFAULT_SCOPE);
-        }
-        if (options.autoBindInjectable === undefined) {
-            options.autoBindInjectable = false;
-        }
-        else if (typeof options.autoBindInjectable !== 'boolean') {
-            throw new Error(ERROR_MSGS.CONTAINER_OPTIONS_INVALID_AUTO_BIND_INJECTABLE);
-        }
-        if (options.skipBaseClassChecks === undefined) {
-            options.skipBaseClassChecks = false;
-        }
-        else if (typeof options.skipBaseClassChecks !== 'boolean') {
-            throw new Error(ERROR_MSGS.CONTAINER_OPTIONS_INVALID_SKIP_BASE_CHECK);
-        }
-        this.options = {
-            autoBindInjectable: options.autoBindInjectable,
-            defaultScope: options.defaultScope,
-            skipBaseClassChecks: options.skipBaseClassChecks,
-        };
-        this.id = (0, id_1.id)();
-        this._bindingDictionary = new lookup_1.Lookup();
-        this._snapshots = [];
-        this._middleware = null;
-        this._activations = new lookup_1.Lookup();
-        this._deactivations = new lookup_1.Lookup();
-        this.parent = null;
-        this._metadataReader = new metadata_reader_1.MetadataReader();
-        this._moduleActivationStore = new module_activation_store_1.ModuleActivationStore();
-    }
-    static merge(container1, container2, ...containers) {
-        const container = new Container();
-        const targetContainers = [
-            container1,
-            container2,
-            ...containers,
-        ].map((targetContainer) => (0, planner_1.getBindingDictionary)(targetContainer));
-        const bindingDictionary = (0, planner_1.getBindingDictionary)(container);
-        function copyDictionary(origin, destination) {
-            origin.traverse((_key, value) => {
-                value.forEach((binding) => {
-                    destination.add(binding.serviceIdentifier, binding.clone());
-                });
-            });
-        }
-        targetContainers.forEach((targetBindingDictionary) => {
-            copyDictionary(targetBindingDictionary, bindingDictionary);
-        });
-        return container;
-    }
-    load(...modules) {
-        // eslint-disable-next-line @typescript-eslint/typedef
-        const getHelpers = this._getContainerModuleHelpersFactory();
-        for (const currentModule of modules) {
-            // eslint-disable-next-line @typescript-eslint/typedef
-            const containerModuleHelpers = getHelpers(currentModule.id);
-            currentModule.registry(containerModuleHelpers.bindFunction, containerModuleHelpers.unbindFunction, containerModuleHelpers.isboundFunction, containerModuleHelpers.rebindFunction, containerModuleHelpers.unbindAsyncFunction, containerModuleHelpers.onActivationFunction, containerModuleHelpers.onDeactivationFunction);
-        }
-    }
-    async loadAsync(...modules) {
-        // eslint-disable-next-line @typescript-eslint/typedef
-        const getHelpers = this._getContainerModuleHelpersFactory();
-        for (const currentModule of modules) {
-            // eslint-disable-next-line @typescript-eslint/typedef
-            const containerModuleHelpers = getHelpers(currentModule.id);
-            await currentModule.registry(containerModuleHelpers.bindFunction, containerModuleHelpers.unbindFunction, containerModuleHelpers.isboundFunction, containerModuleHelpers.rebindFunction, containerModuleHelpers.unbindAsyncFunction, containerModuleHelpers.onActivationFunction, containerModuleHelpers.onDeactivationFunction);
-        }
-    }
-    unload(...modules) {
-        modules.forEach((module) => {
-            const deactivations = this._removeModuleBindings(module.id);
-            this._deactivateSingletons(deactivations);
-            this._removeModuleHandlers(module.id);
-        });
-    }
-    async unloadAsync(...modules) {
-        for (const module of modules) {
-            const deactivations = this._removeModuleBindings(module.id);
-            await this._deactivateSingletonsAsync(deactivations);
-            this._removeModuleHandlers(module.id);
-        }
-    }
-    // Registers a type binding
-    bind(serviceIdentifier) {
-        return this._bind(this._buildBinding(serviceIdentifier));
-    }
-    rebind(serviceIdentifier) {
-        this.unbind(serviceIdentifier);
-        return this.bind(serviceIdentifier);
-    }
-    async rebindAsync(serviceIdentifier) {
-        await this.unbindAsync(serviceIdentifier);
-        return this.bind(serviceIdentifier);
-    }
-    // Removes a type binding from the registry by its key
-    unbind(serviceIdentifier) {
-        if (this._bindingDictionary.hasKey(serviceIdentifier)) {
-            const bindings = this._bindingDictionary.get(serviceIdentifier);
-            this._deactivateSingletons(bindings);
-        }
-        this._removeServiceFromDictionary(serviceIdentifier);
-    }
-    async unbindAsync(serviceIdentifier) {
-        if (this._bindingDictionary.hasKey(serviceIdentifier)) {
-            const bindings = this._bindingDictionary.get(serviceIdentifier);
-            await this._deactivateSingletonsAsync(bindings);
-        }
-        this._removeServiceFromDictionary(serviceIdentifier);
-    }
-    // Removes all the type bindings from the registry
-    unbindAll() {
-        this._bindingDictionary.traverse((_key, value) => {
-            this._deactivateSingletons(value);
-        });
-        this._bindingDictionary = new lookup_1.Lookup();
-    }
-    async unbindAllAsync() {
-        const promises = [];
-        this._bindingDictionary.traverse((_key, value) => {
-            promises.push(this._deactivateSingletonsAsync(value));
-        });
-        await Promise.all(promises);
-        this._bindingDictionary = new lookup_1.Lookup();
-    }
-    onActivation(serviceIdentifier, onActivation) {
-        this._activations.add(serviceIdentifier, onActivation);
-    }
-    onDeactivation(serviceIdentifier, onDeactivation) {
-        this._deactivations.add(serviceIdentifier, onDeactivation);
-    }
-    // Allows to check if there are bindings available for serviceIdentifier
-    isBound(serviceIdentifier) {
-        let bound = this._bindingDictionary.hasKey(serviceIdentifier);
-        if (!bound && this.parent) {
-            bound = this.parent.isBound(serviceIdentifier);
-        }
-        return bound;
-    }
-    // check binding dependency only in current container
-    isCurrentBound(serviceIdentifier) {
-        return this._bindingDictionary.hasKey(serviceIdentifier);
-    }
-    isBoundNamed(serviceIdentifier, named) {
-        return this.isBoundTagged(serviceIdentifier, METADATA_KEY.NAMED_TAG, named);
-    }
-    // Check if a binding with a complex constraint is available without throwing a error. Ancestors are also verified.
-    isBoundTagged(serviceIdentifier, key, value) {
-        let bound = false;
-        // verify if there are bindings available for serviceIdentifier on current binding dictionary
-        if (this._bindingDictionary.hasKey(serviceIdentifier)) {
-            const bindings = this._bindingDictionary.get(serviceIdentifier);
-            const request = (0, planner_1.createMockRequest)(this, serviceIdentifier, {
-                customTag: {
-                    key,
-                    value,
-                },
-                isMultiInject: false,
-            });
-            bound = bindings.some((b) => b.constraint(request));
-        }
-        // verify if there is a parent container that could solve the request
-        if (!bound && this.parent) {
-            bound = this.parent.isBoundTagged(serviceIdentifier, key, value);
-        }
-        return bound;
-    }
-    snapshot() {
-        this._snapshots.push(container_snapshot_1.ContainerSnapshot.of(this._bindingDictionary.clone(), this._middleware, this._activations.clone(), this._deactivations.clone(), this._moduleActivationStore.clone()));
-    }
-    restore() {
-        const snapshot = this._snapshots.pop();
-        if (snapshot === undefined) {
-            throw new Error(ERROR_MSGS.NO_MORE_SNAPSHOTS_AVAILABLE);
-        }
-        this._bindingDictionary = snapshot.bindings;
-        this._activations = snapshot.activations;
-        this._deactivations = snapshot.deactivations;
-        this._middleware = snapshot.middleware;
-        this._moduleActivationStore = snapshot.moduleActivationStore;
-    }
-    createChild(containerOptions) {
-        const child = new Container(containerOptions || this.options);
-        child.parent = this;
-        return child;
-    }
-    applyMiddleware(...middlewares) {
-        const initial = this._middleware
-            ? this._middleware
-            : this._planAndResolve();
-        this._middleware = middlewares.reduce((prev, curr) => curr(prev), initial);
-    }
-    applyCustomMetadataReader(metadataReader) {
-        this._metadataReader = metadataReader;
-    }
-    // Resolves a dependency by its runtime identifier
-    // The runtime identifier must be associated with only one binding
-    // use getAll when the runtime identifier is associated with multiple bindings
-    get(serviceIdentifier) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, false, false);
-        return this._getButThrowIfAsync(getArgs);
-    }
-    async getAsync(serviceIdentifier) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, false, false);
-        return this._get(getArgs);
-    }
-    getTagged(serviceIdentifier, key, value) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, false, false, key, value);
-        return this._getButThrowIfAsync(getArgs);
-    }
-    async getTaggedAsync(serviceIdentifier, key, value) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, false, false, key, value);
-        return this._get(getArgs);
-    }
-    getNamed(serviceIdentifier, named) {
-        return this.getTagged(serviceIdentifier, METADATA_KEY.NAMED_TAG, named);
-    }
-    async getNamedAsync(serviceIdentifier, named) {
-        return this.getTaggedAsync(serviceIdentifier, METADATA_KEY.NAMED_TAG, named);
-    }
-    // Resolves a dependency by its runtime identifier
-    // The runtime identifier can be associated with one or multiple bindings
-    getAll(serviceIdentifier, options) {
-        const getArgs = this._getAllArgs(serviceIdentifier, options, false);
-        return this._getButThrowIfAsync(getArgs);
-    }
-    async getAllAsync(serviceIdentifier, options) {
-        const getArgs = this._getAllArgs(serviceIdentifier, options, false);
-        return this._getAll(getArgs);
-    }
-    getAllTagged(serviceIdentifier, key, value) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, true, false, key, value);
-        return this._getButThrowIfAsync(getArgs);
-    }
-    async getAllTaggedAsync(serviceIdentifier, key, value) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, true, false, key, value);
-        return this._getAll(getArgs);
-    }
-    getAllNamed(serviceIdentifier, named) {
-        return this.getAllTagged(serviceIdentifier, METADATA_KEY.NAMED_TAG, named);
-    }
-    async getAllNamedAsync(serviceIdentifier, named) {
-        return this.getAllTaggedAsync(serviceIdentifier, METADATA_KEY.NAMED_TAG, named);
-    }
-    resolve(constructorFunction) {
-        const isBound = this.isBound(constructorFunction);
-        if (!isBound) {
-            this.bind(constructorFunction).toSelf();
-        }
-        const resolved = this.get(constructorFunction);
-        if (!isBound) {
-            this.unbind(constructorFunction);
-        }
-        return resolved;
-    }
-    tryGet(serviceIdentifier) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, false, true);
-        return this._getButThrowIfAsync(getArgs);
-    }
-    async tryGetAsync(serviceIdentifier) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, false, true);
-        return this._get(getArgs);
-    }
-    tryGetTagged(serviceIdentifier, key, value) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, false, true, key, value);
-        return this._getButThrowIfAsync(getArgs);
-    }
-    async tryGetTaggedAsync(serviceIdentifier, key, value) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, false, true, key, value);
-        return this._get(getArgs);
-    }
-    tryGetNamed(serviceIdentifier, named) {
-        return this.tryGetTagged(serviceIdentifier, METADATA_KEY.NAMED_TAG, named);
-    }
-    async tryGetNamedAsync(serviceIdentifier, named) {
-        return this.tryGetTaggedAsync(serviceIdentifier, METADATA_KEY.NAMED_TAG, named);
-    }
-    tryGetAll(serviceIdentifier, options) {
-        const getArgs = this._getAllArgs(serviceIdentifier, options, true);
-        return this._getButThrowIfAsync(getArgs);
-    }
-    async tryGetAllAsync(serviceIdentifier, options) {
-        const getArgs = this._getAllArgs(serviceIdentifier, options, true);
-        return this._getAll(getArgs);
-    }
-    tryGetAllTagged(serviceIdentifier, key, value) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, true, true, key, value);
-        return this._getButThrowIfAsync(getArgs);
-    }
-    async tryGetAllTaggedAsync(serviceIdentifier, key, value) {
-        const getArgs = this._getNotAllArgs(serviceIdentifier, true, true, key, value);
-        return this._getAll(getArgs);
-    }
-    tryGetAllNamed(serviceIdentifier, named) {
-        return this.tryGetAllTagged(serviceIdentifier, METADATA_KEY.NAMED_TAG, named);
-    }
-    async tryGetAllNamedAsync(serviceIdentifier, named) {
-        return this.tryGetAllTaggedAsync(serviceIdentifier, METADATA_KEY.NAMED_TAG, named);
-    }
-    _preDestroy(constructor, instance) {
-        if (constructor !== undefined &&
-            Reflect.hasMetadata(METADATA_KEY.PRE_DESTROY, constructor)) {
-            const data = Reflect.getMetadata(METADATA_KEY.PRE_DESTROY, constructor);
-            return instance[data.value]?.();
-        }
-    }
-    _removeModuleHandlers(moduleId) {
-        const moduleActivationsHandlers = this._moduleActivationStore.remove(moduleId);
-        this._activations.removeIntersection(moduleActivationsHandlers.onActivations);
-        this._deactivations.removeIntersection(moduleActivationsHandlers.onDeactivations);
-    }
-    _removeModuleBindings(moduleId) {
-        return this._bindingDictionary.removeByCondition((binding) => binding.moduleId === moduleId);
-    }
-    _deactivate(binding, instance) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const constructor = instance == undefined
-            ? undefined
-            : // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                Object.getPrototypeOf(instance).constructor;
-        try {
-            if (this._deactivations.hasKey(binding.serviceIdentifier)) {
-                const result = this._deactivateContainer(instance, this._deactivations.get(binding.serviceIdentifier).values());
-                if ((0, async_1.isPromise)(result)) {
-                    return this._handleDeactivationError(result.then(async () => this._propagateContainerDeactivationThenBindingAndPreDestroyAsync(binding, instance, constructor)), binding.serviceIdentifier);
-                }
-            }
-            const propagateDeactivationResult = this._propagateContainerDeactivationThenBindingAndPreDestroy(binding, instance, constructor);
-            if ((0, async_1.isPromise)(propagateDeactivationResult)) {
-                return this._handleDeactivationError(propagateDeactivationResult, binding.serviceIdentifier);
-            }
-        }
-        catch (ex) {
-            if (ex instanceof Error) {
-                throw new Error(ERROR_MSGS.ON_DEACTIVATION_ERROR((0, serialization_1.getServiceIdentifierAsString)(binding.serviceIdentifier), ex.message));
-            }
-        }
-    }
-    async _handleDeactivationError(asyncResult, serviceIdentifier) {
-        try {
-            await asyncResult;
-        }
-        catch (ex) {
-            if (ex instanceof Error) {
-                throw new Error(ERROR_MSGS.ON_DEACTIVATION_ERROR((0, serialization_1.getServiceIdentifierAsString)(serviceIdentifier), ex.message));
-            }
-        }
-    }
-    _deactivateContainer(instance, deactivationsIterator) {
-        let deactivation = deactivationsIterator.next();
-        while (typeof deactivation.value === 'function') {
-            const result = deactivation.value(instance);
-            if ((0, async_1.isPromise)(result)) {
-                return result.then(async () => this._deactivateContainerAsync(instance, deactivationsIterator));
-            }
-            deactivation = deactivationsIterator.next();
-        }
-    }
-    async _deactivateContainerAsync(instance, deactivationsIterator) {
-        let deactivation = deactivationsIterator.next();
-        while (typeof deactivation.value === 'function') {
-            await deactivation.value(instance);
-            deactivation = deactivationsIterator.next();
-        }
-    }
-    _getContainerModuleHelpersFactory() {
-        const getBindFunction = (moduleId) => (serviceIdentifier) => {
-            const binding = this._buildBinding(serviceIdentifier);
-            binding.moduleId = moduleId;
-            return this._bind(binding);
-        };
-        const getUnbindFunction = () => (serviceIdentifier) => {
-            this.unbind(serviceIdentifier);
-        };
-        const getUnbindAsyncFunction = () => async (serviceIdentifier) => {
-            return this.unbindAsync(serviceIdentifier);
-        };
-        const getIsboundFunction = () => (serviceIdentifier) => {
-            return this.isBound(serviceIdentifier);
-        };
-        const getRebindFunction = (moduleId) => {
-            const bind = getBindFunction(moduleId);
-            return (serviceIdentifier) => {
-                this.unbind(serviceIdentifier);
-                return bind(serviceIdentifier);
-            };
-        };
-        const getOnActivationFunction = (moduleId) => (serviceIdentifier, onActivation) => {
-            this._moduleActivationStore.addActivation(moduleId, serviceIdentifier, onActivation);
-            this.onActivation(serviceIdentifier, onActivation);
-        };
-        const getOnDeactivationFunction = (moduleId) => (serviceIdentifier, onDeactivation) => {
-            this._moduleActivationStore.addDeactivation(moduleId, serviceIdentifier, onDeactivation);
-            this.onDeactivation(serviceIdentifier, onDeactivation);
-        };
-        return (mId) => ({
-            bindFunction: getBindFunction(mId),
-            isboundFunction: getIsboundFunction(),
-            onActivationFunction: getOnActivationFunction(mId),
-            onDeactivationFunction: getOnDeactivationFunction(mId),
-            rebindFunction: getRebindFunction(mId),
-            unbindAsyncFunction: getUnbindAsyncFunction(),
-            unbindFunction: getUnbindFunction(),
-        });
-    }
-    _bind(binding) {
-        this._bindingDictionary.add(binding.serviceIdentifier, binding);
-        return new binding_to_syntax_1.BindingToSyntax(binding);
-    }
-    _buildBinding(serviceIdentifier) {
-        const scope = this.options.defaultScope || literal_types_1.BindingScopeEnum.Transient;
-        return new binding_1.Binding(serviceIdentifier, scope);
-    }
-    async _getAll(getArgs) {
-        return Promise.all(this._get(getArgs));
-    }
-    // Prepares arguments required for resolution and
-    // delegates resolution to _middleware if available
-    // otherwise it delegates resolution to _planAndResolve
-    _get(getArgs) {
-        const planAndResolveArgs = {
-            ...getArgs,
-            contextInterceptor: (context) => context,
-            targetType: literal_types_1.TargetTypeEnum.Variable,
-        };
-        if (this._middleware) {
-            const middlewareResult = this._middleware(planAndResolveArgs);
-            if (middlewareResult === undefined || middlewareResult === null) {
-                throw new Error(ERROR_MSGS.INVALID_MIDDLEWARE_RETURN);
-            }
-            return middlewareResult;
-        }
-        return this._planAndResolve()(planAndResolveArgs);
-    }
-    _getButThrowIfAsync(getArgs) {
-        const result = this._get(getArgs);
-        if ((0, async_1.isPromiseOrContainsPromise)(result)) {
-            throw new Error(ERROR_MSGS.LAZY_IN_SYNC(getArgs.serviceIdentifier));
-        }
-        return result;
-    }
-    _getAllArgs(serviceIdentifier, options, isOptional) {
-        const getAllArgs = {
-            avoidConstraints: !(options?.enforceBindingConstraints ?? false),
-            isMultiInject: true,
-            isOptional,
-            serviceIdentifier,
-        };
-        return getAllArgs;
-    }
-    _getNotAllArgs(serviceIdentifier, isMultiInject, isOptional, key, value) {
-        const getNotAllArgs = {
-            avoidConstraints: false,
-            isMultiInject,
-            isOptional,
-            key,
-            serviceIdentifier,
-            value,
-        };
-        return getNotAllArgs;
-    }
-    _getPlanMetadataFromNextArgs(args) {
-        const planMetadata = {
-            isMultiInject: args.isMultiInject,
-        };
-        if (args.key !== undefined) {
-            planMetadata.customTag = {
-                key: args.key,
-                value: args.value,
-            };
-        }
-        if (args.isOptional === true) {
-            planMetadata.isOptional = true;
-        }
-        return planMetadata;
-    }
-    // Planner creates a plan and Resolver resolves a plan
-    // one of the jobs of the Container is to links the Planner
-    // with the Resolver and that is what this function is about
-    _planAndResolve() {
-        return (args) => {
-            // create a plan
-            let context = (0, planner_1.plan)(this._metadataReader, this, args.targetType, args.serviceIdentifier, this._getPlanMetadataFromNextArgs(args), args.avoidConstraints);
-            // apply context interceptor
-            context = args.contextInterceptor(context);
-            // resolve plan
-            const result = (0, resolver_1.resolve)(context);
-            return result;
-        };
-    }
-    _deactivateIfSingleton(binding) {
-        if (!binding.activated) {
-            return;
-        }
-        if ((0, async_1.isPromise)(binding.cache)) {
-            return binding.cache.then((resolved) => this._deactivate(binding, resolved));
-        }
-        return this._deactivate(binding, binding.cache);
-    }
-    _deactivateSingletons(bindings) {
-        for (const binding of bindings) {
-            const result = this._deactivateIfSingleton(binding);
-            if ((0, async_1.isPromise)(result)) {
-                throw new Error(ERROR_MSGS.ASYNC_UNBIND_REQUIRED);
-            }
-        }
-    }
-    async _deactivateSingletonsAsync(bindings) {
-        await Promise.all(bindings.map(async (b) => this._deactivateIfSingleton(b)));
-    }
-    _propagateContainerDeactivationThenBindingAndPreDestroy(binding, instance, constructor) {
-        if (this.parent) {
-            return this._deactivate.bind(this.parent)(binding, instance);
-        }
-        else {
-            return this._bindingDeactivationAndPreDestroy(binding, instance, constructor);
-        }
-    }
-    async _propagateContainerDeactivationThenBindingAndPreDestroyAsync(binding, instance, constructor) {
-        if (this.parent) {
-            await this._deactivate.bind(this.parent)(binding, instance);
-        }
-        else {
-            await this._bindingDeactivationAndPreDestroyAsync(binding, instance, constructor);
-        }
-    }
-    _removeServiceFromDictionary(serviceIdentifier) {
-        try {
-            this._bindingDictionary.remove(serviceIdentifier);
-        }
-        catch (_e) {
-            throw new Error(`${ERROR_MSGS.CANNOT_UNBIND} ${(0, serialization_1.getServiceIdentifierAsString)(serviceIdentifier)}`);
-        }
-    }
-    _bindingDeactivationAndPreDestroy(binding, instance, constructor) {
-        if (typeof binding.onDeactivation === 'function') {
-            const result = binding.onDeactivation(instance);
-            if ((0, async_1.isPromise)(result)) {
-                return result.then(() => this._preDestroy(constructor, instance));
-            }
-        }
-        return this._preDestroy(constructor, instance);
-    }
-    async _bindingDeactivationAndPreDestroyAsync(binding, instance, constructor) {
-        if (typeof binding.onDeactivation === 'function') {
-            await binding.onDeactivation(instance);
-        }
-        await this._preDestroy(constructor, instance);
-    }
-}
-exports.Container = Container;
-//# sourceMappingURL=container.js.map
-
-/***/ }),
-
-/***/ 7067:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AsyncContainerModule = exports.ContainerModule = void 0;
-const id_1 = __nccwpck_require__(2036);
-class ContainerModule {
-    id;
-    registry;
-    constructor(registry) {
-        this.id = (0, id_1.id)();
-        this.registry = registry;
-    }
-}
-exports.ContainerModule = ContainerModule;
-class AsyncContainerModule {
-    id;
-    registry;
-    constructor(registry) {
-        this.id = (0, id_1.id)();
-        this.registry = registry;
-    }
-}
-exports.AsyncContainerModule = AsyncContainerModule;
-//# sourceMappingURL=container_module.js.map
-
-/***/ }),
-
-/***/ 4527:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ContainerSnapshot = void 0;
-class ContainerSnapshot {
-    bindings;
-    activations;
-    deactivations;
-    middleware;
-    moduleActivationStore;
-    static of(bindings, middleware, activations, deactivations, moduleActivationStore) {
-        const snapshot = new ContainerSnapshot();
-        snapshot.bindings = bindings;
-        snapshot.middleware = middleware;
-        snapshot.deactivations = deactivations;
-        snapshot.activations = activations;
-        snapshot.moduleActivationStore = moduleActivationStore;
-        return snapshot;
-    }
-}
-exports.ContainerSnapshot = ContainerSnapshot;
-//# sourceMappingURL=container_snapshot.js.map
-
-/***/ }),
-
-/***/ 3917:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Lookup = void 0;
-const ERROR_MSGS = __importStar(__nccwpck_require__(8332));
-const clonable_1 = __nccwpck_require__(8423);
-class Lookup {
-    // dictionary used store multiple values for each key <key>
-    _map;
-    constructor() {
-        this._map = new Map();
-    }
-    getMap() {
-        return this._map;
-    }
-    // adds a new entry to _map
-    add(serviceIdentifier, value) {
-        this._checkNonNulish(serviceIdentifier);
-        if (value === null || value === undefined) {
-            throw new Error(ERROR_MSGS.NULL_ARGUMENT);
-        }
-        const entry = this._map.get(serviceIdentifier);
-        if (entry !== undefined) {
-            entry.push(value);
-        }
-        else {
-            this._map.set(serviceIdentifier, [value]);
-        }
-    }
-    // gets the value of a entry by its key (serviceIdentifier)
-    get(serviceIdentifier) {
-        this._checkNonNulish(serviceIdentifier);
-        const entry = this._map.get(serviceIdentifier);
-        if (entry !== undefined) {
-            return entry;
-        }
-        else {
-            throw new Error(ERROR_MSGS.KEY_NOT_FOUND);
-        }
-    }
-    // removes a entry from _map by its key (serviceIdentifier)
-    remove(serviceIdentifier) {
-        this._checkNonNulish(serviceIdentifier);
-        if (!this._map.delete(serviceIdentifier)) {
-            throw new Error(ERROR_MSGS.KEY_NOT_FOUND);
-        }
-    }
-    removeIntersection(lookup) {
-        this.traverse((serviceIdentifier, value) => {
-            const lookupActivations = lookup.hasKey(serviceIdentifier)
-                ? lookup.get(serviceIdentifier)
-                : undefined;
-            if (lookupActivations !== undefined) {
-                const filteredValues = value.filter((lookupValue) => !lookupActivations.some((moduleActivation) => lookupValue === moduleActivation));
-                this._setValue(serviceIdentifier, filteredValues);
-            }
-        });
-    }
-    removeByCondition(condition) {
-        const removals = [];
-        this._map.forEach((entries, key) => {
-            const updatedEntries = [];
-            for (const entry of entries) {
-                const remove = condition(entry);
-                if (remove) {
-                    removals.push(entry);
-                }
-                else {
-                    updatedEntries.push(entry);
-                }
-            }
-            this._setValue(key, updatedEntries);
-        });
-        return removals;
-    }
-    // returns true if _map contains a key (serviceIdentifier)
-    hasKey(serviceIdentifier) {
-        this._checkNonNulish(serviceIdentifier);
-        return this._map.has(serviceIdentifier);
-    }
-    // returns a new Lookup instance; note: this is not a deep clone, only Lookup related data structure (dictionary) is
-    // cloned, content remains the same
-    clone() {
-        const copy = new Lookup();
-        this._map.forEach((value, key) => {
-            value.forEach((b) => {
-                copy.add(key, (0, clonable_1.isClonable)(b) ? b.clone() : b);
-            });
-        });
-        return copy;
-    }
-    traverse(func) {
-        this._map.forEach((value, key) => {
-            func(key, value);
-        });
-    }
-    _checkNonNulish(value) {
-        if (value == null) {
-            throw new Error(ERROR_MSGS.NULL_ARGUMENT);
-        }
-    }
-    _setValue(serviceIdentifier, value) {
-        if (value.length > 0) {
-            this._map.set(serviceIdentifier, value);
-        }
-        else {
-            this._map.delete(serviceIdentifier);
-        }
-    }
-}
-exports.Lookup = Lookup;
-//# sourceMappingURL=lookup.js.map
-
-/***/ }),
-
-/***/ 8848:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ModuleActivationStore = void 0;
-const lookup_1 = __nccwpck_require__(3917);
-class ModuleActivationStore {
-    _map = new Map();
-    remove(moduleId) {
-        const handlers = this._map.get(moduleId);
-        if (handlers === undefined) {
-            return this._getEmptyHandlersStore();
-        }
-        this._map.delete(moduleId);
-        return handlers;
-    }
-    addDeactivation(moduleId, serviceIdentifier, onDeactivation) {
-        this._getModuleActivationHandlers(moduleId).onDeactivations.add(serviceIdentifier, onDeactivation);
-    }
-    addActivation(moduleId, serviceIdentifier, onActivation) {
-        this._getModuleActivationHandlers(moduleId).onActivations.add(serviceIdentifier, onActivation);
-    }
-    clone() {
-        const clone = new ModuleActivationStore();
-        this._map.forEach((handlersStore, moduleId) => {
-            clone._map.set(moduleId, {
-                onActivations: handlersStore.onActivations.clone(),
-                onDeactivations: handlersStore.onDeactivations.clone(),
-            });
-        });
-        return clone;
-    }
-    _getModuleActivationHandlers(moduleId) {
-        let moduleActivationHandlers = this._map.get(moduleId);
-        if (moduleActivationHandlers === undefined) {
-            moduleActivationHandlers = this._getEmptyHandlersStore();
-            this._map.set(moduleId, moduleActivationHandlers);
-        }
-        return moduleActivationHandlers;
-    }
-    _getEmptyHandlersStore() {
-        const handlersStore = {
-            onActivations: new lookup_1.Lookup(),
-            onDeactivations: new lookup_1.Lookup(),
-        };
-        return handlersStore;
-    }
-}
-exports.ModuleActivationStore = ModuleActivationStore;
-//# sourceMappingURL=module_activation_store.js.map
-
-/***/ }),
-
 /***/ 4871:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.multiBindToService = exports.getServiceIdentifierAsString = exports.typeConstraint = exports.namedConstraint = exports.taggedConstraint = exports.traverseAncerstors = exports.decorate = exports.id = exports.MetadataReader = exports.preDestroy = exports.postConstruct = exports.targetName = exports.multiInject = exports.unmanaged = exports.optional = exports.inject = exports.named = exports.tagged = exports.injectable = exports.createTaggedDecorator = exports.ContainerModule = exports.AsyncContainerModule = exports.TargetTypeEnum = exports.BindingTypeEnum = exports.BindingScopeEnum = exports.Container = exports.METADATA_KEY = exports.LazyServiceIdentifer = exports.LazyServiceIdentifier = void 0;
-/* eslint-disable @typescript-eslint/naming-convention */
+exports.preDestroy = exports.postConstruct = exports.tagged = exports.unmanaged = exports.optional = exports.named = exports.multiInject = exports.injectable = exports.injectFromBase = exports.inject = exports.decorate = exports.bindingTypeValues = exports.bindingScopeValues = exports.ContainerModule = exports.Container = exports.LazyServiceIdentifier = void 0;
 __nccwpck_require__(477);
-const common_1 = __nccwpck_require__(9160);
-const keys = __importStar(__nccwpck_require__(9579));
-var common_2 = __nccwpck_require__(9160);
-Object.defineProperty(exports, "LazyServiceIdentifier", ({ enumerable: true, get: function () { return common_2.LazyServiceIdentifier; } }));
-/**
- * @deprecated Use LazyServiceIdentifier instead
- */
-exports.LazyServiceIdentifer = common_1.LazyServiceIdentifier;
-// eslint-disable-next-line @typescript-eslint/typedef
-exports.METADATA_KEY = keys;
-var container_1 = __nccwpck_require__(3600);
+var common_1 = __nccwpck_require__(9160);
+Object.defineProperty(exports, "LazyServiceIdentifier", ({ enumerable: true, get: function () { return common_1.LazyServiceIdentifier; } }));
+var container_1 = __nccwpck_require__(2466);
 Object.defineProperty(exports, "Container", ({ enumerable: true, get: function () { return container_1.Container; } }));
-var literal_types_1 = __nccwpck_require__(1208);
-Object.defineProperty(exports, "BindingScopeEnum", ({ enumerable: true, get: function () { return literal_types_1.BindingScopeEnum; } }));
-Object.defineProperty(exports, "BindingTypeEnum", ({ enumerable: true, get: function () { return literal_types_1.BindingTypeEnum; } }));
-Object.defineProperty(exports, "TargetTypeEnum", ({ enumerable: true, get: function () { return literal_types_1.TargetTypeEnum; } }));
-var container_module_1 = __nccwpck_require__(7067);
-Object.defineProperty(exports, "AsyncContainerModule", ({ enumerable: true, get: function () { return container_module_1.AsyncContainerModule; } }));
-Object.defineProperty(exports, "ContainerModule", ({ enumerable: true, get: function () { return container_module_1.ContainerModule; } }));
-var decorator_utils_1 = __nccwpck_require__(7070);
-Object.defineProperty(exports, "createTaggedDecorator", ({ enumerable: true, get: function () { return decorator_utils_1.createTaggedDecorator; } }));
-var injectable_1 = __nccwpck_require__(8984);
-Object.defineProperty(exports, "injectable", ({ enumerable: true, get: function () { return injectable_1.injectable; } }));
-var tagged_1 = __nccwpck_require__(6721);
-Object.defineProperty(exports, "tagged", ({ enumerable: true, get: function () { return tagged_1.tagged; } }));
-var named_1 = __nccwpck_require__(3012);
-Object.defineProperty(exports, "named", ({ enumerable: true, get: function () { return named_1.named; } }));
-var inject_1 = __nccwpck_require__(4884);
-Object.defineProperty(exports, "inject", ({ enumerable: true, get: function () { return inject_1.inject; } }));
-var optional_1 = __nccwpck_require__(1437);
-Object.defineProperty(exports, "optional", ({ enumerable: true, get: function () { return optional_1.optional; } }));
-var unmanaged_1 = __nccwpck_require__(9981);
-Object.defineProperty(exports, "unmanaged", ({ enumerable: true, get: function () { return unmanaged_1.unmanaged; } }));
-var multi_inject_1 = __nccwpck_require__(6382);
-Object.defineProperty(exports, "multiInject", ({ enumerable: true, get: function () { return multi_inject_1.multiInject; } }));
-var target_name_1 = __nccwpck_require__(8988);
-Object.defineProperty(exports, "targetName", ({ enumerable: true, get: function () { return target_name_1.targetName; } }));
-var post_construct_1 = __nccwpck_require__(5713);
-Object.defineProperty(exports, "postConstruct", ({ enumerable: true, get: function () { return post_construct_1.postConstruct; } }));
-var pre_destroy_1 = __nccwpck_require__(8361);
-Object.defineProperty(exports, "preDestroy", ({ enumerable: true, get: function () { return pre_destroy_1.preDestroy; } }));
-var metadata_reader_1 = __nccwpck_require__(9852);
-Object.defineProperty(exports, "MetadataReader", ({ enumerable: true, get: function () { return metadata_reader_1.MetadataReader; } }));
-var id_1 = __nccwpck_require__(2036);
-Object.defineProperty(exports, "id", ({ enumerable: true, get: function () { return id_1.id; } }));
-var decorator_utils_2 = __nccwpck_require__(7070);
-Object.defineProperty(exports, "decorate", ({ enumerable: true, get: function () { return decorator_utils_2.decorate; } }));
-var constraint_helpers_1 = __nccwpck_require__(8570);
-Object.defineProperty(exports, "traverseAncerstors", ({ enumerable: true, get: function () { return constraint_helpers_1.traverseAncerstors; } }));
-Object.defineProperty(exports, "taggedConstraint", ({ enumerable: true, get: function () { return constraint_helpers_1.taggedConstraint; } }));
-Object.defineProperty(exports, "namedConstraint", ({ enumerable: true, get: function () { return constraint_helpers_1.namedConstraint; } }));
-Object.defineProperty(exports, "typeConstraint", ({ enumerable: true, get: function () { return constraint_helpers_1.typeConstraint; } }));
-var serialization_1 = __nccwpck_require__(3369);
-Object.defineProperty(exports, "getServiceIdentifierAsString", ({ enumerable: true, get: function () { return serialization_1.getServiceIdentifierAsString; } }));
-var binding_utils_1 = __nccwpck_require__(518);
-Object.defineProperty(exports, "multiBindToService", ({ enumerable: true, get: function () { return binding_utils_1.multiBindToService; } }));
+Object.defineProperty(exports, "ContainerModule", ({ enumerable: true, get: function () { return container_1.ContainerModule; } }));
+var core_1 = __nccwpck_require__(4922);
+Object.defineProperty(exports, "bindingScopeValues", ({ enumerable: true, get: function () { return core_1.bindingScopeValues; } }));
+Object.defineProperty(exports, "bindingTypeValues", ({ enumerable: true, get: function () { return core_1.bindingTypeValues; } }));
+Object.defineProperty(exports, "decorate", ({ enumerable: true, get: function () { return core_1.decorate; } }));
+Object.defineProperty(exports, "inject", ({ enumerable: true, get: function () { return core_1.inject; } }));
+Object.defineProperty(exports, "injectFromBase", ({ enumerable: true, get: function () { return core_1.injectFromBase; } }));
+Object.defineProperty(exports, "injectable", ({ enumerable: true, get: function () { return core_1.injectable; } }));
+Object.defineProperty(exports, "multiInject", ({ enumerable: true, get: function () { return core_1.multiInject; } }));
+Object.defineProperty(exports, "named", ({ enumerable: true, get: function () { return core_1.named; } }));
+Object.defineProperty(exports, "optional", ({ enumerable: true, get: function () { return core_1.optional; } }));
+Object.defineProperty(exports, "unmanaged", ({ enumerable: true, get: function () { return core_1.unmanaged; } }));
+Object.defineProperty(exports, "tagged", ({ enumerable: true, get: function () { return core_1.tagged; } }));
+Object.defineProperty(exports, "postConstruct", ({ enumerable: true, get: function () { return core_1.postConstruct; } }));
+Object.defineProperty(exports, "preDestroy", ({ enumerable: true, get: function () { return core_1.preDestroy; } }));
 //# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ 2826:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Context = void 0;
-const id_1 = __nccwpck_require__(2036);
-class Context {
-    id;
-    container;
-    plan;
-    currentRequest;
-    constructor(container) {
-        this.id = (0, id_1.id)();
-        this.container = container;
-    }
-    addPlan(plan) {
-        this.plan = plan;
-    }
-    setCurrentRequest(currentRequest) {
-        this.currentRequest = currentRequest;
-    }
-}
-exports.Context = Context;
-//# sourceMappingURL=context.js.map
-
-/***/ }),
-
-/***/ 1824:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Metadata = void 0;
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-class Metadata {
-    key;
-    value;
-    constructor(key, value) {
-        this.key = key;
-        this.value = value;
-    }
-    toString() {
-        if (this.key === METADATA_KEY.NAMED_TAG) {
-            return `named: ${String(this.value).toString()} `;
-        }
-        else {
-            return `tagged: { key:${this.key.toString()}, value: ${String(this.value)} }`;
-        }
-    }
-}
-exports.Metadata = Metadata;
-//# sourceMappingURL=metadata.js.map
-
-/***/ }),
-
-/***/ 9852:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MetadataReader = void 0;
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-class MetadataReader {
-    getConstructorMetadata(constructorFunc) {
-        // TypeScript compiler generated annotations
-        const compilerGeneratedMetadata = Reflect.getMetadata(METADATA_KEY.DESIGN_PARAM_TYPES, constructorFunc) ?? [];
-        // User generated constructor annotations
-        const userGeneratedMetadata = Reflect.getMetadata(METADATA_KEY.TAGGED, constructorFunc);
-        return {
-            compilerGeneratedMetadata,
-            userGeneratedMetadata: userGeneratedMetadata ?? {},
-        };
-    }
-    getPropertiesMetadata(constructorFunc) {
-        // User generated properties annotations
-        const userGeneratedMetadata = Reflect.getMetadata(METADATA_KEY.TAGGED_PROP, constructorFunc) ?? {};
-        return userGeneratedMetadata;
-    }
-}
-exports.MetadataReader = MetadataReader;
-//# sourceMappingURL=metadata_reader.js.map
-
-/***/ }),
-
-/***/ 6878:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Plan = void 0;
-class Plan {
-    parentContext;
-    rootRequest;
-    constructor(parentContext, rootRequest) {
-        this.parentContext = parentContext;
-        this.rootRequest = rootRequest;
-    }
-}
-exports.Plan = Plan;
-//# sourceMappingURL=plan.js.map
-
-/***/ }),
-
-/***/ 8845:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getBindingDictionary = getBindingDictionary;
-exports.plan = plan;
-exports.createMockRequest = createMockRequest;
-const core_1 = __nccwpck_require__(4922);
-const binding_count_1 = __nccwpck_require__(3995);
-const ERROR_MSGS = __importStar(__nccwpck_require__(8332));
-const literal_types_1 = __nccwpck_require__(1208);
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const exceptions_1 = __nccwpck_require__(3023);
-const serialization_1 = __nccwpck_require__(3369);
-const context_1 = __nccwpck_require__(2826);
-const metadata_1 = __nccwpck_require__(1824);
-const plan_1 = __nccwpck_require__(6878);
-const reflection_utils_1 = __nccwpck_require__(4230);
-const request_1 = __nccwpck_require__(8776);
-function getBindingDictionary(cntnr) {
-    return cntnr._bindingDictionary;
-}
-function _createTarget(targetType, serviceIdentifier, metadata) {
-    const metadataList = _getTargetMetadata(serviceIdentifier, metadata);
-    const classElementMetadata = (0, core_1.getClassElementMetadataFromLegacyMetadata)(metadataList);
-    if (classElementMetadata.kind === core_1.ClassElementMetadataKind.unmanaged) {
-        throw new Error('Unexpected metadata when creating target');
-    }
-    const target = new core_1.LegacyTargetImpl('', classElementMetadata, targetType);
-    return target;
-}
-function _getActiveBindings(metadataReader, avoidConstraints, context, parentRequest, target) {
-    let bindings = getBindings(context.container, target.serviceIdentifier);
-    let activeBindings = [];
-    // automatic binding
-    if (bindings.length === binding_count_1.BindingCount.NoBindingsAvailable &&
-        context.container.options.autoBindInjectable === true &&
-        typeof target.serviceIdentifier === 'function' &&
-        metadataReader.getConstructorMetadata(target.serviceIdentifier)
-            .compilerGeneratedMetadata) {
-        context.container.bind(target.serviceIdentifier).toSelf();
-        bindings = getBindings(context.container, target.serviceIdentifier);
-    }
-    // multiple bindings available
-    if (!avoidConstraints) {
-        // apply constraints if available to reduce the number of active bindings
-        activeBindings = bindings.filter((binding) => {
-            const request = new request_1.Request(binding.serviceIdentifier, context, parentRequest, binding, target);
-            return binding.constraint(request);
-        });
-    }
-    else {
-        // simple injection or multi-injection without constraints
-        activeBindings = bindings;
-    }
-    // validate active bindings
-    _validateActiveBindingCount(target.serviceIdentifier, activeBindings, parentRequest, target, context.container);
-    return activeBindings;
-}
-function _getTargetMetadata(serviceIdentifier, metadata) {
-    const metadataKey = metadata.isMultiInject
-        ? METADATA_KEY.MULTI_INJECT_TAG
-        : METADATA_KEY.INJECT_TAG;
-    const metadataList = [
-        new metadata_1.Metadata(metadataKey, serviceIdentifier),
-    ];
-    if (metadata.customTag !== undefined) {
-        metadataList.push(new metadata_1.Metadata(metadata.customTag.key, metadata.customTag.value));
-    }
-    if (metadata.isOptional === true) {
-        metadataList.push(new metadata_1.Metadata(METADATA_KEY.OPTIONAL_TAG, true));
-    }
-    return metadataList;
-}
-function _validateActiveBindingCount(serviceIdentifier, bindings, parentRequest, target, container) {
-    switch (bindings.length) {
-        case binding_count_1.BindingCount.NoBindingsAvailable:
-            if (target.isOptional()) {
-                return bindings;
-            }
-            else {
-                const serviceIdentifierString = (0, serialization_1.getServiceIdentifierAsString)(serviceIdentifier);
-                let msg = ERROR_MSGS.NOT_REGISTERED;
-                msg += (0, serialization_1.listMetadataForTarget)(serviceIdentifierString, target);
-                msg += (0, serialization_1.listRegisteredBindingsForServiceIdentifier)(container, serviceIdentifierString, getBindings);
-                if (parentRequest !== null) {
-                    msg += `\n${ERROR_MSGS.TRYING_TO_RESOLVE_BINDINGS((0, serialization_1.getServiceIdentifierAsString)(parentRequest.serviceIdentifier))}`;
-                }
-                throw new Error(msg);
-            }
-        case binding_count_1.BindingCount.OnlyOneBindingAvailable:
-            return bindings;
-        case binding_count_1.BindingCount.MultipleBindingsAvailable:
-        default:
-            if (!target.isArray()) {
-                const serviceIdentifierString = (0, serialization_1.getServiceIdentifierAsString)(serviceIdentifier);
-                let msg = `${ERROR_MSGS.AMBIGUOUS_MATCH} ${serviceIdentifierString}`;
-                msg += (0, serialization_1.listRegisteredBindingsForServiceIdentifier)(container, serviceIdentifierString, getBindings);
-                throw new Error(msg);
-            }
-            else {
-                return bindings;
-            }
-    }
-}
-function _createSubRequests(metadataReader, avoidConstraints, serviceIdentifier, context, parentRequest, target) {
-    let activeBindings;
-    let childRequest;
-    if (parentRequest === null) {
-        activeBindings = _getActiveBindings(metadataReader, avoidConstraints, context, null, target);
-        childRequest = new request_1.Request(serviceIdentifier, context, null, activeBindings, target);
-        const thePlan = new plan_1.Plan(context, childRequest);
-        context.addPlan(thePlan);
-    }
-    else {
-        activeBindings = _getActiveBindings(metadataReader, avoidConstraints, context, parentRequest, target);
-        childRequest = parentRequest.addChildRequest(target.serviceIdentifier, activeBindings, target);
-    }
-    activeBindings.forEach((binding) => {
-        let subChildRequest = null;
-        if (target.isArray()) {
-            subChildRequest = childRequest.addChildRequest(binding.serviceIdentifier, binding, target);
-        }
-        else {
-            if (binding.cache !== null) {
-                return;
-            }
-            subChildRequest = childRequest;
-        }
-        if (binding.type === literal_types_1.BindingTypeEnum.Instance &&
-            binding.implementationType !== null) {
-            const dependencies = (0, reflection_utils_1.getDependencies)(metadataReader, binding.implementationType);
-            if (context.container.options.skipBaseClassChecks !== true) {
-                // Throw if a derived class does not implement its constructor explicitly
-                // We do this to prevent errors when a base class (parent) has dependencies
-                // and one of the derived classes (children) has no dependencies
-                const baseClassDependencyCount = (0, reflection_utils_1.getBaseClassDependencyCount)(metadataReader, binding.implementationType);
-                if (dependencies.length < baseClassDependencyCount) {
-                    const error = ERROR_MSGS.ARGUMENTS_LENGTH_MISMATCH((0, reflection_utils_1.getFunctionName)(binding.implementationType));
-                    throw new Error(error);
-                }
-            }
-            dependencies.forEach((dependency) => {
-                _createSubRequests(metadataReader, false, dependency.serviceIdentifier, context, subChildRequest, dependency);
-            });
-        }
-    });
-}
-function getBindings(container, serviceIdentifier) {
-    let bindings = [];
-    const bindingDictionary = getBindingDictionary(container);
-    if (bindingDictionary.hasKey(serviceIdentifier)) {
-        bindings = bindingDictionary.get(serviceIdentifier);
-    }
-    else if (container.parent !== null) {
-        // recursively try to get bindings from parent container
-        bindings = getBindings(container.parent, serviceIdentifier);
-    }
-    return bindings;
-}
-function plan(metadataReader, container, targetType, serviceIdentifier, metadata, avoidConstraints = false) {
-    const context = new context_1.Context(container);
-    const target = _createTarget(targetType, serviceIdentifier, metadata);
-    try {
-        _createSubRequests(metadataReader, avoidConstraints, serviceIdentifier, context, null, target);
-        return context;
-    }
-    catch (error) {
-        if ((0, exceptions_1.isStackOverflowException)(error)) {
-            (0, serialization_1.circularDependencyToException)(context.plan.rootRequest);
-        }
-        throw error;
-    }
-}
-function createMockRequest(container, serviceIdentifier, metadata) {
-    const metadataList = _getTargetMetadata(serviceIdentifier, metadata);
-    const classElementMetadata = (0, core_1.getClassElementMetadataFromLegacyMetadata)(metadataList);
-    if (classElementMetadata.kind === core_1.ClassElementMetadataKind.unmanaged) {
-        throw new Error('Unexpected metadata when creating target');
-    }
-    const target = new core_1.LegacyTargetImpl('', classElementMetadata, 'Variable');
-    const context = new context_1.Context(container);
-    const request = new request_1.Request(serviceIdentifier, context, null, [], target);
-    return request;
-}
-//# sourceMappingURL=planner.js.map
-
-/***/ }),
-
-/***/ 4230:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getFunctionName = void 0;
-exports.getDependencies = getDependencies;
-exports.getBaseClassDependencyCount = getBaseClassDependencyCount;
-const core_1 = __nccwpck_require__(4922);
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const get_base_type_1 = __nccwpck_require__(1240);
-const serialization_1 = __nccwpck_require__(3369);
-Object.defineProperty(exports, "getFunctionName", ({ enumerable: true, get: function () { return serialization_1.getFunctionName; } }));
-function getDependencies(metadataReader, func) {
-    return (0, core_1.getTargets)(metadataReader)(func);
-}
-function getBaseClassDependencyCount(metadataReader, func) {
-    const baseConstructor = (0, get_base_type_1.getBaseType)(func);
-    if (baseConstructor === undefined || baseConstructor === Object) {
-        return 0;
-    }
-    // get targets for base class
-    const targets = (0, core_1.getTargets)(metadataReader)(baseConstructor);
-    // get unmanaged metadata
-    const metadata = targets.map((t) => t.metadata.filter((m) => m.key === METADATA_KEY.UNMANAGED_TAG));
-    // Compare the number of constructor arguments with the number of
-    // unmanaged dependencies unmanaged dependencies are not required
-    const unmanagedCount = [].concat.apply([], metadata).length;
-    const dependencyCount = targets.length - unmanagedCount;
-    if (dependencyCount > 0) {
-        return dependencyCount;
-    }
-    else {
-        return getBaseClassDependencyCount(metadataReader, baseConstructor);
-    }
-}
-//# sourceMappingURL=reflection_utils.js.map
-
-/***/ }),
-
-/***/ 8776:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Request = void 0;
-const id_1 = __nccwpck_require__(2036);
-class Request {
-    id;
-    serviceIdentifier;
-    parentContext;
-    parentRequest;
-    bindings;
-    childRequests;
-    target;
-    requestScope;
-    constructor(serviceIdentifier, parentContext, parentRequest, 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    bindings, target) {
-        this.id = (0, id_1.id)();
-        this.serviceIdentifier = serviceIdentifier;
-        this.parentContext = parentContext;
-        this.parentRequest = parentRequest;
-        this.target = target;
-        this.childRequests = [];
-        this.bindings = Array.isArray(bindings) ? bindings : [bindings];
-        // Set requestScope if Request is the root request
-        this.requestScope = parentRequest === null ? new Map() : null;
-    }
-    addChildRequest(serviceIdentifier, bindings, target) {
-        const child = new Request(serviceIdentifier, this.parentContext, this, bindings, target);
-        this.childRequests.push(child);
-        return child;
-    }
-}
-exports.Request = Request;
-//# sourceMappingURL=request.js.map
-
-/***/ }),
-
-/***/ 6927:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolveInstance = resolveInstance;
-const error_msgs_1 = __nccwpck_require__(8332);
-const literal_types_1 = __nccwpck_require__(1208);
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const async_1 = __nccwpck_require__(5345);
-function _resolveRequests(childRequests, resolveRequest) {
-    return childRequests.reduce((resolvedRequests, childRequest) => {
-        const injection = resolveRequest(childRequest);
-        const targetType = childRequest.target.type;
-        if (targetType === literal_types_1.TargetTypeEnum.ConstructorArgument) {
-            resolvedRequests.constructorInjections.push(injection);
-        }
-        else {
-            resolvedRequests.propertyRequests.push(childRequest);
-            resolvedRequests.propertyInjections.push(injection);
-        }
-        if (!resolvedRequests.isAsync) {
-            resolvedRequests.isAsync = (0, async_1.isPromiseOrContainsPromise)(injection);
-        }
-        return resolvedRequests;
-    }, {
-        constructorInjections: [],
-        isAsync: false,
-        propertyInjections: [],
-        propertyRequests: [],
-    });
-}
-function _createInstance(constr, childRequests, resolveRequest) {
-    let result;
-    if (childRequests.length > 0) {
-        const resolved = _resolveRequests(childRequests, resolveRequest);
-        const createInstanceWithInjectionsArg = {
-            ...resolved,
-            constr,
-        };
-        if (resolved.isAsync) {
-            result = createInstanceWithInjectionsAsync(createInstanceWithInjectionsArg);
-        }
-        else {
-            result = createInstanceWithInjections(createInstanceWithInjectionsArg);
-        }
-    }
-    else {
-        result = new constr();
-    }
-    return result;
-}
-function createInstanceWithInjections(args) {
-    const instance = new args.constr(...args.constructorInjections);
-    args.propertyRequests.forEach((r, index) => {
-        const property = r.target.identifier;
-        const injection = args.propertyInjections[index];
-        if (!r.target.isOptional() || injection !== undefined) {
-            instance[property] = injection;
-        }
-    });
-    return instance;
-}
-async function createInstanceWithInjectionsAsync(args) {
-    const constructorInjections = await possiblyWaitInjections(args.constructorInjections);
-    const propertyInjections = await possiblyWaitInjections(args.propertyInjections);
-    return createInstanceWithInjections({
-        ...args,
-        constructorInjections,
-        propertyInjections,
-    });
-}
-async function possiblyWaitInjections(possiblePromiseinjections) {
-    const injections = [];
-    for (const injection of possiblePromiseinjections) {
-        if (Array.isArray(injection)) {
-            injections.push(Promise.all(injection));
-        }
-        else {
-            injections.push(injection);
-        }
-    }
-    return Promise.all(injections);
-}
-function _getInstanceAfterPostConstruct(constr, result) {
-    const postConstructResult = _postConstruct(constr, result);
-    if ((0, async_1.isPromise)(postConstructResult)) {
-        return postConstructResult.then(() => result);
-    }
-    else {
-        return result;
-    }
-}
-function _postConstruct(constr, instance) {
-    if (Reflect.hasMetadata(METADATA_KEY.POST_CONSTRUCT, constr)) {
-        const data = Reflect.getMetadata(METADATA_KEY.POST_CONSTRUCT, constr);
-        try {
-            return instance[data.value]?.();
-        }
-        catch (e) {
-            if (e instanceof Error) {
-                throw new Error((0, error_msgs_1.POST_CONSTRUCT_ERROR)(constr.name, e.message));
-            }
-        }
-    }
-}
-function _validateInstanceResolution(binding, constr) {
-    if (binding.scope !== literal_types_1.BindingScopeEnum.Singleton) {
-        _throwIfHandlingDeactivation(binding, constr);
-    }
-}
-function _throwIfHandlingDeactivation(binding, constr) {
-    const scopeErrorMessage = `Class cannot be instantiated in ${binding.scope === literal_types_1.BindingScopeEnum.Request ? 'request' : 'transient'} scope.`;
-    if (typeof binding.onDeactivation === 'function') {
-        throw new Error((0, error_msgs_1.ON_DEACTIVATION_ERROR)(constr.name, scopeErrorMessage));
-    }
-    if (Reflect.hasMetadata(METADATA_KEY.PRE_DESTROY, constr)) {
-        throw new Error((0, error_msgs_1.PRE_DESTROY_ERROR)(constr.name, scopeErrorMessage));
-    }
-}
-function resolveInstance(binding, constr, childRequests, resolveRequest) {
-    _validateInstanceResolution(binding, constr);
-    const result = _createInstance(constr, childRequests, resolveRequest);
-    if ((0, async_1.isPromise)(result)) {
-        return result.then((resolvedResult) => _getInstanceAfterPostConstruct(constr, resolvedResult));
-    }
-    else {
-        return _getInstanceAfterPostConstruct(constr, result);
-    }
-}
-//# sourceMappingURL=instantiation.js.map
-
-/***/ }),
-
-/***/ 6310:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolve = resolve;
-const ERROR_MSGS = __importStar(__nccwpck_require__(8332));
-const literal_types_1 = __nccwpck_require__(1208);
-const planner_1 = __nccwpck_require__(8845);
-const scope_1 = __nccwpck_require__(5776);
-const async_1 = __nccwpck_require__(5345);
-const binding_utils_1 = __nccwpck_require__(518);
-const exceptions_1 = __nccwpck_require__(3023);
-const instantiation_1 = __nccwpck_require__(6927);
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _resolveRequest = (requestScope) => (request) => {
-    request.parentContext.setCurrentRequest(request);
-    const bindings = request.bindings;
-    const childRequests = request.childRequests;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
-    const targetIsAnArray = request.target && request.target.isArray();
-    const targetParentIsNotAnArray = !request.parentRequest ||
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
-        !request.parentRequest.target ||
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
-        !request.target ||
-        !request.parentRequest.target.matchesArray(request.target.serviceIdentifier);
-    if (targetIsAnArray && targetParentIsNotAnArray) {
-        // Create an array instead of creating an instance
-        return childRequests.map((childRequest) => {
-            const resolveRequest = _resolveRequest(requestScope);
-            return resolveRequest(childRequest);
-        });
-    }
-    else {
-        if (request.target.isOptional() && bindings.length === 0) {
-            return undefined;
-        }
-        const binding = bindings[0];
-        return _resolveBinding(requestScope, request, binding);
-    }
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _resolveFactoryFromBinding = (binding, context) => {
-    const factoryDetails = (0, binding_utils_1.getFactoryDetails)(binding);
-    return (0, exceptions_1.tryAndThrowErrorIfStackOverflow)(() => factoryDetails.factory.bind(binding)(context), () => new Error(ERROR_MSGS.CIRCULAR_DEPENDENCY_IN_FACTORY(factoryDetails.factoryType, context.currentRequest.serviceIdentifier.toString())));
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _getResolvedFromBinding = (requestScope, request, binding) => {
-    let result;
-    const childRequests = request.childRequests;
-    (0, binding_utils_1.ensureFullyBound)(binding);
-    switch (binding.type) {
-        case literal_types_1.BindingTypeEnum.ConstantValue:
-        case literal_types_1.BindingTypeEnum.Function:
-            result = binding.cache;
-            break;
-        case literal_types_1.BindingTypeEnum.Constructor:
-            result = binding.implementationType;
-            break;
-        case literal_types_1.BindingTypeEnum.Instance:
-            result = (0, instantiation_1.resolveInstance)(binding, binding.implementationType, childRequests, _resolveRequest(requestScope));
-            break;
-        default:
-            result = _resolveFactoryFromBinding(binding, request.parentContext);
-    }
-    return result;
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _resolveInScope = (requestScope, binding, resolveFromBinding) => {
-    let result = (0, scope_1.tryGetFromScope)(requestScope, binding);
-    if (result !== null) {
-        return result;
-    }
-    result = resolveFromBinding();
-    (0, scope_1.saveToScope)(requestScope, binding, result);
-    return result;
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _resolveBinding = (requestScope, request, binding) => {
-    return _resolveInScope(requestScope, binding, () => {
-        let result = _getResolvedFromBinding(requestScope, request, binding);
-        if ((0, async_1.isPromise)(result)) {
-            result = result.then((resolved) => _onActivation(request, binding, resolved));
-        }
-        else {
-            result = _onActivation(request, binding, result);
-        }
-        return result;
-    });
-};
-function _onActivation(request, binding, resolved) {
-    let result = _bindingActivation(request.parentContext, binding, resolved);
-    const containersIterator = _getContainersIterator(request.parentContext.container);
-    let container;
-    let containersIteratorResult = containersIterator.next();
-    do {
-        container = containersIteratorResult.value;
-        const context = request.parentContext;
-        const serviceIdentifier = request.serviceIdentifier;
-        const activationsIterator = _getContainerActivationsForService(container, serviceIdentifier);
-        if ((0, async_1.isPromise)(result)) {
-            result = _activateContainerAsync(activationsIterator, context, result);
-        }
-        else {
-            result = _activateContainer(activationsIterator, context, result);
-        }
-        containersIteratorResult = containersIterator.next();
-        // make sure if we are currently on the container that owns the binding, not to keep looping down to child containers
-    } while (containersIteratorResult.done !== true &&
-        !(0, planner_1.getBindingDictionary)(container).hasKey(request.serviceIdentifier));
-    return result;
-}
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _bindingActivation = (context, binding, previousResult) => {
-    let result;
-    // use activation handler if available
-    if (typeof binding.onActivation === 'function') {
-        result = binding.onActivation(context, previousResult);
-    }
-    else {
-        result = previousResult;
-    }
-    return result;
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _activateContainer = (activationsIterator, context, result) => {
-    let activation = activationsIterator.next();
-    while (activation.done !== true) {
-        result = activation.value(context, result);
-        if ((0, async_1.isPromise)(result)) {
-            return _activateContainerAsync(activationsIterator, context, result);
-        }
-        activation = activationsIterator.next();
-    }
-    return result;
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _activateContainerAsync = async (activationsIterator, context, resultPromise) => {
-    let result = await resultPromise;
-    let activation = activationsIterator.next();
-    while (activation.done !== true) {
-        result = await activation.value(context, result);
-        activation = activationsIterator.next();
-    }
-    return result;
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _getContainerActivationsForService = (container, serviceIdentifier) => {
-    // smell accessing _activations, but similar pattern is done in planner.getBindingDictionary()
-    const activations = container._activations;
-    return activations.hasKey(serviceIdentifier)
-        ? activations.get(serviceIdentifier).values()
-        : [].values();
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _getContainersIterator = (container) => {
-    const containersStack = [container];
-    let parent = container.parent;
-    while (parent !== null) {
-        containersStack.push(parent);
-        parent = parent.parent;
-    }
-    const getNextContainer = () => {
-        const nextContainer = containersStack.pop();
-        if (nextContainer !== undefined) {
-            return { done: false, value: nextContainer };
-        }
-        else {
-            return { done: true, value: undefined };
-        }
-    };
-    const containersIterator = {
-        next: getNextContainer,
-    };
-    return containersIterator;
-};
-function resolve(context) {
-    const resolveRequestFunction = _resolveRequest(context.plan.rootRequest.requestScope);
-    return resolveRequestFunction(context.plan.rootRequest);
-}
-//# sourceMappingURL=resolver.js.map
-
-/***/ }),
-
-/***/ 5776:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.saveToScope = exports.tryGetFromScope = void 0;
-const literal_types_1 = __nccwpck_require__(1208);
-const async_1 = __nccwpck_require__(5345);
-const tryGetFromScope = (requestScope, binding) => {
-    if (binding.scope === literal_types_1.BindingScopeEnum.Singleton && binding.activated) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return binding.cache;
-    }
-    if (binding.scope === literal_types_1.BindingScopeEnum.Request &&
-        requestScope.has(binding.id)) {
-        return requestScope.get(binding.id);
-    }
-    return null;
-};
-exports.tryGetFromScope = tryGetFromScope;
-const saveToScope = (requestScope, binding, result) => {
-    if (binding.scope === literal_types_1.BindingScopeEnum.Singleton) {
-        _saveToSingletonScope(binding, result);
-    }
-    if (binding.scope === literal_types_1.BindingScopeEnum.Request) {
-        _saveToRequestScope(requestScope, binding, result);
-    }
-};
-exports.saveToScope = saveToScope;
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _saveToRequestScope = (requestScope, binding, result) => {
-    if (!requestScope.has(binding.id)) {
-        requestScope.set(binding.id, result);
-    }
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _saveToSingletonScope = (binding, result) => {
-    // store in cache if scope is singleton
-    binding.cache = result;
-    binding.activated = true;
-    if ((0, async_1.isPromise)(result)) {
-        void _saveAsyncResultToSingletonScope(binding, result);
-    }
-};
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const _saveAsyncResultToSingletonScope = async (binding, asyncResult) => {
-    try {
-        const result = await asyncResult;
-        binding.cache = result;
-    }
-    catch (ex) {
-        // allow binding to retry in future
-        binding.cache = null;
-        binding.activated = false;
-        throw ex;
-    }
-};
-//# sourceMappingURL=scope.js.map
-
-/***/ }),
-
-/***/ 8522:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BindingInSyntax = void 0;
-const literal_types_1 = __nccwpck_require__(1208);
-const binding_when_on_syntax_1 = __nccwpck_require__(1323);
-class BindingInSyntax {
-    _binding;
-    constructor(binding) {
-        this._binding = binding;
-    }
-    inRequestScope() {
-        this._binding.scope = literal_types_1.BindingScopeEnum.Request;
-        return new binding_when_on_syntax_1.BindingWhenOnSyntax(this._binding);
-    }
-    inSingletonScope() {
-        this._binding.scope = literal_types_1.BindingScopeEnum.Singleton;
-        return new binding_when_on_syntax_1.BindingWhenOnSyntax(this._binding);
-    }
-    inTransientScope() {
-        this._binding.scope = literal_types_1.BindingScopeEnum.Transient;
-        return new binding_when_on_syntax_1.BindingWhenOnSyntax(this._binding);
-    }
-}
-exports.BindingInSyntax = BindingInSyntax;
-//# sourceMappingURL=binding_in_syntax.js.map
-
-/***/ }),
-
-/***/ 6279:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BindingInWhenOnSyntax = void 0;
-const binding_in_syntax_1 = __nccwpck_require__(8522);
-const binding_on_syntax_1 = __nccwpck_require__(60);
-const binding_when_syntax_1 = __nccwpck_require__(5595);
-class BindingInWhenOnSyntax {
-    _bindingInSyntax;
-    _bindingWhenSyntax;
-    _bindingOnSyntax;
-    _binding;
-    constructor(binding) {
-        this._binding = binding;
-        this._bindingWhenSyntax = new binding_when_syntax_1.BindingWhenSyntax(this._binding);
-        this._bindingOnSyntax = new binding_on_syntax_1.BindingOnSyntax(this._binding);
-        this._bindingInSyntax = new binding_in_syntax_1.BindingInSyntax(binding);
-    }
-    inRequestScope() {
-        return this._bindingInSyntax.inRequestScope();
-    }
-    inSingletonScope() {
-        return this._bindingInSyntax.inSingletonScope();
-    }
-    inTransientScope() {
-        return this._bindingInSyntax.inTransientScope();
-    }
-    when(constraint) {
-        return this._bindingWhenSyntax.when(constraint);
-    }
-    whenTargetNamed(name) {
-        return this._bindingWhenSyntax.whenTargetNamed(name);
-    }
-    whenTargetIsDefault() {
-        return this._bindingWhenSyntax.whenTargetIsDefault();
-    }
-    whenTargetTagged(tag, value) {
-        return this._bindingWhenSyntax.whenTargetTagged(tag, value);
-    }
-    whenInjectedInto(parent) {
-        return this._bindingWhenSyntax.whenInjectedInto(parent);
-    }
-    whenParentNamed(name) {
-        return this._bindingWhenSyntax.whenParentNamed(name);
-    }
-    whenParentTagged(tag, value) {
-        return this._bindingWhenSyntax.whenParentTagged(tag, value);
-    }
-    whenAnyAncestorIs(ancestor) {
-        return this._bindingWhenSyntax.whenAnyAncestorIs(ancestor);
-    }
-    whenNoAncestorIs(ancestor) {
-        return this._bindingWhenSyntax.whenNoAncestorIs(ancestor);
-    }
-    whenAnyAncestorNamed(name) {
-        return this._bindingWhenSyntax.whenAnyAncestorNamed(name);
-    }
-    whenAnyAncestorTagged(tag, value) {
-        return this._bindingWhenSyntax.whenAnyAncestorTagged(tag, value);
-    }
-    whenNoAncestorNamed(name) {
-        return this._bindingWhenSyntax.whenNoAncestorNamed(name);
-    }
-    whenNoAncestorTagged(tag, value) {
-        return this._bindingWhenSyntax.whenNoAncestorTagged(tag, value);
-    }
-    whenAnyAncestorMatches(constraint) {
-        return this._bindingWhenSyntax.whenAnyAncestorMatches(constraint);
-    }
-    whenNoAncestorMatches(constraint) {
-        return this._bindingWhenSyntax.whenNoAncestorMatches(constraint);
-    }
-    onActivation(handler) {
-        return this._bindingOnSyntax.onActivation(handler);
-    }
-    onDeactivation(handler) {
-        return this._bindingOnSyntax.onDeactivation(handler);
-    }
-}
-exports.BindingInWhenOnSyntax = BindingInWhenOnSyntax;
-//# sourceMappingURL=binding_in_when_on_syntax.js.map
-
-/***/ }),
-
-/***/ 60:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BindingOnSyntax = void 0;
-const binding_when_syntax_1 = __nccwpck_require__(5595);
-class BindingOnSyntax {
-    _binding;
-    constructor(binding) {
-        this._binding = binding;
-    }
-    onActivation(handler) {
-        this._binding.onActivation = handler;
-        return new binding_when_syntax_1.BindingWhenSyntax(this._binding);
-    }
-    onDeactivation(handler) {
-        this._binding.onDeactivation = handler;
-        return new binding_when_syntax_1.BindingWhenSyntax(this._binding);
-    }
-}
-exports.BindingOnSyntax = BindingOnSyntax;
-//# sourceMappingURL=binding_on_syntax.js.map
-
-/***/ }),
-
-/***/ 3952:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BindingToSyntax = void 0;
-const ERROR_MSGS = __importStar(__nccwpck_require__(8332));
-const literal_types_1 = __nccwpck_require__(1208);
-const binding_in_when_on_syntax_1 = __nccwpck_require__(6279);
-const binding_when_on_syntax_1 = __nccwpck_require__(1323);
-class BindingToSyntax {
-    // TODO: Implement an internal type `_BindingToSyntax<T>` wherein this member
-    // can be public. Let `BindingToSyntax<T>` be the presentational type that
-    // depends on it, and does not expose this member as public.
-    _binding;
-    constructor(binding) {
-        this._binding = binding;
-    }
-    to(constructor) {
-        this._binding.type = literal_types_1.BindingTypeEnum.Instance;
-        this._binding.implementationType = constructor;
-        return new binding_in_when_on_syntax_1.BindingInWhenOnSyntax(this._binding);
-    }
-    toSelf() {
-        if (typeof this._binding.serviceIdentifier !== 'function') {
-            throw new Error(ERROR_MSGS.INVALID_TO_SELF_VALUE);
-        }
-        const self = this._binding
-            .serviceIdentifier;
-        return this.to(self);
-    }
-    toConstantValue(value) {
-        this._binding.type = literal_types_1.BindingTypeEnum.ConstantValue;
-        this._binding.cache = value;
-        this._binding.dynamicValue = null;
-        this._binding.implementationType = null;
-        this._binding.scope = literal_types_1.BindingScopeEnum.Singleton;
-        return new binding_when_on_syntax_1.BindingWhenOnSyntax(this._binding);
-    }
-    toDynamicValue(func) {
-        this._binding.type = literal_types_1.BindingTypeEnum.DynamicValue;
-        this._binding.cache = null;
-        this._binding.dynamicValue = func;
-        this._binding.implementationType = null;
-        return new binding_in_when_on_syntax_1.BindingInWhenOnSyntax(this._binding);
-    }
-    toConstructor(constructor) {
-        this._binding.type = literal_types_1.BindingTypeEnum.Constructor;
-        this._binding.implementationType = constructor;
-        this._binding.scope = literal_types_1.BindingScopeEnum.Singleton;
-        return new binding_when_on_syntax_1.BindingWhenOnSyntax(this._binding);
-    }
-    toFactory(factory) {
-        this._binding.type = literal_types_1.BindingTypeEnum.Factory;
-        this._binding.factory = factory;
-        this._binding.scope = literal_types_1.BindingScopeEnum.Singleton;
-        return new binding_when_on_syntax_1.BindingWhenOnSyntax(this._binding);
-    }
-    toFunction(func) {
-        // toFunction is an alias of toConstantValue
-        if (typeof func !== 'function') {
-            throw new Error(ERROR_MSGS.INVALID_FUNCTION_BINDING);
-        }
-        const bindingWhenOnSyntax = this.toConstantValue(func);
-        this._binding.type = literal_types_1.BindingTypeEnum.Function;
-        this._binding.scope = literal_types_1.BindingScopeEnum.Singleton;
-        return bindingWhenOnSyntax;
-    }
-    toAutoFactory(serviceIdentifier) {
-        this._binding.type = literal_types_1.BindingTypeEnum.Factory;
-        this._binding.factory = (context) => {
-            const autofactory = () => context.container.get(serviceIdentifier);
-            return autofactory;
-        };
-        this._binding.scope = literal_types_1.BindingScopeEnum.Singleton;
-        return new binding_when_on_syntax_1.BindingWhenOnSyntax(this._binding);
-    }
-    toAutoNamedFactory(serviceIdentifier) {
-        this._binding.type = literal_types_1.BindingTypeEnum.Factory;
-        this._binding.factory = (context) => {
-            return (named) => context.container.getNamed(serviceIdentifier, named);
-        };
-        return new binding_when_on_syntax_1.BindingWhenOnSyntax(this._binding);
-    }
-    toProvider(provider) {
-        this._binding.type = literal_types_1.BindingTypeEnum.Provider;
-        this._binding.provider = provider;
-        this._binding.scope = literal_types_1.BindingScopeEnum.Singleton;
-        return new binding_when_on_syntax_1.BindingWhenOnSyntax(this._binding);
-    }
-    toService(service) {
-        this._binding.type = literal_types_1.BindingTypeEnum.DynamicValue;
-        // Service bindings should never ever be cached. This is just a workaround to achieve that. A better design should replace this approach.
-        Object.defineProperty(this._binding, 'cache', {
-            configurable: true,
-            enumerable: true,
-            get() {
-                return null;
-            },
-            set(_value) { },
-        });
-        this._binding.dynamicValue = (context) => {
-            try {
-                return context.container.get(service);
-            }
-            catch (_error) {
-                // This is a performance degradation in this edge case, we do need to improve the internal resolution architecture in order to solve this properly.
-                return context.container.getAsync(service);
-            }
-        };
-        this._binding.implementationType = null;
-    }
-}
-exports.BindingToSyntax = BindingToSyntax;
-//# sourceMappingURL=binding_to_syntax.js.map
-
-/***/ }),
-
-/***/ 1323:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BindingWhenOnSyntax = void 0;
-const binding_on_syntax_1 = __nccwpck_require__(60);
-const binding_when_syntax_1 = __nccwpck_require__(5595);
-class BindingWhenOnSyntax {
-    _bindingWhenSyntax;
-    _bindingOnSyntax;
-    _binding;
-    constructor(binding) {
-        this._binding = binding;
-        this._bindingWhenSyntax = new binding_when_syntax_1.BindingWhenSyntax(this._binding);
-        this._bindingOnSyntax = new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    when(constraint) {
-        return this._bindingWhenSyntax.when(constraint);
-    }
-    whenTargetNamed(name) {
-        return this._bindingWhenSyntax.whenTargetNamed(name);
-    }
-    whenTargetIsDefault() {
-        return this._bindingWhenSyntax.whenTargetIsDefault();
-    }
-    whenTargetTagged(tag, value) {
-        return this._bindingWhenSyntax.whenTargetTagged(tag, value);
-    }
-    whenInjectedInto(parent) {
-        return this._bindingWhenSyntax.whenInjectedInto(parent);
-    }
-    whenParentNamed(name) {
-        return this._bindingWhenSyntax.whenParentNamed(name);
-    }
-    whenParentTagged(tag, value) {
-        return this._bindingWhenSyntax.whenParentTagged(tag, value);
-    }
-    whenAnyAncestorIs(ancestor) {
-        return this._bindingWhenSyntax.whenAnyAncestorIs(ancestor);
-    }
-    whenNoAncestorIs(ancestor) {
-        return this._bindingWhenSyntax.whenNoAncestorIs(ancestor);
-    }
-    whenAnyAncestorNamed(name) {
-        return this._bindingWhenSyntax.whenAnyAncestorNamed(name);
-    }
-    whenAnyAncestorTagged(tag, value) {
-        return this._bindingWhenSyntax.whenAnyAncestorTagged(tag, value);
-    }
-    whenNoAncestorNamed(name) {
-        return this._bindingWhenSyntax.whenNoAncestorNamed(name);
-    }
-    whenNoAncestorTagged(tag, value) {
-        return this._bindingWhenSyntax.whenNoAncestorTagged(tag, value);
-    }
-    whenAnyAncestorMatches(constraint) {
-        return this._bindingWhenSyntax.whenAnyAncestorMatches(constraint);
-    }
-    whenNoAncestorMatches(constraint) {
-        return this._bindingWhenSyntax.whenNoAncestorMatches(constraint);
-    }
-    onActivation(handler) {
-        return this._bindingOnSyntax.onActivation(handler);
-    }
-    onDeactivation(handler) {
-        return this._bindingOnSyntax.onDeactivation(handler);
-    }
-}
-exports.BindingWhenOnSyntax = BindingWhenOnSyntax;
-//# sourceMappingURL=binding_when_on_syntax.js.map
-
-/***/ }),
-
-/***/ 5595:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BindingWhenSyntax = void 0;
-const binding_on_syntax_1 = __nccwpck_require__(60);
-const constraint_helpers_1 = __nccwpck_require__(8570);
-class BindingWhenSyntax {
-    _binding;
-    constructor(binding) {
-        this._binding = binding;
-    }
-    when(constraint) {
-        this._binding.constraint = constraint;
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenTargetNamed(name) {
-        this._binding.constraint = (0, constraint_helpers_1.namedConstraint)(name);
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenTargetIsDefault() {
-        this._binding.constraint = (request) => {
-            if (request === null) {
-                return false;
-            }
-            const targetIsDefault = 
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            request.target !== null &&
-                !request.target.isNamed() &&
-                !request.target.isTagged();
-            return targetIsDefault;
-        };
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenTargetTagged(tag, value) {
-        this._binding.constraint = (0, constraint_helpers_1.taggedConstraint)(tag)(value);
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenInjectedInto(parent) {
-        this._binding.constraint = (request) => request !== null && (0, constraint_helpers_1.typeConstraint)(parent)(request.parentRequest);
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenParentNamed(name) {
-        this._binding.constraint = (request) => request !== null && (0, constraint_helpers_1.namedConstraint)(name)(request.parentRequest);
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenParentTagged(tag, value) {
-        this._binding.constraint = (request) => request !== null && (0, constraint_helpers_1.taggedConstraint)(tag)(value)(request.parentRequest);
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenAnyAncestorIs(ancestor) {
-        this._binding.constraint = (request) => request !== null && (0, constraint_helpers_1.traverseAncerstors)(request, (0, constraint_helpers_1.typeConstraint)(ancestor));
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenNoAncestorIs(ancestor) {
-        this._binding.constraint = (request) => request !== null &&
-            !(0, constraint_helpers_1.traverseAncerstors)(request, (0, constraint_helpers_1.typeConstraint)(ancestor));
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenAnyAncestorNamed(name) {
-        this._binding.constraint = (request) => request !== null && (0, constraint_helpers_1.traverseAncerstors)(request, (0, constraint_helpers_1.namedConstraint)(name));
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenNoAncestorNamed(name) {
-        this._binding.constraint = (request) => request !== null && !(0, constraint_helpers_1.traverseAncerstors)(request, (0, constraint_helpers_1.namedConstraint)(name));
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenAnyAncestorTagged(tag, value) {
-        this._binding.constraint = (request) => request !== null &&
-            (0, constraint_helpers_1.traverseAncerstors)(request, (0, constraint_helpers_1.taggedConstraint)(tag)(value));
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenNoAncestorTagged(tag, value) {
-        this._binding.constraint = (request) => request !== null &&
-            !(0, constraint_helpers_1.traverseAncerstors)(request, (0, constraint_helpers_1.taggedConstraint)(tag)(value));
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenAnyAncestorMatches(constraint) {
-        this._binding.constraint = (request) => request !== null &&
-            (0, constraint_helpers_1.traverseAncerstors)(request, constraint);
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-    whenNoAncestorMatches(constraint) {
-        this._binding.constraint = (request) => request !== null &&
-            !(0, constraint_helpers_1.traverseAncerstors)(request, constraint);
-        return new binding_on_syntax_1.BindingOnSyntax(this._binding);
-    }
-}
-exports.BindingWhenSyntax = BindingWhenSyntax;
-//# sourceMappingURL=binding_when_syntax.js.map
-
-/***/ }),
-
-/***/ 8570:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.typeConstraint = exports.namedConstraint = exports.taggedConstraint = exports.traverseAncerstors = void 0;
-const METADATA_KEY = __importStar(__nccwpck_require__(9579));
-const metadata_1 = __nccwpck_require__(1824);
-const traverseAncerstors = (request, constraint) => {
-    const parent = request.parentRequest;
-    if (parent !== null) {
-        return constraint(parent) ? true : traverseAncerstors(parent, constraint);
-    }
-    else {
-        return false;
-    }
-};
-exports.traverseAncerstors = traverseAncerstors;
-// This helpers use currying to help you to generate constraints
-const taggedConstraint = (key) => (value) => {
-    const constraint = (request) => request !== null &&
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        request.target !== null &&
-        request.target.matchesTag(key)(value);
-    constraint.metaData = new metadata_1.Metadata(key, value);
-    return constraint;
-};
-exports.taggedConstraint = taggedConstraint;
-const namedConstraint = taggedConstraint(METADATA_KEY.NAMED_TAG);
-exports.namedConstraint = namedConstraint;
-const typeConstraint = (type) => (request) => {
-    // Using index 0 because constraints are applied
-    // to one binding at a time (see Planner class)
-    let binding = null;
-    if (request !== null) {
-        binding = request.bindings[0];
-        if (typeof type === 'string') {
-            return binding.serviceIdentifier === type;
-        }
-        else {
-            const constructor = request.bindings[0].implementationType;
-            return type === constructor;
-        }
-    }
-    return false;
-};
-exports.typeConstraint = typeConstraint;
-//# sourceMappingURL=constraint_helpers.js.map
-
-/***/ }),
-
-/***/ 5345:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isPromise = isPromise;
-exports.isPromiseOrContainsPromise = isPromiseOrContainsPromise;
-function isPromise(object) {
-    const isObjectOrFunction = (typeof object === 'object' && object !== null) ||
-        typeof object === 'function';
-    return (isObjectOrFunction && typeof object.then === 'function');
-}
-function isPromiseOrContainsPromise(object) {
-    if (isPromise(object)) {
-        return true;
-    }
-    return Array.isArray(object) && object.some(isPromise);
-}
-//# sourceMappingURL=async.js.map
-
-/***/ }),
-
-/***/ 518:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getFactoryDetails = exports.ensureFullyBound = exports.multiBindToService = void 0;
-const ERROR_MSGS = __importStar(__nccwpck_require__(8332));
-const literal_types_1 = __nccwpck_require__(1208);
-const serialization_1 = __nccwpck_require__(3369);
-const factory_type_1 = __nccwpck_require__(1602);
-const multiBindToService = (container) => (service) => (...types) => {
-    types.forEach((t) => {
-        container.bind(t).toService(service);
-    });
-};
-exports.multiBindToService = multiBindToService;
-const ensureFullyBound = (binding) => {
-    let boundValue = null;
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
-    switch (binding.type) {
-        case literal_types_1.BindingTypeEnum.ConstantValue:
-        case literal_types_1.BindingTypeEnum.Function:
-            boundValue = binding.cache;
-            break;
-        case literal_types_1.BindingTypeEnum.Constructor:
-        case literal_types_1.BindingTypeEnum.Instance:
-            boundValue = binding.implementationType;
-            break;
-        case literal_types_1.BindingTypeEnum.DynamicValue:
-            boundValue = binding.dynamicValue;
-            break;
-        case literal_types_1.BindingTypeEnum.Provider:
-            boundValue = binding.provider;
-            break;
-        case literal_types_1.BindingTypeEnum.Factory:
-            boundValue = binding.factory;
-            break;
-    }
-    if (boundValue === null) {
-        // The user probably created a binding but didn't finish it
-        // e.g. container.bind<T>('Something'); missing BindingToSyntax
-        const serviceIdentifierAsString = (0, serialization_1.getServiceIdentifierAsString)(binding.serviceIdentifier);
-        throw new Error(`${ERROR_MSGS.INVALID_BINDING_TYPE} ${serviceIdentifierAsString}`);
-    }
-};
-exports.ensureFullyBound = ensureFullyBound;
-const getFactoryDetails = (binding) => {
-    switch (binding.type) {
-        case literal_types_1.BindingTypeEnum.Factory:
-            return { factory: binding.factory, factoryType: factory_type_1.FactoryType.Factory };
-        case literal_types_1.BindingTypeEnum.Provider:
-            return { factory: binding.provider, factoryType: factory_type_1.FactoryType.Provider };
-        case literal_types_1.BindingTypeEnum.DynamicValue:
-            return {
-                factory: binding.dynamicValue,
-                factoryType: factory_type_1.FactoryType.DynamicValue,
-            };
-        default:
-            throw new Error(`Unexpected factory type ${binding.type}`);
-    }
-};
-exports.getFactoryDetails = getFactoryDetails;
-//# sourceMappingURL=binding_utils.js.map
-
-/***/ }),
-
-/***/ 8423:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isClonable = isClonable;
-function isClonable(obj) {
-    return (typeof obj === 'object' &&
-        obj !== null &&
-        'clone' in obj &&
-        typeof obj.clone === 'function');
-}
-//# sourceMappingURL=clonable.js.map
-
-/***/ }),
-
-/***/ 3023:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.tryAndThrowErrorIfStackOverflow = void 0;
-exports.isStackOverflowException = isStackOverflowException;
-const ERROR_MSGS = __importStar(__nccwpck_require__(8332));
-function isStackOverflowException(error) {
-    return (error instanceof RangeError ||
-        error.message === ERROR_MSGS.STACK_OVERFLOW);
-}
-const tryAndThrowErrorIfStackOverflow = (fn, errorCallback) => {
-    try {
-        return fn();
-    }
-    catch (error) {
-        if (isStackOverflowException(error)) {
-            throw errorCallback();
-        }
-        throw error;
-    }
-};
-exports.tryAndThrowErrorIfStackOverflow = tryAndThrowErrorIfStackOverflow;
-//# sourceMappingURL=exceptions.js.map
-
-/***/ }),
-
-/***/ 1602:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FactoryType = void 0;
-var FactoryType;
-(function (FactoryType) {
-    FactoryType["DynamicValue"] = "toDynamicValue";
-    FactoryType["Factory"] = "toFactory";
-    FactoryType["Provider"] = "toProvider";
-})(FactoryType || (exports.FactoryType = FactoryType = {}));
-//# sourceMappingURL=factory_type.js.map
-
-/***/ }),
-
-/***/ 1240:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getBaseType = getBaseType;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-function getBaseType(type) {
-    const prototype = Object.getPrototypeOf(type.prototype);
-    const baseType = prototype?.constructor;
-    return baseType;
-}
-//# sourceMappingURL=get_base_type.js.map
-
-/***/ }),
-
-/***/ 2036:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.id = id;
-let idCounter = 0;
-function id() {
-    return idCounter++;
-}
-//# sourceMappingURL=id.js.map
-
-/***/ }),
-
-/***/ 106:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getFirstArrayDuplicate = getFirstArrayDuplicate;
-function getFirstArrayDuplicate(array) {
-    const seenValues = new Set();
-    for (const entry of array) {
-        if (seenValues.has(entry)) {
-            return entry;
-        }
-        else {
-            seenValues.add(entry);
-        }
-    }
-    return undefined;
-}
-//# sourceMappingURL=js.js.map
-
-/***/ }),
-
-/***/ 3369:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getFunctionName = getFunctionName;
-exports.getServiceIdentifierAsString = getServiceIdentifierAsString;
-exports.listRegisteredBindingsForServiceIdentifier = listRegisteredBindingsForServiceIdentifier;
-exports.listMetadataForTarget = listMetadataForTarget;
-exports.circularDependencyToException = circularDependencyToException;
-exports.getSymbolDescription = getSymbolDescription;
-const ERROR_MSGS = __importStar(__nccwpck_require__(8332));
-function getServiceIdentifierAsString(serviceIdentifier) {
-    if (typeof serviceIdentifier === 'function') {
-        return serviceIdentifier.name;
-    }
-    else if (typeof serviceIdentifier === 'symbol') {
-        return serviceIdentifier.toString();
-    }
-    else {
-        return serviceIdentifier;
-    }
-}
-function listRegisteredBindingsForServiceIdentifier(container, serviceIdentifier, getBindings) {
-    let registeredBindingsList = '';
-    const registeredBindings = getBindings(container, serviceIdentifier);
-    if (registeredBindings.length !== 0) {
-        registeredBindingsList = '\nRegistered bindings:';
-        registeredBindings.forEach((binding) => {
-            // Use 'Object as name of constant value injections'
-            let name = 'Object';
-            // Use function name if available
-            if (binding.implementationType !== null) {
-                name = getFunctionName(binding.implementationType);
-            }
-            registeredBindingsList = `${registeredBindingsList}\n ${name}`;
-            if (binding.constraint.metaData) {
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
-                registeredBindingsList = `${registeredBindingsList} - ${binding.constraint.metaData}`;
-            }
-        });
-    }
-    return registeredBindingsList;
-}
-function alreadyDependencyChain(request, serviceIdentifier) {
-    if (request.parentRequest === null) {
-        return false;
-    }
-    else if (request.parentRequest.serviceIdentifier === serviceIdentifier) {
-        return true;
-    }
-    else {
-        return alreadyDependencyChain(request.parentRequest, serviceIdentifier);
-    }
-}
-function dependencyChainToString(request) {
-    function _createStringArr(req, result = []) {
-        const serviceIdentifier = getServiceIdentifierAsString(req.serviceIdentifier);
-        result.push(serviceIdentifier);
-        if (req.parentRequest !== null) {
-            return _createStringArr(req.parentRequest, result);
-        }
-        return result;
-    }
-    const stringArr = _createStringArr(request);
-    return stringArr.reverse().join(' --> ');
-}
-function circularDependencyToException(request) {
-    request.childRequests.forEach((childRequest) => {
-        if (alreadyDependencyChain(request, childRequest.serviceIdentifier)) {
-            const services = dependencyChainToString(childRequest);
-            throw new Error(`${ERROR_MSGS.CIRCULAR_DEPENDENCY} ${services}`);
-        }
-        else {
-            circularDependencyToException(childRequest);
-        }
-    });
-}
-function listMetadataForTarget(serviceIdentifierString, target) {
-    if (target.isTagged() || target.isNamed()) {
-        let m = '';
-        const namedTag = target.getNamedTag();
-        const otherTags = target.getCustomTags();
-        if (namedTag !== null) {
-            m += stringifyMetadata(namedTag) + '\n';
-        }
-        if (otherTags !== null) {
-            otherTags.forEach((tag) => {
-                m += stringifyMetadata(tag) + '\n';
-            });
-        }
-        return ` ${serviceIdentifierString}\n ${serviceIdentifierString} - ${m}`;
-    }
-    else {
-        return ` ${serviceIdentifierString}`;
-    }
-}
-function getFunctionName(func) {
-    if (func.name != null && func.name !== '') {
-        return func.name;
-    }
-    else {
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string
-        const name = func.toString();
-        const match = name.match(/^function\s*([^\s(]+)/);
-        return match === null
-            ? `Anonymous function: ${name}`
-            : match[1];
-    }
-}
-function getSymbolDescription(symbol) {
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    return symbol.toString().slice(7, -1);
-}
-function stringifyMetadata(metadata) {
-    return `{"key":"${metadata.key.toString()}","value":"${metadata.value.toString()}"}`;
-}
-//# sourceMappingURL=serialization.js.map
 
 /***/ }),
 
