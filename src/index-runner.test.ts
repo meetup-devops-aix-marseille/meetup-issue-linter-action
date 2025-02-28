@@ -18,8 +18,10 @@ describe("run", () => {
   let linterServiceMock: MockProxy<LinterService>;
   let coreServiceMock: MockProxy<CoreService>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+
+    container.snapshot();
 
     setFailedMock = jest.spyOn(core, "setFailed").mockImplementation();
     inputServiceMock = mock<InputService>();
@@ -28,11 +30,20 @@ describe("run", () => {
     linterServiceMock = mock<LinterService>();
     coreServiceMock = mock<CoreService>();
 
-    container.rebind(InputService).toConstantValue(inputServiceMock);
-    container.rebind(LoggerService).toConstantValue(loggerServiceMock);
-    container.rebind(MeetupIssueService).toConstantValue(meetupIssueServiceMock);
-    container.rebind(LinterService).toConstantValue(linterServiceMock);
-    container.rebind<CoreService>(CORE_SERVICE_IDENTIFIER).toConstantValue(coreServiceMock);
+    await container.unbind(InputService);
+    container.bind(InputService).toConstantValue(inputServiceMock);
+    await container.unbind(LoggerService);
+    container.bind(LoggerService).toConstantValue(loggerServiceMock);
+    await container.unbind(MeetupIssueService);
+    container.bind(MeetupIssueService).toConstantValue(meetupIssueServiceMock);
+    await container.unbind(LinterService);
+    container.bind(LinterService).toConstantValue(linterServiceMock);
+    await container.unbind(CORE_SERVICE_IDENTIFIER);
+    container.bind<CoreService>(CORE_SERVICE_IDENTIFIER).toConstantValue(coreServiceMock);
+  });
+
+  afterEach(() => {
+    container.restore();
   });
 
   it("should lint given issue", async () => {

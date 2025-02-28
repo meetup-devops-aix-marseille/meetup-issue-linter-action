@@ -13,7 +13,7 @@ describe("index", () => {
   let meetupIssueServiceMock: MockProxy<MeetupIssueService>;
   let linterServiceMock: MockProxy<LinterService>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     setFailedMock = jest.spyOn(core, "setFailed").mockImplementation();
@@ -22,10 +22,20 @@ describe("index", () => {
     meetupIssueServiceMock = mock<MeetupIssueService>();
     linterServiceMock = mock<LinterService>();
 
-    container.rebind(InputService).toConstantValue(inputServiceMock);
-    container.rebind(LoggerService).toConstantValue(loggerServiceMock);
-    container.rebind(MeetupIssueService).toConstantValue(meetupIssueServiceMock);
-    container.rebind(LinterService).toConstantValue(linterServiceMock);
+    container.snapshot();
+
+    await container.unbind(InputService);
+    container.bind(InputService).toConstantValue(inputServiceMock);
+    await container.unbind(LoggerService);
+    container.bind(LoggerService).toConstantValue(loggerServiceMock);
+    await container.unbind(MeetupIssueService);
+    container.bind(MeetupIssueService).toConstantValue(meetupIssueServiceMock);
+    await container.unbind(LinterService);
+    container.bind(LinterService).toConstantValue(linterServiceMock);
+  });
+
+  afterEach(() => {
+    container.restore();
   });
 
   it("calls run when imported without failure", async () => {
