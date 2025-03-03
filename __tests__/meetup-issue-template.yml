@@ -1,115 +1,120 @@
-name: Meetup
-description: Gather meetup event organization data
-title: "[Meetup]"
-labels:
-  - meetup
-body:
-  - type: input
-    id: event_title
-    attributes:
-      label: Event Title
-      description: Provide the title of the event
-      placeholder: Enter the event title
-  - type: input
-    id: event_date
-    attributes:
-      label: Event date
-      description: |
-        Specify the proposed date for the event.
-        Format: YYYY-MM-DD
-      placeholder: YYYY-MM-DD
-  - type: dropdown
-    id: hoster
-    attributes:
-      label: Hosting
-      description: Pick a hoster
-      options:
-        - EasyPartner
-        - Sept Lieues
-        - Axians Communication & Cloud Aix
-        - FGTECH
-        - Softway medical
-        - Free Pro
-        - La Briqueterie
-        - Devoteam
-        - SmartTribune
-        - OnePoint
-        - Linxo
-        - Squad
-        - Doinsport
-        - Numbr Marseille
-        - La plateforme
-        - Smile
-        - TheCamp
-  - type: textarea
-    id: event_description
-    attributes:
-      label: Event Description
-      description: Short describe the event
-  - type: textarea
-    id: agenda
-    attributes:
-      label: Agenda
-      description: Outline the schedule and topics to be discussed
-      placeholder: |
-        - <speaker_1>: <talk_description_1>
-        - <speaker_2>: <talk_description_2>
-  - type: input
-    id: meetup_link
-    attributes:
-      label: Meetup Link
-      description: Provide the link to the Meetup event page
-      placeholder: https://www.meetup.com/fr-FR/devops-aix-marseille/events/xxxxxxx
-  - type: input
-    id: drive_link
-    attributes:
-      label: Drive Link
-      description: Provide the link to the Google Drive folder
-      placeholder: https://drive.google.com/drive/folders/xxxxxxxxxxxxxxxxxxxx
-  - type: checkboxes
-    id: slides
-    attributes:
-      label: Slides & Content
-      description: Check items for slides and event content
-      options:
-        - label: Basic Slides
-        - label: Announcements / surveys / news etc...
-        - label: Slides hosting
-        - label: Slides speaker(s)
-        - label: Kahoot / Game
-  - type: checkboxes
-    id: communication
-    attributes:
-      label: Communication
-      description: Select communication items to be prepared
-      options:
-        - label: Announcement
-        - label: Cover image
-        - label: Social networks
-        - label: Goodies
-  - type: dropdown
-    id: aperitif
-    attributes:
-      label: Aperitif
-      description: To be provided?
-      options:
+"name": "Meetup"
+"description": "Gather meetup event organization data"
+"title": "[Meetup]"
+"labels":
+  - "meetup"
+"body":
+  - "type": "input"
+    "id": "event_title"
+    "attributes":
+      "label": "Event Title"
+      "description": "Provide the title of the event"
+      "placeholder": "Enter the event title"
+  - "type": "input"
+    "id": "event_date"
+    "attributes":
+      "label": "Event date"
+      "description": "Specify the proposed date for the event.
+
+        Format: YYYY-MM-DD\n"
+      "placeholder": "YYYY-MM-DD"
+  - "type": "dropdown"
+    "id": "hoster"
+    "attributes":
+      "label": "Hosting"
+      "description": "Pick a hoster"
+      "options":
+        - "Hoster 1"
+        - "Hoster 2"
+  - "type": "textarea"
+    "id": "event_description"
+    "attributes":
+      "label": "Event Description"
+      "description": "Short describe the event"
+  - "type": "markdown"
+    "attributes":
+      "value": "<!-- Available speakers -->
+
+        <!--
+
+        Speaker One; Speaker Two
+
+        -->"
+  - "type": "textarea"
+    "id": "agenda"
+    "attributes":
+      "label": "Agenda"
+      "description": "Outline the schedule and topics to be discussed"
+      "placeholder": "- <speaker_1>: <talk_description_1>
+
+        - <speaker_2>: <talk_description_2>\n"
+  - "type": "input"
+    "id": "meetup_link"
+    "attributes":
+      "label": "Meetup Link"
+      "description": "Provide the link to the Meetup event page"
+      "placeholder": "https://www.meetup.com/fr-FR/devops-aix-marseille/events/xxxxxxx"
+  - "type": "input"
+    "id": "cncf_link"
+    "attributes":
+      "label": "CNCF Link"
+      "description": "Provide the link to the CNCF event page"
+      "placeholder": "https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-xxx"
+  - "type": "input"
+    "id": "drive_link"
+    "attributes":
+      "label": "Drive Link"
+      "description": "Provide the link to the Google Drive folder"
+      "placeholder": "https://drive.google.com/drive/folders/xxxxxxxxxxxxxxxxxxxx"
+  - "type": "checkboxes"
+    "id": "slides"
+    "attributes":
+      "label": "Slides & Content"
+      "description": "Check items for slides and event content"
+      "options":
+        - "label": "Cover image"
+        - "label": "Basic Slides"
+        - "label": "Announcements / surveys / news etc..."
+        - "label": "Slides hosting"
+        - "label": "Slides speaker(s)"
+        - "label": "Kahoot / Game"
+        - "label": "Openfeedback"
+        - "label": "Goodies"
+  - "type": "checkboxes"
+    "id": "communication"
+    "attributes":
+      "label": "Communication"
+      "description": "Select communication items to be prepared"
+      "options":
+        - "label": "Announcement"
+        - "label": "Cover image"
+        - "label": "Slack - AixMarseille.Tech"
+        - "label": "Slack - OpenBaR"
+        - "label": "LinkedIn"
+        - "label": "BlueSky"
+  - "type": "dropdown"
+    "id": "aperitif"
+    "attributes":
+      "label": "Aperitif"
+      "description": "To be provided?"
+      "options":
         - "Yes"
         - "No"
-  - type: dropdown
-    id: restaurant
-    attributes:
-      label: Restaurant / Bar
-      description: Afterwards?
-      options:
+  - "type": "dropdown"
+    "id": "restaurant"
+    "attributes":
+      "label": "Restaurant / Bar"
+      "description": "Afterwards?"
+      "options":
         - "Yes"
         - "No"
-  - type: checkboxes
-    id: post-event
-    attributes:
-      label: Post event
-      description: Select Post event items to be done
-      options:
-        - label: Thanks hoster
-        - label: Thanks speakers
-        - label: Share slides to meetup
-        - label: Social networks
+  - "type": "checkboxes"
+    "id": "post-event"
+    "attributes":
+      "label": "Post event"
+      "description": "Select Post event items to be done"
+      "options":
+        - "label": "Thanks hoster"
+        - "label": "Thanks speakers"
+        - "label": "Share slides to Meetup"
+        - "label": "Social networks"

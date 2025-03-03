@@ -106,6 +106,7 @@ jobs:
           Agenda: Speaker "Wrong Speaker" is not in the list of speakers
           Agenda: Entry "- Wrong agenda entry" must follow the format: "- <speaker>: <talk_description>"
           Meetup Link: Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789
+          CNCF Link: Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-quiz-conteneurs-et-observabilite
           Drive Link: Must be a valid Drive Link, e.g. https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j
           EOF
           )

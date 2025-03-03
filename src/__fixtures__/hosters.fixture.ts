@@ -1,3 +1,3 @@
 export function getHostersFixture(): [string, ...string[]] {
-  return ["hoster 1", "hoster 2"];
+  return ["Hoster 1", "Hoster 2"];
 }
