@@ -53,7 +53,7 @@
     "attributes":
       "label": "Meetup Link"
       "description": "Provide the link to the Meetup event page"
-      "placeholder": "https://www.meetup.com/fr-FR/devops-aix-marseille/events/xxxxxxx"
+      "placeholder": "https://www.meetup.com/cloud-native-aix-marseille/events/xxxxxxxxx"
   - "type": "input"
     "id": "cncf_link"
     "attributes":

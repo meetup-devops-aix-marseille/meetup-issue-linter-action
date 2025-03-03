@@ -10,7 +10,7 @@ export class CNCFLinkLinterAdapter extends AbstractZodLinterAdapter {
   protected getValidator() {
     return string().url().regex(CNCFLinkLinterAdapter.CNCF_LINK_REGEX, {
       message:
-        "Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-quiz-conteneurs-et-observabilite",
+        "Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-test-meetup-event",
     });
   }
 

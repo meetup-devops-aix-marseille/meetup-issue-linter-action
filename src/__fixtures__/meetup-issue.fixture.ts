@@ -15,9 +15,9 @@ export function getMeetupIssueFixture(override?: Partial<MeetupIssue>): MeetupIs
       hoster: [getHostersFixture()[0]],
       event_description: "Description",
       agenda: `- ${speakers[0]}: Talk description One\n- ${speakers[1]}: Talk description Two`,
-      meetup_link: "https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
+      meetup_link: "https://www.meetup.com/cloud-native-aix-marseille/events/123456789",
       cncf_link:
-        "https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-quiz-conteneurs-et-observabilite",
+        "https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-test-meetup-event",
       drive_link: "https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j",
       ...(override?.body ?? {}),
     },

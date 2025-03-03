@@ -33,7 +33,7 @@ describe("MeetupLinkLinterAdapter", () => {
 
       // Act & Assert
       const expectedError = new LintError([
-        "Meetup Link: Invalid url; Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
+        "Meetup Link: Invalid url; Must be a valid Meetup link, e.g. https://www.meetup.com/cloud-native-aix-marseille/events/123456789",
       ]);
 
       await expect(
@@ -52,7 +52,7 @@ describe("MeetupLinkLinterAdapter", () => {
 
       // Act & Assert
       const expectedError = new LintError([
-        "Meetup Link: Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
+        "Meetup Link: Must be a valid Meetup link, e.g. https://www.meetup.com/cloud-native-aix-marseille/events/123456789",
       ]);
 
       await expect(
