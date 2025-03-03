@@ -10,7 +10,7 @@
     "prefix": "",
     "branch": "main"
   },
-  "owner": "meetup-devops-aix-marseille",
+  "owner": "cloud-native-aixmarseille",
   "repo": "meetup-issue-linter-action",
   "title_prefix": "GitHub Action: ",
   "prettier": true

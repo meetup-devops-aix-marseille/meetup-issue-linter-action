@@ -2,15 +2,15 @@
   "name": "meetup-issue-linter-action",
   "description": "Docker Compose Action",
   "version": "0.0.0",
-  "author": "Meetup DevOps Aix-Marseille",
+  "author": "Cloud Native Aix-Marseille",
   "private": true,
-  "homepage": "https://github.com/meetup-devops-aix-marseille/meetup-issue-linter-action",
+  "homepage": "https://github.com/cloud-native-aixmarseille/meetup-issue-linter-action",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/meetup-devops-aix-marseille/meetup-issue-linter-action.git"
+    "url": "git+https://github.com/cloud-native-aixmarseille/meetup-issue-linter-action.git"
   },
   "bugs": {
-    "url": "https://github.com/meetup-devops-aix-marseille/meetup-issue-linter-action/issues"
+    "url": "https://github.com/cloud-native-aixmarseille/meetup-issue-linter-action/issues"
   },
   "keywords": [
     "actions",

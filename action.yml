@@ -1,6 +1,6 @@
 name: "Meetup issue linter action"
 description: "This action lint the meetup issue for required fields and format"
-author: "Meetup DevOps Aix-Marseille"
+author: "Cloud Native Aix-Marseille"
 branding:
   icon: check-circle
   color: blue
