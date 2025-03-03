@@ -73,18 +73,18 @@
     ]
   },
   "dependencies": {
-    "@actions/core": "^1.10.1",
+    "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.0",
     "inversify": "^7.0.1",
     "reflect-metadata": "^0.2.2",
-    "zod": "^3.24.1",
+    "zod": "^3.24.2",
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
     "@ts-dev-tools/core": "^1.6.2",
-    "@vercel/ncc": "^0.38.1",
-    "eslint-plugin-github": "^5.0.1",
-    "eslint-plugin-jsonc": "^2.14.1",
+    "@vercel/ncc": "^0.38.3",
+    "eslint-plugin-github": "^5.1.8",
+    "eslint-plugin-jsonc": "^2.19.1",
     "jest-mock-extended": "^4.0.0-beta1"
   },
   "eslintConfig": {
