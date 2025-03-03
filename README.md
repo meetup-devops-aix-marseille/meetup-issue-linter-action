@@ -12,7 +12,7 @@
 <!-- end title -->
 <!-- start badges -->
 
-<a href="https%3A%2F%2Fgithub.com%2Fmeetup-devops-aix-marseille%2Fmeetup-issue-linter-action%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/meetup-devops-aix-marseille/meetup-issue-linter-action?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2Fmeetup-devops-aix-marseille%2Fmeetup-issue-linter-action%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/meetup-devops-aix-marseille/meetup-issue-linter-action?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit/meetup-devops-aix-marseille/meetup-issue-linter-action?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2Fmeetup-devops-aix-marseille%2Fmeetup-issue-linter-action%2Fissues"><img src="https://img.shields.io/github/issues/meetup-devops-aix-marseille/meetup-issue-linter-action?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads/meetup-devops-aix-marseille/meetup-issue-linter-action/total?logo=github&style=flat-square" alt="Downloads" />
+<a href="https%3A%2F%2Fgithub.com%2Fcloud-native-aixmarseille%2Fmeetup-issue-linter-action%2Freleases%2Flatest"><img src="https://img.shields.io/github/v/release/cloud-native-aixmarseille/meetup-issue-linter-action?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20tag" /></a><a href="https%3A%2F%2Fgithub.com%2Fcloud-native-aixmarseille%2Fmeetup-issue-linter-action%2Freleases%2Flatest"><img src="https://img.shields.io/github/release-date/cloud-native-aixmarseille/meetup-issue-linter-action?display_name=tag&sort=semver&logo=github&style=flat-square" alt="Release%20by%20date" /></a><img src="https://img.shields.io/github/last-commit/cloud-native-aixmarseille/meetup-issue-linter-action?logo=github&style=flat-square" alt="Commit" /><a href="https%3A%2F%2Fgithub.com%2Fcloud-native-aixmarseille%2Fmeetup-issue-linter-action%2Fissues"><img src="https://img.shields.io/github/issues/cloud-native-aixmarseille/meetup-issue-linter-action?logo=github&style=flat-square" alt="Open%20Issues" /></a><img src="https://img.shields.io/github/downloads/cloud-native-aixmarseille/meetup-issue-linter-action/total?logo=github&style=flat-square" alt="Downloads" />
 
 <!-- end badges -->
 </div>
@@ -26,7 +26,7 @@ This action lint the meetup issue for required fields and format
 <!-- start usage -->
 
 ```yaml
-- uses: meetup-devops-aix-marseille/meetup-issue-linter-action@0.0.0
+- uses: cloud-native-aixmarseille/meetup-issue-linter-action@0.0.0
   with:
     # Description: The issue number to lint.
     #
