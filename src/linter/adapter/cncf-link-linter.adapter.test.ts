@@ -33,7 +33,7 @@ describe("CNCFLinkLinterAdapter", () => {
 
       // Act & Assert
       const expectedError = new LintError([
-        "CNCF Link: Invalid url; Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-quiz-conteneurs-et-observabilite",
+        "CNCF Link: Invalid url; Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-test-meetup-event",
       ]);
 
       await expect(cncfLinkLinterAdapter.lint(invalidmeetupIssue, shouldFix)).rejects.toStrictEqual(
@@ -52,7 +52,7 @@ describe("CNCFLinkLinterAdapter", () => {
 
       // Act & Assert
       const expectedError = new LintError([
-        "CNCF Link: Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-quiz-conteneurs-et-observabilite",
+        "CNCF Link: Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-test-meetup-event",
       ]);
 
       await expect(cncfLinkLinterAdapter.lint(invalidmeetupIssue, shouldFix)).rejects.toStrictEqual(

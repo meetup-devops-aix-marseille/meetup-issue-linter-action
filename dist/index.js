@@ -35015,7 +35015,7 @@ let CNCFLinkLinterAdapter = class CNCFLinkLinterAdapter extends abtract_zod_lint
     static CNCF_LINK_REGEX = /^https:\/\/community\.cncf\.io\/events\/details\/cncf-cloud-native-aix-marseille-presents-[0-9a-z-]+$/;
     getValidator() {
         return (0, zod_1.string)().url().regex(CNCFLinkLinterAdapter_1.CNCF_LINK_REGEX, {
-            message: "Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-quiz-conteneurs-et-observabilite",
+            message: "Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-test-meetup-event",
         });
     }
     getFieldName() {
@@ -35251,10 +35251,10 @@ const zod_1 = __nccwpck_require__(4809);
 const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
 let MeetupLinkLinterAdapter = class MeetupLinkLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
     static { MeetupLinkLinterAdapter_1 = this; }
-    static MEETUP_LINK_REGEX = /^https:\/\/www\.meetup\.com\/fr-FR\/devops-aix-marseille\/events\/[0-9]+$/;
+    static MEETUP_LINK_REGEX = /^https:\/\/www\.meetup\.com\/cloud-native-aix-marseille\/events\/[0-9]+$/;
     getValidator() {
         return (0, zod_1.string)().url().regex(MeetupLinkLinterAdapter_1.MEETUP_LINK_REGEX, {
-            message: "Must be a valid Meetup link, e.g. https://www.meetup.com/fr-FR/devops-aix-marseille/events/123456789",
+            message: "Must be a valid Meetup link, e.g. https://www.meetup.com/cloud-native-aix-marseille/events/123456789",
         });
     }
     getFieldName() {
