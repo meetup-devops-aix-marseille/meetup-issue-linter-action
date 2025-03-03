@@ -34762,6 +34762,7 @@ const hoster_linter_adapter_1 = __nccwpck_require__(5057);
 const agenda_linter_adapter_1 = __nccwpck_require__(3066);
 const meetup_link_linter_adapter_1 = __nccwpck_require__(4595);
 const drive_link_linter_adapter_1 = __nccwpck_require__(3271);
+const cncf_link_linter_adapter_1 = __nccwpck_require__(8321);
 const container = new inversify_1.Container();
 exports.container = container;
 container.bind(core_service_1.CORE_SERVICE_IDENTIFIER).toConstantValue(core_service_1.coreService);
@@ -34778,6 +34779,7 @@ container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(hoster_linter_adap
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(event_description_linter_adapter_1.EventDescriptionLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(agenda_linter_adapter_1.AgendaLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(meetup_link_linter_adapter_1.MeetupLinkLinterAdapter);
+container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(cncf_link_linter_adapter_1.CNCFLinkLinterAdapter);
 container.bind(linter_adapter_1.LINTER_ADAPTER_IDENTIFIER).to(drive_link_linter_adapter_1.DriveLinkLinterAdapter);
 
 
@@ -34987,6 +34989,43 @@ exports.AgendaLinterAdapter = AgendaLinterAdapter = AgendaLinterAdapter_1 = __de
     (0, inversify_1.injectable)(),
     __metadata("design:paramtypes", [input_service_1.InputService])
 ], AgendaLinterAdapter);
+
+
+/***/ }),
+
+/***/ 8321:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var CNCFLinkLinterAdapter_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CNCFLinkLinterAdapter = void 0;
+const inversify_1 = __nccwpck_require__(4871);
+const zod_1 = __nccwpck_require__(4809);
+const abtract_zod_linter_adapter_1 = __nccwpck_require__(4053);
+let CNCFLinkLinterAdapter = class CNCFLinkLinterAdapter extends abtract_zod_linter_adapter_1.AbstractZodLinterAdapter {
+    static { CNCFLinkLinterAdapter_1 = this; }
+    static CNCF_LINK_REGEX = /^https:\/\/community\.cncf\.io\/events\/details\/cncf-cloud-native-aix-marseille-presents-[0-9a-z-]+$/;
+    getValidator() {
+        return (0, zod_1.string)().url().regex(CNCFLinkLinterAdapter_1.CNCF_LINK_REGEX, {
+            message: "Must be a valid CNCF link, e.g. https://community.cncf.io/events/details/cncf-cloud-native-aix-marseille-presents-quiz-conteneurs-et-observabilite",
+        });
+    }
+    getFieldName() {
+        return "cncf_link";
+    }
+};
+exports.CNCFLinkLinterAdapter = CNCFLinkLinterAdapter;
+exports.CNCFLinkLinterAdapter = CNCFLinkLinterAdapter = CNCFLinkLinterAdapter_1 = __decorate([
+    (0, inversify_1.injectable)()
+], CNCFLinkLinterAdapter);
 
 
 /***/ }),
@@ -35752,6 +35791,7 @@ exports.MEETUP_ISSUE_BODY_FIELD_LABELS = {
     event_description: "Event Description",
     agenda: "Agenda",
     meetup_link: "Meetup Link",
+    cncf_link: "CNCF Link",
     drive_link: "Drive Link",
 };
 let MeetupIssueService = class MeetupIssueService {

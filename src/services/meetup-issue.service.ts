@@ -11,6 +11,7 @@ export type MeetupIssueBody = {
   event_description?: string;
   agenda?: string;
   meetup_link?: string;
+  cncf_link?: string;
   drive_link?: string;
 };
 
@@ -28,6 +29,7 @@ export const MEETUP_ISSUE_BODY_FIELD_LABELS: Record<MeetupIssueBodyFields, strin
   event_description: "Event Description",
   agenda: "Agenda",
   meetup_link: "Meetup Link",
+  cncf_link: "CNCF Link",
   drive_link: "Drive Link",
 };
 

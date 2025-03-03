@@ -14,6 +14,7 @@ import { HosterLinterAdapter } from "./linter/adapter/hoster-linter.adapter";
 import { AgendaLinterAdapter } from "./linter/adapter/agenda-linter.adapter";
 import { MeetupLinkLinterAdapter } from "./linter/adapter/meetup-link-linter.adapter";
 import { DriveLinkLinterAdapter } from "./linter/adapter/drive-link-linter.adapter";
+import { CNCFLinkLinterAdapter } from "./linter/adapter/cncf-link-linter.adapter";
 
 const container = new Container();
 
@@ -33,6 +34,7 @@ container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(HosterLinterAdapter)
 container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(EventDescriptionLinterAdapter);
 container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(AgendaLinterAdapter);
 container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(MeetupLinkLinterAdapter);
+container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(CNCFLinkLinterAdapter);
 container.bind<LinterAdapter>(LINTER_ADAPTER_IDENTIFIER).to(DriveLinkLinterAdapter);
 
 export { container };
